@@ -144,7 +144,8 @@ details.status summary { font-weight: 700; cursor: pointer; min-height: 32px; di
 .table-scroll { overflow-x: auto; margin-top: 10px; }
 table.grid { border-collapse: separate; border-spacing: 2px; width: 100%; min-width: 400px; table-layout: fixed; }
 table.grid th { font-weight: 600; font-size: .75rem; color: var(--secondary); text-align: center; padding: 2px 0; }
-table.grid th[scope=row] { text-align: left; width: 64px; white-space: nowrap; color: var(--primary); font-size: .85rem; padding-right: 4px; }
+table.grid thead th:first-child, table.grid th[scope=row] { width: 78px; }
+table.grid th[scope=row] { text-align: left; white-space: nowrap; color: var(--primary); font-size: .85rem; padding-right: 6px; overflow: hidden; }
 table.grid td { height: 34px; border-radius: 6px; text-align: center; font-size: .65rem; font-weight: 700; border: 1px solid var(--line); background: var(--surface); color: var(--muted); }
 td.pending { background: repeating-linear-gradient(135deg, var(--amber-soft) 0 5px, #F6D8B8 5px 7px); color: var(--on-amber-soft); border-color: #E8C49B; }
 td.confirmed { background: var(--taken); color: var(--on-taken); border-color: var(--taken); }
