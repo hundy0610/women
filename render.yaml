@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: women-booking
+    name: yeoseong-culture-center
     runtime: node
     plan: free
     buildCommand: "true"
