@@ -32,6 +32,7 @@ const state = {
   error: '',
   done: null,
   photos: {},
+  openPhotos: new Set(),
   lk: { id: '', phone: '', rec: null, err: '', msg: '', busy: false, cancelOpen: false, reason: '' },
 };
 const now = () => Date.now() + state.offset;
@@ -190,16 +191,17 @@ function viewSpace() {
   const cards = C.spaces.map((s) => {
     const free = freeHours(state.date, s.id);
     const pics = state.photos[s.id] || [];
-    const photoBlock = pics.length
+    const isOpen = pics.length > 0 && state.openPhotos.has(s.id);
+    const photoBlock = isOpen
       ? `<div class="photos" role="group" aria-label="${s.name} 사진">${pics.map((src, i) => `<img src="${esc(src)}" alt="${s.name} 사진 ${i + 1}" loading="lazy" data-zoom="${s.id}" data-i="${i}">`).join('')}${pics.length > 1 ? `<span class="pcount num">${pics.length}장</span>` : ''}</div>`
       : '';
-    return `<div class="opt-card">${photoBlock}<button type="button" class="opt" data-id="${s.id}" aria-pressed="${state.spaceIds.includes(s.id)}">
+    return `<div class="opt-card"><button type="button" class="opt" data-id="${s.id}" aria-pressed="${state.spaceIds.includes(s.id)}">
       <b>${s.name}</b>
       <span class="meta num">${s.pyeong}평 · ${s.dims} · 최대 ${s.capacity}명${s.layout ? `(${s.layout})` : ''}</span>
       <span class="meta">${s.note}</span>
       <span class="price num">시간당 ${won(s.hourly)} · 1일 ${won(s.daily)}</span>
       <span class="free num ${free >= C.minHours ? '' : 'none'}">${free >= C.minHours ? `이날 예약 가능 ${free}시간` : '이날 예약 가능한 시간이 없습니다'}</span>
-    </button></div>`;
+    </button>${pics.length ? `<button type="button" class="photo-toggle" data-photos="${s.id}" aria-expanded="${isOpen}">${isOpen ? '사진 접기' : `사진 ${pics.length}장 보기`}</button>` : ''}${photoBlock}</div>`;
   }).join('');
   const all = state.spaceIds.length === C.spaces.length;
   return `<h1>사용할 공간을<br>선택하세요</h1>
@@ -541,7 +543,12 @@ $('#main').addEventListener('click', (e) => {
   if (opt) {
     const id = opt.dataset.id;
     if (id === '__all') state.spaceIds = state.spaceIds.length === C.spaces.length ? [] : C.spaces.map((s) => s.id);
-    else state.spaceIds = state.spaceIds.includes(id) ? state.spaceIds.filter((x) => x !== id) : [...state.spaceIds, id];
+    else {
+      const on = !state.spaceIds.includes(id);
+      state.spaceIds = on ? [...state.spaceIds, id] : state.spaceIds.filter((x) => x !== id);
+      // 카드를 누르면 사진이 펼쳐지고, 선택을 풀면 접힙니다.
+      if (on && (state.photos[id] || []).length) state.openPhotos.add(id); else state.openPhotos.delete(id);
+    }
     return render(true);
   }
   const s = t.closest('[data-start]');
@@ -550,6 +557,8 @@ $('#main').addEventListener('click', (e) => {
   if (en) { state.end = Number(en.dataset.end); return render(true); }
   if (t.closest('#pMinus')) return setPeople(state.people - 1);
   if (t.closest('#pPlus')) return setPeople(state.people + 1);
+  const pt = t.closest('[data-photos]');
+  if (pt) { const id = pt.dataset.photos; if (state.openPhotos.has(id)) state.openPhotos.delete(id); else state.openPhotos.add(id); return render(true); }
   const z = t.closest('[data-zoom]');
   if (z) return openLightbox(z.dataset.zoom, Number(z.dataset.i));
   if (t.closest('#lkCancelOpen')) { state.lk.cancelOpen = true; return render(true); }

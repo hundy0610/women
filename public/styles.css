@@ -252,3 +252,6 @@ dialog#lightbox::backdrop { background: rgba(20, 28, 23, .9); }
 .card .btn.ghost, .card .btn.danger { margin-top: 14px; }
 .btn.danger { background: var(--danger); }
 .btn.danger:hover:not(:disabled) { background: #8f1d17; }
+
+.photo-toggle { display: block; width: 100%; border: 0; border-top: 1px solid var(--line); background: transparent; padding: 12px 18px; text-align: left; font-weight: 600; color: var(--tertiary-deep); font-size: .95rem; }
+.opt-card:has(.opt[aria-pressed=true]) .photo-toggle { border-top-color: rgba(79, 111, 82, .25); }
