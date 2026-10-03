@@ -5,6 +5,7 @@
   "type": "module",
   "description": "여성문화센터 대관 예약",
   "scripts": {
+    "start": "node server.js",
     "dev": "node dev-server.js",
     "test": "node --test"
   },

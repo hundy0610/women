@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: women-booking
+    runtime: node
+    plan: free
+    buildCommand: "true"
+    startCommand: node server.js
+    healthCheckPath: /api/info
+    envVars:
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: BANK_NAME
+        sync: false
+      - key: BANK_NUMBER
+        sync: false
+      - key: BANK_HOLDER
+        sync: false
+      - key: CONTACT_PHONE
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
