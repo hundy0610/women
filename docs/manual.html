@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>대관 예약 운영 매뉴얼</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  :root { --bg:#FAF6EF; --ink:#2B2118; --mute:#6B5F53; --line:#E4D8C5; --brand:#B4461F; --card:#FFFFFF; --soft:#F3E9D8; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1E1914; --ink:#F3EBDD; --mute:#B8AB9A; --line:#3A3027; --brand:#F0916A; --card:#27201A; --soft:#322920; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:17px/1.75 "Pretendard Variable", Pretendard, "Malgun Gothic", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 30px; line-height: 1.3; margin: 0 0 8px; }
+  h2 { font-size: 22px; margin: 44px 0 12px; padding-top: 8px; border-top: 1px solid var(--line); }
+  h3 { font-size: 18px; margin: 24px 0 6px; }
+  p, li { margin: 6px 0; }
+  .lead { color: var(--mute); }
+  nav { background: var(--soft); border-radius: 14px; padding: 12px 20px; margin: 24px 0; }
+  nav a { color: var(--brand); }
+  table { width:100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; margin: 12px 0; }
+  th, td { text-align:left; padding: 10px 12px; border-bottom: 1px solid var(--line); font-size: 16px; vertical-align: top; }
+  th { background: var(--soft); }
+  code { background: var(--soft); padding: 2px 6px; border-radius: 6px; font-size: 15px; }
+  .note { background: var(--card); border-left: 4px solid var(--brand); padding: 10px 16px; border-radius: 8px; margin: 14px 0; }
+  .num { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<main>
+  <h1>대관 예약 운영 매뉴얼</h1>
+  <p class="lead">예약자 안내와 담당자 업무를 한 문서에 정리했습니다. 담당자는 하루에 한 번, 입금 내역과 관리 페이지를 맞춰 보면 됩니다.</p>
+
+  <nav>
+    <a href="#customer">1. 예약자가 하는 일</a> ·
+    <a href="#price">2. 요금 규칙</a> ·
+    <a href="#admin">3. 담당자가 하는 일</a> ·
+    <a href="#setup">4. 처음 설정</a> ·
+    <a href="#trouble">5. 문제가 생기면</a>
+  </nav>
+
+  <h2 id="customer">1. 예약자가 하는 일</h2>
+  <ol>
+    <li>예약 페이지에서 날짜를 누릅니다. 아래 현황표에 그날의 공간별 시간이 보입니다.</li>
+    <li>공간을 고릅니다. 여러 개를 함께 고를 수 있고, 5개 공간을 모두 고르려면 "전체 통대관"을 누릅니다.</li>
+    <li>시작 시간과 종료 시간을 고릅니다. 최소 2시간부터 가능합니다.</li>
+    <li>이름, 휴대전화 번호, 이용 인원을 입력하고 이용 안내 확인에 체크합니다.</li>
+    <li>"예약하고 입금 안내 보기"를 누르면 금액과 입금 계좌가 나옵니다. 입금자명은 입력한 이름과 같아야 합니다.</li>
+    <li>24시간 안에 입금합니다. 입금이 확인되면 담당자가 확정하고, 현황표에 "예약 완료"로 표시됩니다.</li>
+  </ol>
+  <p>현황표의 "입금 대기"는 다른 사람이 예약했지만 아직 입금하지 않은 시간입니다. 기한 안에 입금되지 않으면 다시 열립니다.</p>
+
+  <h2 id="price">2. 요금 규칙</h2>
+  <table>
+    <tr><th>공간</th><th>시간당</th><th>1일(8시간)</th><th>최대 인원</th></tr>
+    <tr><td>로비</td><td class="num">30,000원</td><td class="num">200,000원</td><td>50명</td></tr>
+    <tr><td>세미나실</td><td class="num">30,000원</td><td class="num">200,000원</td><td>60명</td></tr>
+    <tr><td>방1, 방2, 방3</td><td class="num">20,000원</td><td class="num">130,000원</td><td>각 12명</td></tr>
+    <tr><td>전체 통대관</td><td colspan="2" class="num">700,000원 (개별 합계 790,000원)</td><td>합계 146명</td></tr>
+  </table>
+  <ul>
+    <li>시간당 요금의 합이 1일 요금을 넘으면 1일 요금만 받습니다.</li>
+    <li>8시간을 넘으면 1일 요금에 남은 시간의 요금을 더합니다.</li>
+    <li>최대 인원을 넘으면 1명당 10,000원을 더합니다. 여러 공간을 고르면 최대 인원을 합산합니다.</li>
+    <li>요금은 서버가 다시 계산합니다. 화면에 보인 금액과 입금 금액은 항상 같습니다.</li>
+  </ul>
+
+  <h2 id="admin">3. 담당자가 하는 일</h2>
+  <p>관리 페이지 주소는 예약 페이지 주소 뒤에 <code>/admin.html</code>을 붙인 것입니다. 검색 엔진에 노출되지 않지만 주소를 공개하지 마세요.</p>
+  <h3>입금 확인</h3>
+  <ol>
+    <li>관리 페이지에 비밀번호를 입력하고 "불러오기"를 누릅니다.</li>
+    <li>"입금 대기" 탭에서 예약자 이름과 금액을 통장 입금 내역과 맞춰 봅니다.</li>
+    <li>일치하면 "입금 확인(확정)"을 누릅니다.</li>
+  </ol>
+  <h3>취소</h3>
+  <p>예약자가 취소를 요청하면 "취소"를 누릅니다. 해당 시간이 바로 다시 열립니다. 환불은 통장에서 직접 처리합니다.</p>
+  <div class="note">기한이 지난 예약도 목록에 "기한 만료"로 남습니다. 늦게 입금이 들어왔고 그 시간이 비어 있으면 "입금 확인(확정)"으로 되살릴 수 있습니다. 다른 사람이 이미 예약했다면 확정되지 않습니다.</div>
+
+  <h2 id="setup">4. 처음 설정</h2>
+  <ol>
+    <li>Vercel에서 GitHub 저장소 <code>hundy0610/women</code>을 Import합니다.</li>
+    <li>Storage에서 Upstash Redis를 만들어 프로젝트에 연결합니다.</li>
+    <li>Environment Variables에 <code>ADMIN_PASSWORD</code>, <code>BANK_NAME</code>, <code>BANK_NUMBER</code>, <code>BANK_HOLDER</code>, <code>CONTACT_PHONE</code>을 입력합니다.</li>
+    <li>Deployments에서 Redeploy를 누릅니다.</li>
+    <li>예약 페이지에서 계좌번호가 맞게 보이는지, 테스트 예약이 되는지 확인합니다. 테스트 예약은 관리 페이지에서 취소합니다.</li>
+  </ol>
+  <p>요금, 운영 시간, 휴관 요일은 <code>public/shared/config.mjs</code>에서 바꿉니다. 현재 화요일은 전시 해설, 수요일은 전체 대관 불가로 막혀 있습니다.</p>
+
+  <h2 id="trouble">5. 문제가 생기면</h2>
+  <table>
+    <tr><th>증상</th><th>원인과 조치</th></tr>
+    <tr><td>"예약할 수 없습니다" 안내가 뜬다</td><td>Upstash Redis가 연결되지 않았습니다. 4장 2번을 확인하고 Redeploy합니다.</td></tr>
+    <tr><td>계좌 정보가 설정되지 않았다고 나온다</td><td><code>BANK_*</code> 환경변수를 입력하고 Redeploy합니다.</td></tr>
+    <tr><td>관리 페이지에서 "비밀번호가 맞지 않습니다"</td><td><code>ADMIN_PASSWORD</code> 값을 확인합니다. 10분에 20번을 넘게 틀리면 잠시 막힙니다.</td></tr>
+    <tr><td>같은 시간에 두 건이 들어왔다</td><td>발생하지 않도록 설계했습니다. 먼저 저장된 한 건만 성공하고 다른 쪽에는 "이미 예약이 있습니다"가 표시됩니다.</td></tr>
+    <tr><td>예약자가 입금자명을 다르게 입금했다</td><td>예약자 연락처로 확인한 뒤 확정합니다.</td></tr>
+  </table>
+</main>
+</body>
+</html>

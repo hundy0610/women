@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>예약 관리</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .adm { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+    .adm h1 { font-size: 24px; margin: 0 0 4px; }
+    .adm .bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 16px 0; }
+    .adm .bar input { max-width: 260px; }
+    .adm .tabs { display: flex; gap: 8px; margin: 16px 0; flex-wrap: wrap; }
+    .adm table { width: 100%; border-collapse: collapse; background: var(--surface, #fff); }
+    .adm th, .adm td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line, #e7dccb); font-size: 15px; vertical-align: top; }
+    .adm .st { font-weight: 700; }
+    .adm .st.pending { color: #9a6a00; }
+    .adm .st.confirmed { color: #2f6b3f; }
+    .adm .st.canceled, .adm .st.expired { color: #8a8178; }
+    .adm .acts { display: flex; gap: 6px; flex-wrap: wrap; }
+    .adm button.sm { min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line, #d9cbb5); background: #fff; font: inherit; cursor: pointer; }
+    .adm button.sm.pri { background: #b4461f; color: #fff; border-color: #b4461f; }
+    .adm .msg { min-height: 24px; color: #b4461f; }
+    .adm .tablewrap { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <main class="adm">
+    <h1>예약 관리</h1>
+    <p class="hint">입금을 확인한 예약만 "확정"을 누르세요. 확정하면 예약 현황에 "예약 완료"로 표시됩니다.</p>
+    <form class="bar" id="login">
+      <label for="pw" class="sr-only">관리자 비밀번호</label>
+      <input id="pw" type="password" placeholder="관리자 비밀번호" autocomplete="current-password">
+      <button class="sm pri" type="submit">불러오기</button>
+    </form>
+    <p class="msg" id="msg" role="alert"></p>
+    <div class="tabs" id="tabs" hidden>
+      <button class="sm" data-f="pending">입금 대기</button>
+      <button class="sm" data-f="confirmed">확정</button>
+      <button class="sm" data-f="all">전체</button>
+    </div>
+    <div class="tablewrap"><table id="tbl" hidden>
+      <thead><tr><th>일정</th><th>공간</th><th>예약자</th><th>금액</th><th>상태</th><th></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+  </main>
+  <script type="module" src="/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "women-booking",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "여성문화센터 대관 예약",
+  "scripts": {
+    "dev": "node dev-server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
