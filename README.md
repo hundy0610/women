@@ -35,7 +35,11 @@ node --test
 | `BANK_NUMBER` | 계좌번호 |
 | `BANK_HOLDER` | 예금주 |
 | `CONTACT_PHONE` | 문의 전화번호 |
+| `NOTIFY_WEBHOOK_URL` | (선택) 새 예약 알림을 받을 슬랙, 디스코드 웹훅 주소 |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | (선택) 텔레그램으로 알림을 받을 때 |
 
 4. Redeploy합니다. 저장소가 연결되지 않으면 예약 페이지가 "예약할 수 없습니다"를 표시합니다.
 
 요금, 운영 시간, 휴관 요일은 `public/shared/config.mjs`에서 바꿉니다.
+
+공간 사진은 `public/photos/`에 `room1-1.jpg`처럼 `공간ID-번호.확장자`로 넣으면 자동으로 표시됩니다. 자세한 규칙은 그 폴더의 `README.txt`를 보세요.

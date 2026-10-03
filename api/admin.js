@@ -1,7 +1,9 @@
 import { handle, requireAdmin } from '../lib/http.js';
-import { BookingError, adminList, confirmReservation, cancelReservation, createReservation, setMemo } from '../lib/booking.js';
+import { BookingError, adminList, confirmReservation, cancelReservation, createReservation, setMemo, dismissCancelRequest } from '../lib/booking.js';
+import { configWith, getBlocks, addBlock, removeBlock } from '../lib/blocks.js';
 import { listLog, logEvent } from '../lib/history.js';
 import { changePassword } from '../lib/adminpw.js';
+import { notifyAdmin, notifyEnabled, adminLink } from '../lib/notify.js';
 
 export default handle('POST', async (ctx) => {
   await requireAdmin(ctx);
@@ -23,9 +25,25 @@ export default handle('POST', async (ctx) => {
       await setMemo(store, id, body.memo, nowMs);
       return {};
     case 'create': {
-      const { rec } = await createReservation(store, { ...body.reservation }, { nowMs, ip: ctx.ip, admin: true });
+      const { rec } = await createReservation(store, { ...body.reservation }, { nowMs, ip: ctx.ip, admin: true, cfg: await configWith(store) });
       return { reservation: rec };
     }
+    case 'dismiss':
+      await dismissCancelRequest(store, id, nowMs);
+      return {};
+    case 'blocks':
+      return { blocks: await getBlocks(store) };
+    case 'block_add':
+      return await addBlock(store, body, nowMs);
+    case 'block_remove':
+      await removeBlock(store, String(body.blockId || ''), nowMs);
+      return {};
+    case 'notify_status':
+      return { enabled: notifyEnabled() };
+    case 'notify_test':
+      if (!notifyEnabled()) throw new BookingError('NOTIFY_OFF', '알림 채널이 설정되지 않았습니다.');
+      await notifyAdmin('[테스트] 예약 알림이 정상적으로 연결되었습니다.', adminLink(ctx.req));
+      return {};
     case 'setpw':
       await changePassword(store, body.newPassword);
       await logEvent(store, nowMs, { id: '', action: 'password_changed', by: 'admin', note: '관리자 비밀번호 변경' });

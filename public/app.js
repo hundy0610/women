@@ -8,7 +8,9 @@ const won = (n) => `${Number(n).toLocaleString('ko-KR')}원`;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const HOUR_MS = 3600 * 1000;
 const HOURS = Array.from({ length: C.closeHour - C.openHour }, (_, i) => C.openHour + i);
-const STEPS = 6; // 1 날짜, 2 공간, 3 시간, 4 인원, 5 예약자, 6 확인. 7은 입금 안내.
+const STEPS = 6; // 1 날짜, 2 공간, 3 시간, 4 인원, 5 예약자, 6 확인. 7은 입금 안내, 8은 내 예약 확인.
+const BASE_BLOCKED = [...C.blockedDates];
+const STATUS_TEXT = { pending: '입금 대기', confirmed: '예약 확정', expired: '입금 기한 만료', canceled: '취소됨' };
 
 const state = {
   offset: 0,
@@ -29,6 +31,8 @@ const state = {
   submitting: false,
   error: '',
   done: null,
+  photos: {},
+  lk: { id: '', phone: '', rec: null, err: '', msg: '', busy: false, cancelOpen: false, reason: '' },
 };
 const now = () => Date.now() + state.offset;
 
@@ -63,6 +67,7 @@ async function loadInfo() {
     const j = await api('/api/info');
     state.offset = j.now - Date.now();
     state.info = { bank: j.bank, contact: j.contact, storeReady: j.storeReady };
+    state.photos = j.photos || {};
   } catch { /* 계좌 정보 없이도 화면은 열립니다 */ }
   $('#storeNotice').hidden = state.info.storeReady;
 }
@@ -74,6 +79,7 @@ async function loadAvailability() {
     const j = await api(`/api/availability?from=${today}&to=${addDays(today, C.horizonDays)}`);
     state.offset = j.now - Date.now();
     state.taken = indexItems(j.items);
+    C.blockedDates = [...BASE_BLOCKED, ...(j.blocks || [])];
     $('#netNotice').hidden = true;
   } catch {
     $('#netNotice').hidden = false;
@@ -142,6 +148,7 @@ function stepProblem(step) {
     case 4: return state.people >= 1 ? '' : '인원을 입력하세요.';
     case 5: return state.name.trim().length < 2 ? '이름을 입력하세요.' : !phoneOk(state.phone) ? '휴대전화 번호를 입력하세요.' : '';
     case 6: return state.agree ? '' : '이용 안내 확인에 체크하세요.';
+    case 8: return state.lk.rec ? '' : state.lk.id.trim().length < 6 ? '예약번호를 입력하세요.' : !phoneOk(state.lk.phone) ? '휴대전화 번호를 입력하세요.' : '';
     default: return '';
   }
 }
@@ -182,13 +189,17 @@ function viewDate() {
 function viewSpace() {
   const cards = C.spaces.map((s) => {
     const free = freeHours(state.date, s.id);
-    return `<button type="button" class="opt" data-id="${s.id}" aria-pressed="${state.spaceIds.includes(s.id)}">
+    const pics = state.photos[s.id] || [];
+    const photoBlock = pics.length
+      ? `<div class="photos" role="group" aria-label="${s.name} 사진">${pics.map((src, i) => `<img src="${esc(src)}" alt="${s.name} 사진 ${i + 1}" loading="lazy" data-zoom="${s.id}" data-i="${i}">`).join('')}${pics.length > 1 ? `<span class="pcount num">${pics.length}장</span>` : ''}</div>`
+      : '';
+    return `<div class="opt-card">${photoBlock}<button type="button" class="opt" data-id="${s.id}" aria-pressed="${state.spaceIds.includes(s.id)}">
       <b>${s.name}</b>
       <span class="meta num">${s.pyeong}평 · ${s.dims} · 최대 ${s.capacity}명${s.layout ? `(${s.layout})` : ''}</span>
       <span class="meta">${s.note}</span>
       <span class="price num">시간당 ${won(s.hourly)} · 1일 ${won(s.daily)}</span>
       <span class="free num ${free >= C.minHours ? '' : 'none'}">${free >= C.minHours ? `이날 예약 가능 ${free}시간` : '이날 예약 가능한 시간이 없습니다'}</span>
-    </button>`;
+    </button></div>`;
   }).join('');
   const all = state.spaceIds.length === C.spaces.length;
   return `<h1>사용할 공간을<br>선택하세요</h1>
@@ -326,14 +337,105 @@ function viewDone() {
         <dt>입금자명</dt><dd>${esc(r.name)}</dd>
         <dt>입금 기한</dt><dd>${formatKstDateTime(r.holdUntil)}</dd>
       </dl></div>
-      <ol class="todo"><li>입금자명을 "${esc(r.name)}"으로 입금합니다.</li><li>${formatKstDateTime(r.holdUntil)}까지 입금이 확인되지 않으면 예약이 취소됩니다.</li></ol>
+      <ol class="todo"><li>입금자명을 "${esc(r.name)}"으로 입금합니다.</li><li>${formatKstDateTime(r.holdUntil)}까지 입금이 확인되지 않으면 예약이 취소됩니다.</li><li>예약번호 ${esc(r.id)}는 예약 조회와 취소에 필요합니다. 화면을 캡처해 두세요.</li></ol>
     </div>`;
+}
+
+function viewLookup() {
+  const k = state.lk;
+  const r = k.rec;
+  let result = '';
+  if (r) {
+    const bank = state.info.bank;
+    let note = '';
+    if (r.status === 'pending') note = `<p class="notice-line">${formatKstDateTime(r.holdUntil)}까지 입금해 주세요.</p>${bank ? `<div class="bank"><h3>입금 계좌</h3><div class="acct num">${esc(bank.name)} ${esc(bank.number)}</div><p class="who">예금주 ${esc(bank.holder)} · 입금자명 ${esc(r.name)}</p><button type="button" class="copy" data-copy="${esc(bank.number)}">계좌번호 복사</button></div>` : ''}`;
+    else if (r.status === 'confirmed' && r.cancelRequested) note = '<p class="notice-line">취소 요청이 접수되었습니다. 담당자가 확인한 뒤 환불 방법을 안내합니다.</p>';
+    else if (r.status === 'expired') note = '<p class="notice-line">입금 기한이 지났습니다. 다시 예약하거나 담당자에게 문의하세요.</p>';
+    const canCancel = r.status === 'pending' || (r.status === 'confirmed' && !r.cancelRequested);
+    const cancelLabel = r.status === 'pending' ? '예약 취소' : '취소 요청';
+    const cancelBox = k.cancelOpen
+      ? `<div class="field"><label for="f-reason">취소 사유 (선택)</label><input id="f-reason" maxlength="100" value="${esc(k.reason)}"></div>
+         <p class="hint">${r.status === 'pending' ? '입금 전 예약은 바로 취소되고 시간이 다시 열립니다.' : '입금이 확인된 예약은 담당자가 확인한 뒤 취소하고 환불합니다.'}</p>
+         <div class="btnrow"><button type="button" class="btn danger" id="lkDoCancel" ${k.busy ? 'disabled' : ''}>${cancelLabel}하기</button><button type="button" class="btn ghost" id="lkCancelClose">돌아가기</button></div>`
+      : canCancel ? `<button type="button" class="btn ghost" id="lkCancelOpen">${cancelLabel}</button>` : '';
+    result = `<div class="card"><p class="status-pill ${r.status}">${STATUS_TEXT[r.status]}</p>
+      <dl class="info"><dt>예약번호</dt><dd>${esc(r.id)}</dd><dt>일정</dt><dd>${formatKoreanDate(r.date)} ${hh(r.start)}~${hh(r.end)}</dd><dt>공간</dt><dd>${esc(spaceNames(r.spaces))}</dd><dt>인원</dt><dd>${r.people}명</dd><dt>금액</dt><dd>${won(r.amount)}</dd></dl>
+      ${note}${k.msg ? `<p class="notice-line ok">${esc(k.msg)}</p>` : ''}${cancelBox}</div>`;
+  }
+  return `<h1>내 예약을<br>확인하세요</h1>
+    <p class="sub">예약할 때 받은 예약번호와 휴대전화 번호를 입력하세요. 회원가입은 필요 없습니다.</p>
+    <div class="body">
+      <div class="field"><label for="f-lkid">예약번호</label><input id="f-lkid" maxlength="8" autocapitalize="characters" autocomplete="off" placeholder="예: AB12CD34" value="${esc(k.id)}"></div>
+      <div class="field"><label for="f-lkphone">휴대전화</label><input id="f-lkphone" type="tel" inputmode="tel" placeholder="010-0000-0000" maxlength="13" value="${esc(k.phone)}"></div>
+      ${k.err ? `<p class="err">${esc(k.err)}</p>` : ''}
+      ${result}
+    </div>`;
+}
+
+async function doLookup() {
+  const k = state.lk;
+  k.busy = true; k.err = ''; k.msg = ''; chrome();
+  try {
+    const j = await api('/api/lookup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: k.id.trim(), phone: k.phone }) });
+    k.rec = j.reservation; k.cancelOpen = false;
+  } catch (e) { k.rec = null; k.err = e.message; }
+  k.busy = false;
+  render(true);
+}
+
+async function doCancel() {
+  const k = state.lk;
+  k.busy = true; render(true);
+  try {
+    const j = await api('/api/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: k.rec.id, phone: k.phone, reason: k.reason }) });
+    k.msg = j.mode === 'canceled' ? '예약을 취소했습니다. 해당 시간이 다시 열렸습니다.' : '취소 요청을 접수했습니다. 담당자가 확인한 뒤 환불 방법을 안내합니다.';
+    k.cancelOpen = false;
+    const r = await api('/api/lookup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: k.rec.id, phone: k.phone }) });
+    k.rec = r.reservation;
+    try { localStorage.removeItem('women:last'); } catch { /* 무시 */ }
+    loadAvailability();
+  } catch (e) { k.err = e.message; }
+  k.busy = false;
+  render(true);
+}
+
+/* ---------- 사진 확대 ---------- */
+const lb = { list: [], i: 0, name: '' };
+function openLightbox(spaceId, i) {
+  lb.list = state.photos[spaceId] || [];
+  lb.i = i;
+  lb.name = C.spaces.find((s) => s.id === spaceId)?.name || '';
+  let d = $('#lightbox');
+  if (!d) {
+    d = document.createElement('dialog');
+    d.id = 'lightbox';
+    d.setAttribute('aria-label', '사진 보기');
+    d.addEventListener('click', (e) => {
+      if (e.target.closest('[data-lb=close]') || e.target === d) d.close();
+      else if (e.target.closest('[data-lb=prev]')) { lb.i = (lb.i + lb.list.length - 1) % lb.list.length; paintLb(); }
+      else if (e.target.closest('[data-lb=next]')) { lb.i = (lb.i + 1) % lb.list.length; paintLb(); }
+    });
+    d.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') { lb.i = (lb.i + lb.list.length - 1) % lb.list.length; paintLb(); }
+      if (e.key === 'ArrowRight') { lb.i = (lb.i + 1) % lb.list.length; paintLb(); }
+    });
+    document.body.append(d);
+  }
+  paintLb();
+  if (!d.open) d.showModal();
+}
+function paintLb() {
+  const many = lb.list.length > 1;
+  $('#lightbox').innerHTML = `<div class="lb"><button type="button" class="lb-x" data-lb="close" aria-label="닫기">&times;</button>
+    <img src="${esc(lb.list[lb.i])}" alt="${esc(lb.name)} 사진 ${lb.i + 1}">
+    ${many ? `<button type="button" class="lb-n prev" data-lb="prev" aria-label="이전 사진">&lsaquo;</button><button type="button" class="lb-n next" data-lb="next" aria-label="다음 사진">&rsaquo;</button>` : ''}
+    <p class="lb-c num">${esc(lb.name)} ${lb.i + 1} / ${lb.list.length}</p></div>`;
 }
 
 /* ---------- 렌더 ---------- */
 function render(keepScroll = false) {
   normalizeTime();
-  const views = { 1: viewDate, 2: viewSpace, 3: viewTime, 4: viewPeople, 5: viewPerson, 6: viewReview, 7: viewDone };
+  const views = { 1: viewDate, 2: viewSpace, 3: viewTime, 4: viewPeople, 5: viewPerson, 6: viewReview, 7: viewDone, 8: viewLookup };
   const y = window.scrollY;
   $('#main').innerHTML = `<section class="step" ${keepScroll ? 'style="animation:none"' : ''}>${views[state.step]()}</section>`;
   if (keepScroll) window.scrollTo(0, y);
@@ -343,9 +445,10 @@ function render(keepScroll = false) {
 function chrome() {
   const st = state.step;
   $('#back').hidden = st === 1 || st === 7;
+  $('#myres').hidden = st === 8;
   $('#progBar').style.width = `${Math.min(st, STEPS) / STEPS * 100}%`;
   $('#prog').setAttribute('aria-valuenow', String(Math.min(st, STEPS)));
-  $('#prog').hidden = st === 7;
+  $('#prog').hidden = st >= 7;
 
   const q = currentQuote();
   const peek = $('#peek');
@@ -357,9 +460,9 @@ function chrome() {
 
   const btn = $('#next');
   const problem = state.submitting ? '' : stepProblem(st);
-  btn.textContent = st === 6 ? (state.submitting ? '예약하는 중' : '예약하기') : st === 7 ? '처음으로' : '다음';
-  btn.disabled = st === 7 ? false : Boolean(problem) || state.submitting;
-  $('#ctaHint').textContent = state.error || (st === 7 ? '' : problem);
+  btn.textContent = st === 6 ? (state.submitting ? '예약하는 중' : '예약하기') : st === 7 ? '처음으로' : st === 8 ? (state.lk.rec ? '처음으로' : state.lk.busy ? '조회하는 중' : '조회하기') : '다음';
+  btn.disabled = st === 7 || (st === 8 && state.lk.rec) ? false : Boolean(problem) || state.submitting || state.lk.busy;
+  $('#ctaHint').textContent = state.error || (st === 7 || (st === 8 && state.lk.rec) ? '' : problem);
   $('#ctaHint').style.color = state.error ? 'var(--danger)' : '';
 
   renderSide();
@@ -447,6 +550,11 @@ $('#main').addEventListener('click', (e) => {
   if (en) { state.end = Number(en.dataset.end); return render(true); }
   if (t.closest('#pMinus')) return setPeople(state.people - 1);
   if (t.closest('#pPlus')) return setPeople(state.people + 1);
+  const z = t.closest('[data-zoom]');
+  if (z) return openLightbox(z.dataset.zoom, Number(z.dataset.i));
+  if (t.closest('#lkCancelOpen')) { state.lk.cancelOpen = true; return render(true); }
+  if (t.closest('#lkCancelClose')) { state.lk.cancelOpen = false; return render(true); }
+  if (t.closest('#lkDoCancel')) return doCancel();
   const c = t.closest('[data-copy]');
   if (c) copyText(c);
 });
@@ -465,6 +573,12 @@ $('#main').addEventListener('input', (e) => {
   else if (id === 'f-name') { state.name = e.target.value; chrome(); }
   else if (id === 'f-phone') { e.target.value = state.phone = formatPhone(e.target.value); chrome(); }
   else if (id === 'f-website') state.website = e.target.value;
+  else if (id === 'f-lkid') { state.lk.id = e.target.value.toUpperCase(); e.target.value = state.lk.id; state.lk.rec = null; chrome(); }
+  else if (id === 'f-lkphone') { e.target.value = state.lk.phone = formatPhone(e.target.value); state.lk.rec = null; chrome(); }
+  else if (id === 'f-reason') state.lk.reason = e.target.value;
+});
+$('#main').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && state.step === 8 && !state.lk.rec && !stepProblem(8)) { e.preventDefault(); doLookup(); }
 });
 $('#main').addEventListener('change', (e) => {
   if (e.target.id === 'f-agree') { state.agree = e.target.checked; chrome(); }
@@ -487,6 +601,7 @@ async function copyText(btn) {
 $('#next').addEventListener('click', () => {
   const st = state.step;
   if (st === 7) return reset();
+  if (st === 8) return state.lk.rec ? reset() : doLookup();
   if (stepProblem(st)) return;
   if (st === 6) return submit();
   go(st + 1);
@@ -494,12 +609,13 @@ $('#next').addEventListener('click', () => {
 $('#back').addEventListener('click', () => history.back());
 window.addEventListener('popstate', (e) => {
   const step = e.state?.step || 1;
-  state.step = state.done && step === 7 ? 7 : Math.min(step, 6);
+  state.step = step === 8 ? 8 : state.done && step === 7 ? 7 : Math.min(step, 6);
   state.error = '';
   render();
   window.scrollTo(0, 0);
 });
 $('#retryBtn').addEventListener('click', loadAvailability);
+$('#myres').addEventListener('click', () => go(8));
 $('#lastBtn').addEventListener('click', () => {
   try { state.done = JSON.parse(localStorage.getItem('women:last')); go(7); } catch { /* 무시 */ }
 });
@@ -541,7 +657,7 @@ async function submit() {
 }
 
 function reset() {
-  Object.assign(state, { spaceIds: [], start: null, end: null, people: 10, purpose: '', agree: false, done: null, error: '' });
+  Object.assign(state, { spaceIds: [], start: null, end: null, people: 10, purpose: '', agree: false, done: null, error: '', lk: { id: '', phone: '', rec: null, err: '', msg: '', busy: false, cancelOpen: false, reason: '' } });
   go(1);
 }
 

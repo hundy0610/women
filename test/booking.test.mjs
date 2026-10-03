@@ -185,3 +185,35 @@ test('관리자 비밀번호: 초기값은 환경변수, 변경하면 저장소 
   assert.equal(await checkPassword(store, 'new-password-1'), true);
   assert.equal(await checkPassword(store, 'init-pass'), false);
 });
+
+test('관리자 휴관일: 예약이 막히고, 해제하면 다시 열린다', async () => {
+  const { addBlock, removeBlock, configWith, getBlocks } = await import('../lib/blocks.js');
+  const store = createMemoryStore();
+  const { block } = await addBlock(store, { from: OPEN_DAY, to: OPEN_DAY, reason: '센터 행사' }, NOW);
+  assert.equal(await code(createReservation(store, fresh(), ctx({ cfg: await configWith(store) }))), 'BLOCKED');
+  await removeBlock(store, block.id, NOW);
+  assert.equal((await getBlocks(store)).length, 0);
+  assert.equal(await code(createReservation(store, fresh(), ctx({ cfg: await configWith(store) }))), null);
+});
+
+test('예약자 조회와 취소: 번호가 맞아야 보이고, 입금 전은 바로 취소, 확정은 요청으로 접수', async () => {
+  const { findForUser, userCancel, userView, dismissCancelRequest } = await import('../lib/booking.js');
+  const store = createMemoryStore();
+  const { rec } = await createReservation(store, fresh({ phone: '010-7777-1111' }), ctx());
+  const c = { nowMs: NOW, ip: '5.5.5.5' };
+  assert.equal(await code(findForUser(store, rec.id, '010-0000-0000', c)), 'NOT_FOUND');
+  const got = await findForUser(store, rec.id.toLowerCase(), '01077771111', c);
+  assert.equal(userView(got, NOW).status, 'pending');
+  assert.equal((await userCancel(store, got, '일정 변경', NOW)).mode, 'canceled');
+  assert.equal(await code(createReservation(store, fresh(), ctx())), null);
+
+  const { rec: r2 } = await createReservation(store, fresh({ phone: '010-7777-2222', date: OPEN_DAY_2 }), ctx());
+  await confirmReservation(store, r2.id, NOW);
+  const g2 = await findForUser(store, r2.id, '010-7777-2222', c);
+  assert.equal((await userCancel(store, g2, '사정이 생김', NOW)).mode, 'requested');
+  const g3 = await findForUser(store, r2.id, '010-7777-2222', c);
+  assert.equal(userView(g3, NOW).status, 'confirmed');
+  assert.equal(userView(g3, NOW).cancelRequested, true);
+  await dismissCancelRequest(store, r2.id, NOW);
+  assert.equal(userView(await findForUser(store, r2.id, '010-7777-2222', c), NOW).cancelRequested, false);
+});

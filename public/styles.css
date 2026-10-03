@@ -109,9 +109,11 @@ main { flex: 1; padding: 0 20px 24px; }
 
 /* 선택 카드(공간) */
 .options { display: grid; gap: 12px; }
+.opt-card { background: var(--surface); border: 2px solid transparent; border-radius: var(--r-lg); box-shadow: var(--shadow); overflow: hidden; }
+.opt-card:has(.opt[aria-pressed=true]) { background: var(--select-soft); border-color: var(--tertiary); }
 .opt {
-  position: relative; text-align: left; border: 2px solid transparent; border-radius: var(--r-lg);
-  background: var(--surface); padding: 18px 56px 16px 18px; display: grid; gap: 2px; box-shadow: var(--shadow);
+  position: relative; text-align: left; border: 0; border-radius: 0; background: transparent; width: 100%;
+  padding: 18px 56px 16px 18px; display: grid; gap: 2px;
 }
 .opt b { font-size: 1.15rem; }
 .opt .meta { color: var(--secondary); font-size: .9rem; }
@@ -122,13 +124,12 @@ main { flex: 1; padding: 0 20px 24px; }
   content: ""; position: absolute; top: 18px; right: 18px; width: 26px; height: 26px; border-radius: 50%;
   border: 2px solid var(--line); background: var(--surface);
 }
-.opt[aria-pressed=true] { background: var(--select-soft); border-color: var(--tertiary); }
 .opt[aria-pressed=true]::after {
   border-color: var(--tertiary); background: var(--tertiary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3.2 3.2L15 6.8' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/18px no-repeat;
 }
-.opt.all { grid-template-columns: 1fr auto; align-items: center; background: var(--sand); box-shadow: none; }
+.opt.all { grid-template-columns: 1fr auto; align-items: center; background: var(--sand); box-shadow: none; border: 2px solid transparent; border-radius: var(--r-lg); }
 .opt.all .price { margin: 0; text-align: right; font-size: 1.1rem; }
-.opt.all[aria-pressed=true] { background: var(--select-soft); }
+.opt.all[aria-pressed=true] { background: var(--select-soft); border-color: var(--tertiary); }
 
 /* 시간 */
 .time-label { font-weight: 700; margin-bottom: 8px; }
@@ -222,3 +223,31 @@ ol.todo { margin: 0; padding-left: 20px; color: var(--secondary); display: grid;
 }
 @media (min-width: 1000px) and (max-height: 760px) { .side { padding-top: 20px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
+
+/* 공간 사진 */
+.photos { position: relative; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; background: var(--sand); }
+.photos::-webkit-scrollbar { display: none; }
+.photos img { flex: 0 0 100%; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; scroll-snap-align: center; cursor: zoom-in; display: block; }
+.pcount { position: absolute; right: 10px; bottom: 10px; background: rgba(36, 48, 42, .78); color: #fff; font-size: .8rem; font-weight: 600; padding: 2px 10px; border-radius: var(--r-full); pointer-events: none; }
+dialog#lightbox { border: 0; padding: 0; background: transparent; max-width: 100vw; max-height: 100vh; width: 100%; height: 100%; }
+dialog#lightbox::backdrop { background: rgba(20, 28, 23, .9); }
+.lb { position: relative; width: 100%; height: 100%; display: grid; place-items: center; padding: 56px 16px 48px; }
+.lb img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: var(--r-md); }
+.lb-x, .lb-n { position: absolute; border: 0; background: rgba(255, 255, 255, .16); color: #fff; width: 48px; height: 48px; border-radius: 50%; font-size: 1.8rem; line-height: 1; }
+.lb-x { top: 12px; right: 12px; }
+.lb-n { top: 50%; transform: translateY(-50%); }
+.lb-n.prev { left: 12px; } .lb-n.next { right: 12px; }
+.lb-c { position: absolute; bottom: 14px; left: 0; right: 0; text-align: center; color: #fff; font-size: .9rem; }
+
+/* 내 예약 확인 */
+.myres { margin-left: auto; margin-right: 8px; border: 1.5px solid var(--line); background: var(--surface); border-radius: var(--r-full); padding: 0 14px; min-height: 40px; font-weight: 600; font-size: .9rem; color: var(--tertiary-deep); }
+.myres[hidden] { display: none; }
+.status-pill { display: inline-block; border-radius: var(--r-full); padding: 2px 14px; font-weight: 700; font-size: .9rem; margin-bottom: 12px; background: var(--sand); }
+.status-pill.pending { background: var(--amber-soft); color: var(--on-amber-soft); }
+.status-pill.confirmed { background: var(--select-soft); color: var(--tertiary-deep); }
+.notice-line { margin-top: 14px; color: var(--secondary); font-size: .95rem; }
+.notice-line.ok { color: var(--success); font-weight: 600; }
+.btnrow { display: grid; gap: 8px; margin-top: 12px; }
+.card .btn.ghost, .card .btn.danger { margin-top: 14px; }
+.btn.danger { background: var(--danger); }
+.btn.danger:hover:not(:disabled) { background: #8f1d17; }
