@@ -32,5 +32,6 @@ export default function handler(req, res) {
     contact: process.env.CONTACT_PHONE || null,
     photos: photos(),
     naverMapClientId: process.env.NAVER_MAP_CLIENT_ID || null,
+    kakaoMapKey: process.env.KAKAO_MAP_KEY || null,
   });
 }

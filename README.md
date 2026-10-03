@@ -36,6 +36,7 @@ node --test
 | `BANK_HOLDER` | 예금주 |
 | `CONTACT_PHONE` | 문의 전화번호 |
 | `NAVER_MAP_CLIENT_ID` | (선택) 예약 화면 안에 네이버 지도를 표시할 때. 없으면 네이버 지도로 가는 버튼만 보입니다 |
+| `KAKAO_MAP_KEY` | (선택) 카카오 JavaScript 키. 예약 화면 안에 카카오 지도 탭이 생깁니다 |
 | `NOTIFY_WEBHOOK_URL` | (선택) 새 예약 알림을 받을 슬랙, 디스코드 웹훅 주소 |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | (선택) 텔레그램으로 알림을 받을 때 |
 

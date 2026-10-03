@@ -29,3 +29,5 @@ services:
         sync: false
       - key: NAVER_MAP_CLIENT_ID
         sync: false
+      - key: KAKAO_MAP_KEY
+        sync: false

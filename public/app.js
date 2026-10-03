@@ -33,6 +33,7 @@ const state = {
   done: null,
   photos: {},
   mapKey: null,
+  kakaoKey: null,
   openPhotos: new Set(),
   lk: { id: '', phone: '', rec: null, err: '', msg: '', busy: false, cancelOpen: false, reason: '' },
 };
@@ -71,6 +72,7 @@ async function loadInfo() {
     state.info = { bank: j.bank, contact: j.contact, storeReady: j.storeReady };
     state.photos = j.photos || {};
     state.mapKey = j.naverMapClientId || null;
+    state.kakaoKey = j.kakaoMapKey || null;
   } catch { /* 계좌 정보 없이도 화면은 열립니다 */ }
   $('#storeNotice').hidden = state.info.storeReady;
 }
@@ -678,50 +680,95 @@ function reset() {
 const mapQuery = () => encodeURIComponent(C.address.replace(/\s*\d+층$/, ''));
 const naverUrl = () => `https://map.naver.com/p/search/${mapQuery()}`;
 
+const MAP_LABEL = { naver: '네이버', kakao: '카카오', google: '구글' };
+const mapInited = {};
+
+function mapChoices() {
+  const list = [];
+  if (state.mapKey) list.push('naver');
+  if (state.kakaoKey) list.push('kakao');
+  list.push('google');
+  return list;
+}
+
 function buildWhere() {
+  const choices = mapChoices();
+  const first = choices[0];
+  const panes = choices.map((m) => m === 'google'
+    ? `<iframe class="map-pane" data-map="google" title="센터 위치 지도(구글)" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=${mapQuery()}&hl=ko&z=17&output=embed" ${m === first ? '' : 'hidden'}></iframe>`
+    : `<div class="map-pane" data-map="${m}" role="img" aria-label="${MAP_LABEL[m]} 지도" ${m === first ? '' : 'hidden'}></div>`).join('');
   $('#where').innerHTML = `<div class="card where-card">
     <h2>오시는 길</h2>
     <p class="addr">${esc(C.address)}</p>
     <p class="hint">${esc(C.access)}</p>
-    ${state.mapKey
-      ? '<div class="naver-map" id="naverMap" role="img" aria-label="네이버 지도"></div>'
-      : `<iframe class="naver-map" title="센터 위치 지도" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=${mapQuery()}&hl=ko&z=17&output=embed"></iframe>`}
+    ${choices.length > 1 ? `<div class="map-tabs" role="tablist" aria-label="지도 선택">${choices.map((m) => `<button type="button" role="tab" data-maptab="${m}" aria-selected="${m === first}">${MAP_LABEL[m]} 지도</button>`).join('')}</div>` : ''}
+    ${panes}
     <div class="where-actions">
-      <a class="btn small" href="${naverUrl()}" target="_blank" rel="noopener">네이버 지도에서 보기</a>
-      <a class="btn small ghost" href="https://map.kakao.com/?q=${mapQuery()}" target="_blank" rel="noopener">카카오맵</a>
+      <a class="btn small" href="${naverUrl()}" target="_blank" rel="noopener">네이버 지도에서 열기</a>
+      <a class="btn small ghost" href="https://map.kakao.com/?q=${mapQuery()}" target="_blank" rel="noopener">카카오맵에서 열기</a>
       <button type="button" class="copy" data-copy="${esc(C.address)}">주소 복사</button>
     </div>
-    <p class="hint">네이버 지도에서 길찾기, 대중교통, 주차 정보를 확인할 수 있습니다.</p>
+    <p class="hint">길찾기, 대중교통, 주차 정보는 네이버 지도나 카카오맵에서 확인할 수 있습니다.</p>
   </div>`;
-  if (state.mapKey) initNaverMap();
+  showMap(first);
 }
 
-function loadNaverScript(key) {
+function showMap(m) {
+  for (const el of document.querySelectorAll('#where [data-map]')) el.hidden = el.dataset.map !== m;
+  for (const b of document.querySelectorAll('#where [data-maptab]')) b.setAttribute('aria-selected', String(b.dataset.maptab === m));
+  if (mapInited[m]) return;
+  mapInited[m] = true;
+  if (m === 'naver') initNaverMap();
+  else if (m === 'kakao') initKakaoMap();
+}
+
+function loadScript(src) {
   return new Promise((resolve, reject) => {
-    if (window.naver?.maps) return resolve();
     const s = document.createElement('script');
-    s.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${encodeURIComponent(key)}&submodules=geocoder`;
-    s.onload = resolve;
-    s.onerror = reject;
+    s.src = src; s.onload = resolve; s.onerror = reject;
     document.head.append(s);
   });
 }
+function mapFail(m) {
+  const el = $(`#where [data-map="${m}"]`);
+  if (el) el.replaceWith(Object.assign(document.createElement('p'), { className: 'hint', textContent: `${MAP_LABEL[m]} 지도를 불러오지 못했습니다. 아래 버튼으로 지도 앱을 여세요.` }));
+}
 
 async function initNaverMap() {
-  const el = $('#naverMap');
-  const fail = () => el?.replaceWith(Object.assign(document.createElement('p'), { className: 'hint', textContent: '지도를 불러오지 못했습니다. 아래 버튼으로 네이버 지도를 여세요.' }));
+  const el = $('#where [data-map="naver"]');
   try {
-    await loadNaverScript(state.mapKey);
-    window.naver.maps.Service.geocode({ query: C.address }, (status, resp) => {
+    if (!window.naver?.maps) await loadScript(`https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${encodeURIComponent(state.mapKey)}&submodules=geocoder`);
+    window.naver.maps.Service.geocode({ query: C.address.replace(/\s*\d+층$/, '') }, (status, resp) => {
       const a = resp?.v2?.addresses?.[0];
-      if (status !== window.naver.maps.Service.Status.OK || !a) return fail();
+      if (status !== window.naver.maps.Service.Status.OK || !a) return mapFail('naver');
       const pos = new window.naver.maps.LatLng(Number(a.y), Number(a.x));
       const map = new window.naver.maps.Map(el, { center: pos, zoom: 16, zoomControl: true, zoomControlOptions: { position: window.naver.maps.Position.TOP_RIGHT } });
       new window.naver.maps.Marker({ position: pos, map });
     });
-  } catch { fail(); }
+  } catch { mapFail('naver'); }
 }
-$('#where').addEventListener('click', (e) => { const c = e.target.closest('[data-copy]'); if (c) copyText(c); });
+
+async function initKakaoMap() {
+  const el = $('#where [data-map="kakao"]');
+  try {
+    if (!window.kakao?.maps) await loadScript(`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(state.kakaoKey)}&libraries=services&autoload=false`);
+    window.kakao.maps.load(() => {
+      new window.kakao.maps.services.Geocoder().addressSearch(C.address.replace(/\s*\d+층$/, ''), (result, status) => {
+        if (status !== window.kakao.maps.services.Status.OK || !result[0]) return mapFail('kakao');
+        const pos = new window.kakao.maps.LatLng(Number(result[0].y), Number(result[0].x));
+        const map = new window.kakao.maps.Map(el, { center: pos, level: 3 });
+        new window.kakao.maps.Marker({ position: pos, map });
+        map.addControl(new window.kakao.maps.ZoomControl(), window.kakao.maps.ControlPosition.RIGHT);
+      });
+    });
+  } catch { mapFail('kakao'); }
+}
+$('#where').addEventListener('click', (e) => {
+  const t = e.target.closest('[data-maptab]');
+  if (t) return showMap(t.dataset.maptab);
+  const c = e.target.closest('[data-copy]');
+  if (c) copyText(c);
+});
 
 /* ---------- 시작 ---------- */
 (async function init() {
