@@ -8,7 +8,7 @@ import { todayKst, addDays, kstEpoch, dowOf } from '../public/shared/time.mjs';
 
 const NOW = kstEpoch('2026-10-05', 12); // 월요일 12:00 KST
 const day = (n) => addDays('2026-10-05', n);
-// 화(2), 수(3)는 막혀 있으므로 월/목/금/토/일 중에서 고릅니다.
+// 일(0), 수(3)는 휴무이므로 월/화/목/금/토 중에서 고릅니다.
 const OPEN_DAY = day(3);   // 목요일
 const OPEN_DAY_2 = day(4); // 금요일
 
@@ -97,7 +97,7 @@ test('만료된 예약도 자리가 비어 있으면 다시 확정할 수 있다
 
 test('검증: 막힌 요일, 24시간 규칙, 90일, 입력값', async () => {
   const store = createMemoryStore();
-  assert.equal(await code(createReservation(store, fresh({ date: day(8) }), ctx())), 'BLOCKED'); // 다음 주 화
+  assert.equal(await code(createReservation(store, fresh({ date: day(13) }), ctx())), 'BLOCKED'); // 일요일
   assert.equal(await code(createReservation(store, fresh({ date: day(9) }), ctx())), 'BLOCKED'); // 다음 주 수
   assert.equal(await code(createReservation(store, fresh({ date: day(0), start: 15, end: 18 }), ctx())), 'LEAD');
   assert.equal(await code(createReservation(store, fresh({ date: day(100) }), ctx())), 'HORIZON');

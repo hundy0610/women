@@ -171,7 +171,7 @@ function viewDate() {
   for (let d = 1; d <= daysInMonth; d++) {
     const date = ymd(y, m, d);
     const st = dayStatus(date);
-    const small = st === 'blocked' ? '불가' : st === 'full' ? '마감' : '';
+    const small = st === 'blocked' ? '휴무' : st === 'full' ? '마감' : '';
     const cls = ['day', st === 'blocked' ? 'blocked' : '', date === today ? 'today' : '', date === state.date ? 'sel' : ''].join(' ').trim();
     const dot = state.taken[date] && !small ? '<span class="dot"></span>' : '';
     cells += `<button type="button" class="${cls}" data-date="${date}" ${st === 'out' ? 'disabled' : ''} aria-pressed="${date === state.date}" aria-label="${formatKoreanDate(date)}${small ? ' ' + small : ''}">${d}${small ? `<small>${small}</small>` : ''}${dot}</button>`;
@@ -187,7 +187,7 @@ function viewDate() {
         </div>
         <div class="cal">${cells}</div>
       </div>
-      <div class="legend"><span><i class="l-sel"></i>오늘</span><span><i class="l-pending"></i>점은 예약이 있는 날</span><span><i class="l-blocked"></i>이용 불가</span></div>
+      <div class="legend"><span><i class="l-sel"></i>오늘</span><span><i class="l-pending"></i>점은 예약이 있는 날</span><span><i class="l-blocked"></i>휴무</span></div>
     </div>`;
 }
 
@@ -227,8 +227,8 @@ function statusTable(all = false) {
     for (const h of HOURS) {
       const st = slotState(date, sp.id, h);
       const mine = picked.has(sp.id) && state.start != null && state.end != null && h >= state.start && h < state.end;
-      const text = { confirmed: '예약', pending: '대기', blocked: '불가', past: '마감', free: '' }[st.s];
-      const title = `${sp.name} ${h}시 ${{ confirmed: '예약 완료', pending: '입금 대기', blocked: '이용 불가', past: '예약 마감', free: '예약 가능' }[st.s]}`;
+      const text = { confirmed: '예약', pending: '대기', blocked: '휴무', past: '마감', free: '' }[st.s];
+      const title = `${sp.name} ${h}시 ${{ confirmed: '예약 완료', pending: '입금 대기', blocked: '휴무', past: '예약 마감', free: '예약 가능' }[st.s]}`;
       html += `<td class="${st.s}${mine && st.s === 'free' ? ' sel' : ''}" title="${title}">${mine && st.s === 'free' ? '선택' : text}<span class="sr-only"> ${title}</span></td>`;
     }
     html += '</tr>';
@@ -259,7 +259,7 @@ function viewTime() {
       ${endBlock}${result}
       <details class="status" open><summary>이날 예약 현황</summary>
         <div class="table-scroll"><table class="grid">${statusTable()}</table></div>
-        <div class="legend" style="margin-top:10px"><span><i></i>예약 가능</span><span><i class="l-pending"></i>입금 대기</span><span><i class="l-confirmed"></i>예약 완료</span><span><i class="l-blocked"></i>이용 불가</span></div>
+        <div class="legend" style="margin-top:10px"><span><i></i>예약 가능</span><span><i class="l-pending"></i>입금 대기</span><span><i class="l-confirmed"></i>예약 완료</span><span><i class="l-blocked"></i>휴무</span></div>
       </details>
     </div>`;
 }
@@ -490,7 +490,7 @@ function renderSide() {
   const b = state.info.bank;
   const day = state.date
     ? `<div class="card"><h2>${formatKoreanDate(state.date)} 공간별 현황</h2><div class="table-scroll" style="margin-top:10px"><table class="grid">${statusTable(true)}</table></div>
-       <div class="legend" style="margin-top:10px"><span><i></i>예약 가능</span><span><i class="l-pending"></i>입금 대기</span><span><i class="l-confirmed"></i>예약 완료</span><span><i class="l-blocked"></i>이용 불가</span></div></div>`
+       <div class="legend" style="margin-top:10px"><span><i></i>예약 가능</span><span><i class="l-pending"></i>입금 대기</span><span><i class="l-confirmed"></i>예약 완료</span><span><i class="l-blocked"></i>휴무</span></div></div>`
     : '<div class="card"><h2>공간별 현황</h2><p class="placeholder" style="margin-top:8px">날짜를 선택하면 5개 공간의 시간별 예약 현황이 여기에 보입니다.</p></div>';
   $('#side').innerHTML = `
     <div class="card"><h2>내 예약</h2>

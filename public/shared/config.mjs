@@ -31,8 +31,8 @@ export const CONFIG = {
 
   // 예약을 받지 않는 날. weekday: 0=일 ... 6=토. spaces, from, to를 쓰면 일부 공간·시간만 막습니다.
   blockedRules: [
-    { weekday: 2, label: '전시 해설' },
-    { weekday: 3, label: '전체 대관' },
+    { weekday: 0, label: '휴무' },
+    { weekday: 3, label: '휴무' },
   ],
   // 특정 날짜 휴관. 예: { date: '2026-12-25', label: '휴관' }
   blockedDates: [],
