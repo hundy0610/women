@@ -683,9 +683,12 @@ function buildWhere() {
     <h2>오시는 길</h2>
     <p class="addr">${esc(C.address)}</p>
     <p class="hint">${esc(C.access)}</p>
-    ${state.mapKey ? '<div class="naver-map" id="naverMap" role="img" aria-label="네이버 지도"></div>' : ''}
+    ${state.mapKey
+      ? '<div class="naver-map" id="naverMap" role="img" aria-label="네이버 지도"></div>'
+      : `<iframe class="naver-map" title="센터 위치 지도" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=${mapQuery()}&hl=ko&z=17&output=embed"></iframe>`}
     <div class="where-actions">
       <a class="btn small" href="${naverUrl()}" target="_blank" rel="noopener">네이버 지도에서 보기</a>
+      <a class="btn small ghost" href="https://map.kakao.com/?q=${mapQuery()}" target="_blank" rel="noopener">카카오맵</a>
       <button type="button" class="copy" data-copy="${esc(C.address)}">주소 복사</button>
     </div>
     <p class="hint">네이버 지도에서 길찾기, 대중교통, 주차 정보를 확인할 수 있습니다.</p>

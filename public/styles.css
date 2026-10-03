@@ -268,3 +268,6 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 @media (min-width: 1000px) { .where { padding-left: 0; padding-right: 0; } }
 
 .step h1:focus { outline: none; }
+
+iframe.naver-map { width: 100%; border: 0; }
+.where-actions .btn.ghost { margin: 0; }
