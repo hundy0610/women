@@ -150,3 +150,38 @@ test('Upstash REST 어댑터로도 같은 결과', async () => {
     assert.equal((await publicAvailability(store, OPEN_DAY, OPEN_DAY, NOW)).length, 2);
   } finally { server.close(); }
 });
+
+test('이력: 생성, 확정, 취소, 메모가 순서대로 남는다', async () => {
+  const { listLog } = await import('../lib/history.js');
+  const { setMemo } = await import('../lib/booking.js');
+  const store = createMemoryStore();
+  const { rec } = await createReservation(store, fresh(), ctx());
+  await confirmReservation(store, rec.id, NOW + 1000, '입금 확인');
+  await setMemo(store, rec.id, '전화 문의 있음', NOW + 2000);
+  await cancelReservation(store, rec.id, NOW + 3000, '본인 요청');
+  const log = await listLog(store);
+  assert.deepEqual(log.map((e) => e.action), ['canceled', 'memo', 'confirmed', 'created']);
+  assert.equal(log[3].rec.name, '홍길동');
+  assert.equal(log[2].note, '입금 확인');
+});
+
+test('관리자 직접 등록은 24시간 규칙과 횟수 제한을 건너뛰고, 중복은 막는다', async () => {
+  const store = createMemoryStore();
+  const mk = (o) => base({ date: day(0), start: 15, end: 18, agree: undefined, confirmed: true, ...o });
+  const { rec } = await createReservation(store, mk({}), { nowMs: NOW, admin: true });
+  assert.equal(rec.status, 'confirmed');
+  assert.equal(rec.source, 'admin');
+  assert.equal(await code(createReservation(store, mk({}), { nowMs: NOW, admin: true })), 'CONFLICT');
+});
+
+test('관리자 비밀번호: 초기값은 환경변수, 변경하면 저장소 값이 우선', async () => {
+  const { checkPassword, changePassword } = await import('../lib/adminpw.js');
+  const store = createMemoryStore();
+  process.env.ADMIN_PASSWORD = 'init-pass';
+  assert.equal(await checkPassword(store, 'init-pass'), true);
+  assert.equal(await checkPassword(store, 'nope'), false);
+  assert.equal(await code(changePassword(store, 'short')), 'PW_SHORT');
+  await changePassword(store, 'new-password-1');
+  assert.equal(await checkPassword(store, 'new-password-1'), true);
+  assert.equal(await checkPassword(store, 'init-pass'), false);
+});

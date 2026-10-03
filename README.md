@@ -30,7 +30,7 @@ node --test
 
 | 이름 | 내용 |
 | --- | --- |
-| `ADMIN_PASSWORD` | 관리 페이지 비밀번호 |
+| `ADMIN_PASSWORD` | 관리 페이지 초기 비밀번호. 관리 페이지 설정 탭에서 바꾸면 저장소 값이 우선합니다 |
 | `BANK_NAME` | 은행 이름 |
 | `BANK_NUMBER` | 계좌번호 |
 | `BANK_HOLDER` | 예금주 |

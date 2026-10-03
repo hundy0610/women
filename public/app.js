@@ -200,15 +200,16 @@ function viewSpace() {
       </button></div></div>`;
 }
 
-function statusTable() {
+function statusTable(all = false) {
   const date = state.date;
-  const sel = new Set(state.spaceIds);
+  const sel = new Set(all ? C.spaces.map((s) => s.id) : state.spaceIds);
+  const picked = new Set(state.spaceIds);
   let html = `<thead><tr><th scope="col"><span class="sr-only">공간</span></th>${HOURS.map((h) => `<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>`;
   for (const sp of C.spaces.filter((s) => sel.has(s.id))) {
     html += `<tr><th scope="row">${sp.name}</th>`;
     for (const h of HOURS) {
       const st = slotState(date, sp.id, h);
-      const mine = state.start != null && state.end != null && h >= state.start && h < state.end;
+      const mine = picked.has(sp.id) && state.start != null && state.end != null && h >= state.start && h < state.end;
       const text = { confirmed: '예약', pending: '대기', blocked: '불가', past: '마감', free: '' }[st.s];
       const title = `${sp.name} ${h}시 ${{ confirmed: '예약 완료', pending: '입금 대기', blocked: '이용 불가', past: '예약 마감', free: '예약 가능' }[st.s]}`;
       html += `<td class="${st.s}${mine && st.s === 'free' ? ' sel' : ''}" title="${title}">${mine && st.s === 'free' ? '선택' : text}<span class="sr-only"> ${title}</span></td>`;
@@ -361,8 +362,42 @@ function chrome() {
   $('#ctaHint').textContent = state.error || (st === 7 ? '' : problem);
   $('#ctaHint').style.color = state.error ? 'var(--danger)' : '';
 
+  renderSide();
   $('#foot').innerHTML = [`${esc(C.address)} · ${esc(C.access)}`, state.info.contact ? `문의 ${esc(state.info.contact)}` : ''].filter(Boolean).map((t) => `<span>${t}</span>`).join('');
   renderLast();
+}
+
+function renderSide() {
+  const q = currentQuote();
+  const dash = '<span class="placeholder">선택 전</span>';
+  const t = state.start != null && state.end != null ? `${hh(state.start)}~${hh(state.end)} (${state.end - state.start}시간)` : dash;
+  let calc = '';
+  if (q) {
+    for (const l of q.lines) calc += `<div class="row"><span>${l.name}</span><span>${won(l.cost)}</span></div>`;
+    if (q.packageDiscount > 0) calc += `<div class="row minus"><span>전체 통대관 할인</span><span>-${won(q.packageDiscount)}</span></div>`;
+    if (q.extraPeople > 0) calc += `<div class="row"><span>인원 초과 ${q.extraPeople}명</span><span>${won(q.overageFee)}</span></div>`;
+  }
+  const b = state.info.bank;
+  const day = state.date
+    ? `<div class="card"><h2>${formatKoreanDate(state.date)} 공간별 현황</h2><div class="table-scroll" style="margin-top:10px"><table class="grid">${statusTable(true)}</table></div>
+       <div class="legend" style="margin-top:10px"><span><i></i>예약 가능</span><span><i class="l-pending"></i>입금 대기</span><span><i class="l-confirmed"></i>예약 완료</span><span><i class="l-blocked"></i>이용 불가</span></div></div>`
+    : '<div class="card"><h2>공간별 현황</h2><p class="placeholder" style="margin-top:8px">날짜를 선택하면 5개 공간의 시간별 예약 현황이 여기에 보입니다.</p></div>';
+  $('#side').innerHTML = `
+    <div class="card"><h2>내 예약</h2>
+      <div class="sum-rows" style="margin-top:12px">
+        <div class="row"><span>날짜</span><span>${state.date ? formatKoreanDate(state.date) : dash}</span></div>
+        <div class="row"><span>공간</span><span>${state.spaceIds.length ? esc(spaceNames(state.spaceIds)) : dash}</span></div>
+        <div class="row"><span>시간</span><span>${t}</span></div>
+        <div class="row"><span>인원</span><span>${state.step >= 4 ? `${state.people}명` : dash}</span></div>
+        ${calc}
+      </div>
+      <div class="total-row"><span class="label">예상 요금</span><span class="price-lg num">${q ? won(q.total) : '0원'}</span></div>
+    </div>
+    ${day}
+    <div class="card"><h2>입금 안내</h2>
+      <p style="margin-top:8px">예약 후 ${C.holdHours}시간 안에 입금하세요.</p>
+      ${b ? `<p class="num" style="font-weight:800;margin-top:6px">${esc(b.name)} ${esc(b.number)}</p><p class="hint">예금주 ${esc(b.holder)}</p>` : '<p class="hint">계좌 정보는 예약을 마치면 안내됩니다.</p>'}
+    </div>`;
 }
 
 function go(step, push = true) {

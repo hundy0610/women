@@ -42,7 +42,9 @@ button { cursor: pointer; }
 .hint { color: var(--secondary); font-size: .9rem; }
 
 /* 틀 */
-.app { max-width: 520px; margin: 0 auto; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+.app { max-width: 520px; margin: 0 auto; min-height: 100vh; min-height: 100dvh; }
+.col { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; min-width: 0; }
+.side { display: none; }
 .top { padding: 12px 8px 0; position: sticky; top: 0; z-index: 10; background: var(--neutral); }
 .top-row { display: flex; align-items: center; gap: 4px; height: 48px; }
 .back { width: 48px; height: 48px; border: 0; background: transparent; border-radius: var(--r-md); font-size: 1.6rem; line-height: 1; color: var(--primary); }
@@ -194,6 +196,27 @@ ol.todo { margin: 0; padding-left: 20px; color: var(--secondary); display: grid;
 .foot { padding: 4px 20px 16px; color: var(--muted); font-size: .85rem; display: grid; gap: 2px; }
 
 @media (min-width: 560px) {
-  .app { margin-top: 24px; min-height: calc(100dvh - 48px); }
+  .app { margin-top: 24px; }
+  .col { min-height: calc(100dvh - 48px); }
 }
+
+/* 데스크톱: 왼쪽은 단계 화면, 오른쪽은 내 예약 요약과 공간별 현황 */
+@media (min-width: 1000px) {
+  .app { max-width: 1120px; display: grid; grid-template-columns: minmax(0, 540px) minmax(0, 1fr); gap: 56px; align-items: start; padding: 0 32px; margin-top: 32px; }
+  .side { display: grid; gap: 16px; position: sticky; top: 32px; padding-top: 76px; max-height: 100vh; overflow-y: auto; padding-bottom: 32px; }
+  .side h2 { font-size: 1.05rem; font-weight: 700; color: var(--secondary); }
+  .side .card { padding: 22px; }
+  .side .placeholder { color: var(--muted); font-size: .95rem; }
+  .side .sum-rows .row span:last-child { text-align: right; }
+  .side table.grid { min-width: 0; }
+  .side .table-scroll { overflow: visible; }
+  details.status { display: none; }
+  .top { position: static; padding-left: 0; padding-right: 0; }
+  .dock { padding-left: 0; padding-right: 0; }
+  .foot { padding-left: 0; }
+  main { padding-left: 0; padding-right: 0; }
+  .notice { margin-left: 0; margin-right: 0; }
+  .progress { margin-left: 4px; margin-right: 4px; }
+}
+@media (min-width: 1000px) and (max-height: 760px) { .side { padding-top: 20px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
