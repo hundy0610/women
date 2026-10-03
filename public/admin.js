@@ -143,7 +143,7 @@ $('#tabs').addEventListener('click', (e) => {
   const b = e.target.closest('[data-t]');
   if (!b) return;
   for (const x of document.querySelectorAll('#tabs button')) x.setAttribute('aria-pressed', String(x === b));
-  for (const t of ['list', 'log', 'new', 'set']) $(`#tab-${t}`).hidden = t !== b.dataset.t;
+  for (const t of ['list', 'log', 'new', 'qr', 'set']) $(`#tab-${t}`).hidden = t !== b.dataset.t;
   if (b.dataset.t === 'list' || b.dataset.t === 'log') refresh();
 });
 
@@ -212,6 +212,55 @@ $('#newForm').addEventListener('submit', async (e) => {
     await load();
   } catch (err) { $('#n-err').textContent = err.message; }
 });
+
+/* ---------- QR 코드 ---------- */
+function qrSvg(url) {
+  const qr = window.qrcode(0, 'M');
+  qr.addData(url);
+  qr.make();
+  const n = qr.getModuleCount();
+  const quiet = 4;
+  let d = '';
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) d += `M${c + quiet} ${r + quiet}h1v1h-1z`;
+  const size = n + quiet * 2;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" role="img" aria-label="QR 코드"><rect width="${size}" height="${size}" fill="#fff"/><path d="${d}" fill="#24302A"/></svg>`;
+}
+function renderQr() {
+  const url = $('#qr-url').value.trim();
+  const card = $('#qr-card');
+  if (!/^https?:\/\/\S+$/i.test(url)) { card.innerHTML = '<p class="hint">http:// 또는 https://로 시작하는 주소를 입력하세요.</p>'; return null; }
+  try {
+    const svg = qrSvg(url);
+    const cap = $('#qr-title').value.trim();
+    card.innerHTML = `${svg}${cap ? `<div class="cap">${esc(cap)}</div>` : ''}<div class="u">${esc(url)}</div>`;
+    return svg;
+  } catch { card.innerHTML = '<p class="err">주소가 너무 길어 QR 코드로 만들 수 없습니다.</p>'; return null; }
+}
+function download(name, href) { const a = document.createElement('a'); a.href = href; a.download = name; a.click(); }
+$('#qr-url').value = location.origin + '/';
+$('#qr-url').addEventListener('input', renderQr);
+$('#qr-title').addEventListener('input', renderQr);
+$('#qr-svg').addEventListener('click', () => { const s = renderQr(); if (s) download('reservation-qr.svg', 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s)); });
+$('#qr-png').addEventListener('click', () => {
+  const s = renderQr();
+  if (!s) return;
+  const img = new Image();
+  img.onload = () => {
+    const px = 1024;
+    const cap = $('#qr-title').value.trim();
+    const cv = document.createElement('canvas');
+    cv.width = px; cv.height = px + (cap ? 120 : 0);
+    const g = cv.getContext('2d');
+    g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height);
+    g.imageSmoothingEnabled = false;
+    g.drawImage(img, 0, 0, px, px);
+    if (cap) { g.fillStyle = '#24302A'; g.font = '700 48px "Pretendard Variable", sans-serif'; g.textAlign = 'center'; g.fillText(cap, px / 2, px + 70); }
+    download('reservation-qr.png', cv.toDataURL('image/png'));
+  };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
+});
+$('#qr-print').addEventListener('click', () => { if (renderQr()) window.print(); });
+renderQr();
 
 /* ---------- 설정 ---------- */
 $('#pwForm').addEventListener('submit', async (e) => {

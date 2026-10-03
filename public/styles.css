@@ -49,7 +49,10 @@ button { cursor: pointer; }
 .top-row { display: flex; align-items: center; gap: 4px; height: 48px; }
 .back { width: 48px; height: 48px; border: 0; background: transparent; border-radius: var(--r-md); font-size: 1.6rem; line-height: 1; color: var(--primary); }
 .back[hidden] { display: block !important; visibility: hidden; }
-.brand { font-weight: 700; font-size: .95rem; color: var(--secondary); }
+.logo { width: 32px; height: 32px; margin-left: 4px; flex: none; }
+.back[hidden] + .logo { margin-left: 0; }
+.brand { font-weight: 800; font-size: 1.05rem; color: var(--primary); letter-spacing: -.01em; margin-left: 4px; }
+.brand small { font-weight: 600; font-size: .85rem; color: var(--secondary); margin-left: 4px; }
 .progress { height: 4px; background: var(--sand); border-radius: var(--r-full); margin: 4px 12px 0; overflow: hidden; }
 .progress i { display: block; height: 100%; width: 0; background: var(--tertiary); border-radius: var(--r-full); transition: width .3s ease; }
 

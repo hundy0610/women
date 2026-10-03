@@ -6,6 +6,7 @@
   <meta name="robots" content="noindex, nofollow">
   <meta name="theme-color" content="#F7F4EC">
   <title>예약 관리</title>
+  <link rel="icon" type="image/svg+xml" href="/logo.svg">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/admin.css">
@@ -13,6 +14,7 @@
 <body class="adm">
   <section class="login" id="loginView">
     <form class="card" id="login">
+      <img src="/logo.svg" alt="" width="48" height="48">
       <h1>예약 관리</h1>
       <p class="hint">관리자 비밀번호를 입력하세요.</p>
       <div class="field"><label for="pw">비밀번호</label><input id="pw" type="password" autocomplete="current-password" required></div>
@@ -24,11 +26,12 @@
   <div id="appView" hidden>
     <header class="a-top">
       <div class="a-wrap">
-        <strong>예약 관리</strong>
+        <strong class="a-brand"><img src="/logo.svg" alt="" width="28" height="28">예약 관리</strong>
         <nav class="a-tabs" id="tabs" aria-label="메뉴">
           <button data-t="list" aria-pressed="true">예약 목록</button>
           <button data-t="log" aria-pressed="false">이력</button>
           <button data-t="new" aria-pressed="false">직접 등록</button>
+          <button data-t="qr" aria-pressed="false">QR 코드</button>
           <button data-t="set" aria-pressed="false">설정</button>
         </nav>
         <button class="a-btn" id="logout">나가기</button>
@@ -78,6 +81,24 @@
         </form>
       </section>
 
+      <section id="tab-qr" hidden>
+        <h2>QR 코드</h2>
+        <p class="hint">휴대폰 카메라로 찍으면 해당 주소가 열립니다. 센터 입구나 안내문에 붙여 두면 바로 예약 화면으로 들어옵니다.</p>
+        <div class="qr-grid">
+          <div class="card form">
+            <div class="field"><label for="qr-url">주소</label><input id="qr-url" type="url" inputmode="url" placeholder="https://"></div>
+            <div class="field"><label for="qr-title">QR 아래에 넣을 문구 (선택)</label><input id="qr-title" maxlength="40" value="여성문화센터 대관 예약"></div>
+            <div class="acts">
+              <button type="button" class="pri" id="qr-png">PNG 내려받기</button>
+              <button type="button" id="qr-svg">SVG 내려받기</button>
+              <button type="button" id="qr-print">인쇄</button>
+            </div>
+            <p class="hint">PNG는 카톡이나 문서에 넣을 때, SVG는 현수막이나 인쇄물처럼 크게 뽑을 때 씁니다. 인쇄 전에 휴대폰으로 한 번 찍어 보세요.</p>
+          </div>
+          <div class="qr-card" id="qr-card" aria-live="polite"></div>
+        </div>
+      </section>
+
       <section id="tab-set" hidden>
         <h2>설정</h2>
         <form class="card form" id="pwForm">
@@ -96,6 +117,7 @@
       </section>
     </main>
   </div>
+  <script src="/vendor/qrcode.js"></script>
   <script type="module" src="/admin.js"></script>
 </body>
 </html>
