@@ -4,125 +4,37 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <meta name="theme-color" content="#FAF6EF">
+  <meta name="theme-color" content="#F7F4EC">
   <title>여성문화센터 대관 예약</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23B4461F'/%3E%3Cpath d='M9 24V15a7 7 0 0114 0v9' fill='none' stroke='%23FBEBCF' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='19' r='1.6' fill='%23E6A23C'/%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%234F6F52'/%3E%3Cpath d='M9 24V15a7 7 0 0114 0v9' fill='none' stroke='%23F7F4EC' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='19' r='1.6' fill='%23F2C9A0'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&display=swap">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <header class="top">
-    <div class="wrap">
-      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#B4461F"/><path d="M9 24V15a7 7 0 0114 0v9" fill="none" stroke="#FBEBCF" stroke-width="2.4" stroke-linecap="round"/><circle cx="16" cy="19" r="1.6" fill="#E6A23C"/></svg>
-      <div>
-        <h1>여성문화센터 대관 예약</h1>
-        <p>날짜와 시간을 고르면 요금이 계산됩니다. 예약 후 안내된 계좌로 입금하면 확정됩니다.</p>
+  <div class="app">
+    <header class="top">
+      <div class="top-row">
+        <button type="button" class="back" id="back" aria-label="이전 단계" hidden>&lsaquo;</button>
+        <span class="brand">여성문화센터 대관 예약</span>
       </div>
-      <p class="where" id="where"></p>
-    </div>
-  </header>
+      <div class="progress" role="progressbar" aria-label="예약 진행" aria-valuemin="1" aria-valuemax="6" id="prog"><i id="progBar"></i></div>
+    </header>
 
-  <div class="notice error" id="storeNotice" hidden><div class="wrap">예약 저장소가 아직 설정되지 않아 예약할 수 없습니다. 관리자에게 알려 주세요.</div></div>
-  <div class="notice" id="lastNotice" hidden><div class="wrap"><span id="lastText"></span><button type="button" id="lastBtn">입금 안내 보기</button></div></div>
-  <div class="notice error" id="netNotice" hidden><div class="wrap"><span>예약 현황을 불러오지 못했습니다.</span><button type="button" id="retryBtn">다시 불러오기</button></div></div>
+    <div class="notice error" id="storeNotice" hidden>예약 저장소가 아직 설정되지 않아 예약할 수 없습니다. 관리자에게 알려 주세요.</div>
+    <div class="notice" id="lastNotice" hidden><span id="lastText"></span><button type="button" id="lastBtn">입금 안내 보기</button></div>
+    <div class="notice error" id="netNotice" hidden><span>예약 현황을 불러오지 못했습니다.</span><button type="button" id="retryBtn">다시 불러오기</button></div>
 
-  <main class="wrap layout">
-    <div class="col-main">
-      <section class="card" aria-labelledby="h-date">
-        <div class="step-head"><span class="step-no">1</span><h2 id="h-date">날짜 선택</h2></div>
-        <div class="cal-head">
-          <button type="button" class="icon-btn" id="prevM" aria-label="이전 달">&lsaquo;</button>
-          <strong id="monthLabel" class="num"></strong>
-          <button type="button" class="icon-btn" id="nextM" aria-label="다음 달">&rsaquo;</button>
-        </div>
-        <div class="cal" id="cal"></div>
-        <div class="status-wrap">
-          <h3 id="statusTitle">예약 현황</h3>
-          <p class="hint" id="statusNote"></p>
-          <div class="table-scroll"><table class="grid" id="grid"></table></div>
-          <div class="legend" aria-label="범례">
-            <span><i></i>예약 가능</span>
-            <span><i class="l-pending"></i>입금 대기</span>
-            <span><i class="l-confirmed"></i>예약 완료</span>
-            <span><i class="l-blocked"></i>이용 불가</span>
-            <span><i class="l-sel"></i>내 선택</span>
-          </div>
-        </div>
-      </section>
+    <main id="main" aria-live="polite"></main>
 
-      <section class="card" aria-labelledby="h-space">
-        <div class="step-head"><span class="step-no">2</span><h2 id="h-space">공간 선택</h2></div>
-        <div class="spaces" id="spaces"></div>
-      </section>
-
-      <section class="card" aria-labelledby="h-time">
-        <div class="step-head"><span class="step-no">3</span><h2 id="h-time">이용 시간 선택</h2></div>
-        <p class="hint" id="timeHint"></p>
-        <div id="timeBox">
-          <p class="time-label">시작 시간</p>
-          <div class="chips" id="startChips"></div>
-          <p class="time-label">종료 시간</p>
-          <div class="chips" id="endChips"></div>
-        </div>
-        <p class="time-result num" id="timeResult"></p>
-      </section>
-
-      <section class="card" aria-labelledby="h-info">
-        <div class="step-head"><span class="step-no">4</span><h2 id="h-info">예약자 정보</h2></div>
-        <form class="fields" id="form" novalidate autocomplete="on">
-          <div class="field">
-            <label for="f-name">이름</label>
-            <input id="f-name" name="name" autocomplete="name" maxlength="20" required>
-            <span class="hint">입금자명과 같은 이름을 입력하세요.</span>
-            <span class="err" id="e-name"></span>
-          </div>
-          <div class="field">
-            <label for="f-phone">휴대전화</label>
-            <input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000" maxlength="13" required>
-            <span class="err" id="e-phone"></span>
-          </div>
-          <div class="field">
-            <label for="f-people">이용 인원</label>
-            <input id="f-people" name="people" type="number" inputmode="numeric" min="1" max="500" required>
-            <span class="hint" id="peopleHint"></span>
-            <span class="err" id="e-people"></span>
-          </div>
-          <div class="field">
-            <label for="f-purpose">이용 목적 (선택)</label>
-            <input id="f-purpose" name="purpose" maxlength="100" placeholder="예: 독서 모임, 소규모 전시">
-          </div>
-          <input class="hp" type="text" name="website" id="f-website" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <label class="check"><input type="checkbox" id="f-agree"><span>아래 이용 안내를 확인했습니다. 입력한 이름과 연락처는 예약과 입금 확인에만 쓰입니다.</span></label>
-        </form>
-      </section>
+    <div class="dock" id="dock">
+      <div class="peek" id="peek" hidden></div>
+      <button type="button" class="btn" id="next" disabled>다음</button>
+      <p class="cta-hint" id="ctaHint"></p>
     </div>
 
-    <aside class="side">
-      <section class="card summary" aria-labelledby="h-sum">
-        <h2 id="h-sum">예상 요금</h2>
-        <div id="sumBody"></div>
-        <div class="total-row"><span class="label">합계</span><span class="price-lg num" id="sumTotal">0원</span></div>
-        <button type="button" class="btn" id="submitBtn" disabled>예약하고 입금 안내 보기</button>
-        <p class="cta-hint" id="ctaHint"></p>
-      </section>
-      <section class="bank" id="bankBox" aria-label="입금 계좌"></section>
-      <section class="card rules-card">
-        <h3>이용 안내</h3>
-        <ul class="rules" id="rules"></ul>
-      </section>
-    </aside>
-  </main>
-
-  <footer class="foot"><div class="wrap" id="foot"></div></footer>
-
-  <div class="mobilebar" id="mobilebar">
-    <div class="t"><small>합계</small><b id="mTotal">0원</b></div>
-    <button type="button" class="btn" id="mSubmit" disabled>예약하기</button>
+    <footer class="foot" id="foot"></footer>
   </div>
-
-  <dialog id="done" aria-labelledby="doneTitle"></dialog>
 
   <script type="module" src="/app.js"></script>
 </body>
