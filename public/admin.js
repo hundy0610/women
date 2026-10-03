@@ -15,6 +15,14 @@ let events = [];
 let filter = 'pending';
 let query = '';
 let openId = null;
+const holdLeft = (r) => (r.holdUntil - Date.now()) / 3600000;
+const holdText = (r) => { const h = holdLeft(r); return h <= 0 ? '지남' : h < 1 ? `${Math.ceil(h * 60)}분 남음` : `${Math.floor(h)}시간 남음`; };
+function badge() {
+  const n = items.filter((r) => r.status === 'pending').length + items.filter((r) => r.status === 'confirmed' && r.cancelRequest).length;
+  document.title = n ? `(${n}) 예약 관리` : '예약 관리';
+  const b = document.querySelector('[data-t="list"]');
+  if (b) b.textContent = n ? `예약 목록 ${n}` : '예약 목록';
+}
 let blocks = [];
 let calMonth = null;
 let calDay = null;
@@ -61,11 +69,17 @@ function stats() {
 
 function filtered() {
   const q = query.trim().toLowerCase().replace(/-/g, '');
-  return items.filter((r) => {
+  const today = todayKst(Date.now());
+  const cmp = (a, b) => (a.date + String(a.start).padStart(2, '0')).localeCompare(b.date + String(b.start).padStart(2, '0'));
+  const list = items.filter((r) => {
     if (filter === 'req') { if (!(r.status === 'confirmed' && r.cancelRequest)) return false; } else if (filter !== 'all' && r.status !== filter) return false;
     if (!q) return true;
     return [r.name, r.phone, r.id, r.purpose].some((v) => String(v || '').toLowerCase().replace(/-/g, '').includes(q));
   });
+  // 입금 대기는 기한이 급한 순, 확정은 다가오는 이용일 순, 그 외는 최근 순
+  if (filter === 'pending') return list.sort((a, b) => (a.holdUntil || 0) - (b.holdUntil || 0));
+  if (filter === 'confirmed' || filter === 'req') return list.sort((a, b) => ((a.date >= today) === (b.date >= today) ? ((a.date >= today) ? cmp(a, b) : cmp(b, a)) : (a.date >= today ? -1 : 1)));
+  return list.sort((a, b) => cmp(b, a));
 }
 
 function renderFilters() {
@@ -104,10 +118,10 @@ function renderRows() {
     return `<article class="item">
       <button type="button" class="item-head" data-open="${esc(r.id)}" aria-expanded="${open}">
         <span class="when"><b>${formatKoreanDate(r.date)}</b><small>${hh(r.start)}~${hh(r.end)}</small></span>
-        <span class="who"><b>${esc(r.name)}</b> <small>${esc(spaceNames(r.spaces))}${r.memo ? ' · 메모 있음' : ''}</small></span>
+        <span class="who"><b>${esc(r.name)}</b> <small>${esc(spaceNames(r.spaces))}${r.memo ? ' · 메모 있음' : ''}</small>${r.status === 'pending' ? `<small class="left ${holdLeft(r) < 6 ? 'warn' : ''}">입금 기한 ${holdText(r)}</small>` : ''}</span>
         <span class="amt">${won(r.amount)}</span>
         <span class="badge ${r.cancelRequest && r.status === 'confirmed' ? 'req' : r.status}">${r.cancelRequest && r.status === 'confirmed' ? '취소 요청' : LABEL[r.status]}</span>
-      </button>${body}</article>`;
+      </button>${!open && (r.status === 'pending') ? `<div class="quick"><button class="pri" data-act="confirm" data-id="${esc(r.id)}">입금 확인(확정)</button></div>` : ''}${body}</article>`;
   }).join('') : '<p class="empty">해당하는 예약이 없습니다.</p>';
 }
 
@@ -124,7 +138,7 @@ async function load() {
   blocks = c.blocks;
   items = a.items.sort((x, y) => (y.date + String(y.start).padStart(2, '0')).localeCompare(x.date + String(x.start).padStart(2, '0')));
   events = b.events;
-  stats(); renderFilters(); renderRows(); renderLog(); renderBlocks(); renderCal();
+  stats(); renderFilters(); renderRows(); renderLog(); renderBlocks(); renderCal(); badge();
 }
 
 async function refresh() {
@@ -173,6 +187,7 @@ $('#rows').addEventListener('click', async (e) => {
       await call({ action: 'dismiss', id });
       toast('취소 요청을 반려했습니다.');
     } else if (b.dataset.act === 'confirm') {
+      if (!confirm(`${rec.name}님이 ${won(rec.amount)}을 입금한 것을 통장에서 확인했나요?`)) return;
       await call({ action: 'confirm', id });
       toast(`${rec.name}님 예약을 확정했습니다.`);
     } else if (b.dataset.act === 'cancel') {
@@ -389,3 +404,12 @@ async function loadNotify() {
 $('#notifyTest').addEventListener('click', async () => {
   try { await call({ action: 'notify_test' }); toast('테스트 알림을 보냈습니다. 채널을 확인하세요.'); } catch (e) { toast(e.message, true); }
 });
+
+
+/* ---------- 자동 새로고침 (1분마다, 입력 중이면 건너뜀) ---------- */
+setInterval(() => {
+  if (document.hidden || $('#appView').hidden) return;
+  const a = document.activeElement;
+  if (a && (a.tagName === 'TEXTAREA' || a.tagName === 'INPUT') && a.closest('#appView')) return;
+  load().catch(() => {});
+}, 60000);

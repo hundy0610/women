@@ -31,5 +31,6 @@ export default function handler(req, res) {
     bank,
     contact: process.env.CONTACT_PHONE || null,
     photos: photos(),
+    naverMapClientId: process.env.NAVER_MAP_CLIENT_ID || null,
   });
 }

@@ -32,6 +32,7 @@ const state = {
   error: '',
   done: null,
   photos: {},
+  mapKey: null,
   openPhotos: new Set(),
   lk: { id: '', phone: '', rec: null, err: '', msg: '', busy: false, cancelOpen: false, reason: '' },
 };
@@ -69,6 +70,7 @@ async function loadInfo() {
     state.offset = j.now - Date.now();
     state.info = { bank: j.bank, contact: j.contact, storeReady: j.storeReady };
     state.photos = j.photos || {};
+    state.mapKey = j.naverMapClientId || null;
   } catch { /* 계좌 정보 없이도 화면은 열립니다 */ }
   $('#storeNotice').hidden = state.info.storeReady;
 }
@@ -330,7 +332,7 @@ function viewDone() {
   return `<h1>아래 계좌로<br>입금해 주세요</h1>
     <p class="sub">입금이 확인되면 예약이 확정됩니다.</p>
     <div class="body">
-      <div class="amount num">${won(r.amount)}</div>
+      <div><div class="amount num">${won(r.amount)}</div><button type="button" class="copy" data-copy="${r.amount}" style="margin-top:10px">금액 복사</button></div>
       ${bank}
       <div class="card"><dl class="info">
         <dt>예약번호</dt><dd>${esc(r.id)}</dd>
@@ -441,6 +443,7 @@ function render(keepScroll = false) {
   const y = window.scrollY;
   $('#main').innerHTML = `<section class="step" ${keepScroll ? 'style="animation:none"' : ''}>${views[state.step]()}</section>`;
   if (keepScroll) window.scrollTo(0, y);
+  else { const h = $('#main h1'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } }
   chrome();
 }
 
@@ -468,7 +471,7 @@ function chrome() {
   $('#ctaHint').style.color = state.error ? 'var(--danger)' : '';
 
   renderSide();
-  $('#foot').innerHTML = [`${esc(C.address)} · ${esc(C.access)}`, state.info.contact ? `문의 ${esc(state.info.contact)}` : ''].filter(Boolean).map((t) => `<span>${t}</span>`).join('');
+  $('#foot').innerHTML = state.info.contact ? `<span>문의 ${esc(state.info.contact)}</span>` : '';
   renderLast();
 }
 
@@ -588,6 +591,7 @@ $('#main').addEventListener('input', (e) => {
 });
 $('#main').addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && state.step === 8 && !state.lk.rec && !stepProblem(8)) { e.preventDefault(); doLookup(); }
+  else if (e.key === 'Enter' && (state.step === 4 || state.step === 5) && e.target.tagName === 'INPUT' && !stepProblem(state.step)) { e.preventDefault(); go(state.step + 1); }
 });
 $('#main').addEventListener('change', (e) => {
   if (e.target.id === 'f-agree') { state.agree = e.target.checked; chrome(); }
@@ -643,7 +647,7 @@ async function submit() {
   try {
     const j = await api('/api/reserve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     state.done = { ...j.reservation, holdHours: j.holdHours };
-    try { localStorage.setItem('women:last', JSON.stringify(state.done)); } catch { /* 저장 불가 환경 */ }
+    try { localStorage.setItem('women:last', JSON.stringify(state.done)); localStorage.setItem('women:me', JSON.stringify({ name: state.name.trim(), phone: state.phone })); } catch { /* 저장 불가 환경 */ }
     state.submitting = false;
     state.step = 7;
     await loadAvailability();
@@ -670,12 +674,60 @@ function reset() {
   go(1);
 }
 
+/* ---------- 오시는 길, 네이버 지도 ---------- */
+const mapQuery = () => encodeURIComponent(C.address.replace(/\s*\d+층$/, ''));
+const naverUrl = () => `https://map.naver.com/p/search/${mapQuery()}`;
+
+function buildWhere() {
+  $('#where').innerHTML = `<div class="card where-card">
+    <h2>오시는 길</h2>
+    <p class="addr">${esc(C.address)}</p>
+    <p class="hint">${esc(C.access)}</p>
+    ${state.mapKey ? '<div class="naver-map" id="naverMap" role="img" aria-label="네이버 지도"></div>' : ''}
+    <div class="where-actions">
+      <a class="btn small" href="${naverUrl()}" target="_blank" rel="noopener">네이버 지도에서 보기</a>
+      <button type="button" class="copy" data-copy="${esc(C.address)}">주소 복사</button>
+    </div>
+    <p class="hint">네이버 지도에서 길찾기, 대중교통, 주차 정보를 확인할 수 있습니다.</p>
+  </div>`;
+  if (state.mapKey) initNaverMap();
+}
+
+function loadNaverScript(key) {
+  return new Promise((resolve, reject) => {
+    if (window.naver?.maps) return resolve();
+    const s = document.createElement('script');
+    s.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${encodeURIComponent(key)}&submodules=geocoder`;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.append(s);
+  });
+}
+
+async function initNaverMap() {
+  const el = $('#naverMap');
+  const fail = () => el?.replaceWith(Object.assign(document.createElement('p'), { className: 'hint', textContent: '지도를 불러오지 못했습니다. 아래 버튼으로 네이버 지도를 여세요.' }));
+  try {
+    await loadNaverScript(state.mapKey);
+    window.naver.maps.Service.geocode({ query: C.address }, (status, resp) => {
+      const a = resp?.v2?.addresses?.[0];
+      if (status !== window.naver.maps.Service.Status.OK || !a) return fail();
+      const pos = new window.naver.maps.LatLng(Number(a.y), Number(a.x));
+      const map = new window.naver.maps.Map(el, { center: pos, zoom: 16, zoomControl: true, zoomControlOptions: { position: window.naver.maps.Position.TOP_RIGHT } });
+      new window.naver.maps.Marker({ position: pos, map });
+    });
+  } catch { fail(); }
+}
+$('#where').addEventListener('click', (e) => { const c = e.target.closest('[data-copy]'); if (c) copyText(c); });
+
 /* ---------- 시작 ---------- */
 (async function init() {
   await loadInfo();
   const p = parseYmd(todayKst(now()));
   state.month = { y: p.y, m: p.m };
+  try { const me = JSON.parse(localStorage.getItem('women:me') || 'null'); if (me) { state.name = me.name || ''; state.phone = me.phone || ''; state.lk.phone = me.phone || ''; } } catch { /* 무시 */ }
   history.replaceState({ step: 1 }, '');
+  buildWhere();
   render();
   await loadAvailability();
   setInterval(() => { if (!document.hidden && state.step <= 3) loadAvailability(); }, 30000);

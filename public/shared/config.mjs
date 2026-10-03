@@ -3,6 +3,7 @@ export const CONFIG = {
   siteName: '여성문화센터 대관 예약',
   address: '고양시 일산동구 강석로 149 강촌프라자 2층',
   access: '마두역(3호선) 도보 3~5분',
+  placeName: '강촌프라자',   // 네이버 지도 검색에 함께 쓰는 건물 이름
 
   openHour: 9,          // 09:00부터
   closeHour: 21,        // 21:00까지 (마지막 종료 시각)

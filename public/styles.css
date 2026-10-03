@@ -255,3 +255,16 @@ dialog#lightbox::backdrop { background: rgba(20, 28, 23, .9); }
 
 .photo-toggle { display: block; width: 100%; border: 0; border-top: 1px solid var(--line); background: transparent; padding: 12px 18px; text-align: left; font-weight: 600; color: var(--tertiary-deep); font-size: .95rem; }
 .opt-card:has(.opt[aria-pressed=true]) .photo-toggle { border-top-color: rgba(79, 111, 82, .25); }
+
+/* 오시는 길 */
+.where { padding: 8px 20px 16px; }
+.where-card { display: grid; gap: 8px; }
+.where-card h2 { font-size: 1.1rem; }
+.where-card .addr { font-weight: 600; }
+.naver-map { height: 220px; border-radius: var(--r-md); overflow: hidden; background: var(--sand); margin: 6px 0; }
+.where-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.btn.small { height: 48px; width: auto; flex: 1; min-width: 160px; font-size: 1rem; }
+@media (min-width: 1000px) { .where { padding-left: 0; padding-right: 0; } }
+
+.step h1:focus { outline: none; }

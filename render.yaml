@@ -27,3 +27,5 @@ services:
         sync: false
       - key: TELEGRAM_CHAT_ID
         sync: false
+      - key: NAVER_MAP_CLIENT_ID
+        sync: false
