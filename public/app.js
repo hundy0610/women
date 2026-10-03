@@ -194,10 +194,12 @@ function viewDate() {
 function viewSpace() {
   const cards = C.spaces.map((s) => {
     const free = freeHours(state.date, s.id);
-    const pics = state.photos[s.id] || [];
+    const real = state.photos[s.id] || [];
+    const holder = real.length === 0 && C.photoPlaceholders;
+    const pics = holder ? [null, null] : real;
     const isOpen = pics.length > 0 && state.openPhotos.has(s.id);
     const photoBlock = isOpen
-      ? `<div class="photos" role="group" aria-label="${s.name} 사진">${pics.map((src, i) => `<img src="${esc(src)}" alt="${s.name} 사진 ${i + 1}" loading="lazy" data-zoom="${s.id}" data-i="${i}">`).join('')}${pics.length > 1 ? `<span class="pcount num">${pics.length}장</span>` : ''}</div>`
+      ? `<div class="photos" role="group" aria-label="${s.name} 사진">${pics.map((src, i) => (src ? `<img src="${esc(src)}" alt="${s.name} 사진 ${i + 1}" loading="lazy" data-zoom="${s.id}" data-i="${i}">` : `<div class="ph" role="img" aria-label="${s.name} 사진 준비 중"><b>${s.name}</b><span>사진 준비 중</span></div>`)).join('')}${pics.length > 1 && !holder ? `<span class="pcount num">${pics.length}장</span>` : ''}</div>`
       : '';
     return `<div class="opt-card"><button type="button" class="opt" data-id="${s.id}" aria-pressed="${state.spaceIds.includes(s.id)}">
       <b>${s.name}</b>
@@ -205,7 +207,7 @@ function viewSpace() {
       <span class="meta">${s.note}</span>
       <span class="price num">시간당 ${won(s.hourly)} · 1일 ${won(s.daily)}</span>
       <span class="free num ${free >= C.minHours ? '' : 'none'}">${free >= C.minHours ? `이날 예약 가능 ${free}시간` : '이날 예약 가능한 시간이 없습니다'}</span>
-    </button>${pics.length ? `<button type="button" class="photo-toggle" data-photos="${s.id}" aria-expanded="${isOpen}">${isOpen ? '사진 접기' : `사진 ${pics.length}장 보기`}</button>` : ''}${photoBlock}</div>`;
+    </button>${pics.length ? `<button type="button" class="photo-toggle" data-photos="${s.id}" aria-expanded="${isOpen}">${isOpen ? '사진 접기' : holder ? '사진 보기' : `사진 ${pics.length}장 보기`}</button>` : ''}${photoBlock}</div>`;
   }).join('');
   const all = state.spaceIds.length === C.spaces.length;
   return `<h1>사용할 공간을<br>선택하세요</h1>
@@ -552,7 +554,7 @@ $('#main').addEventListener('click', (e) => {
       const on = !state.spaceIds.includes(id);
       state.spaceIds = on ? [...state.spaceIds, id] : state.spaceIds.filter((x) => x !== id);
       // 카드를 누르면 사진이 펼쳐지고, 선택을 풀면 접힙니다.
-      if (on && (state.photos[id] || []).length) state.openPhotos.add(id); else state.openPhotos.delete(id);
+      if (on && ((state.photos[id] || []).length || C.photoPlaceholders)) state.openPhotos.add(id); else state.openPhotos.delete(id);
     }
     return render(true);
   }

@@ -282,3 +282,8 @@ iframe.naver-map { width: 100%; border: 0; }
   .side { scrollbar-width: none; }
   .side::-webkit-scrollbar { display: none; }
 }
+
+.ph { flex: 0 0 100%; aspect-ratio: 4 / 3; scroll-snap-align: center; display: grid; place-content: center; justify-items: center; gap: 4px; color: var(--secondary);
+  background: repeating-linear-gradient(135deg, var(--sand) 0 14px, #E6DFCC 14px 28px); }
+.ph b { font-size: 1.2rem; color: var(--primary); }
+.ph span { font-size: .9rem; }

@@ -13,6 +13,8 @@ export const CONFIG = {
   holdHours: 24,        // 예약 후 입금 기한
   horizonDays: 90,      // 오늘부터 90일 뒤까지 예약
 
+  photoPlaceholders: true,   // 실제 사진이 없는 공간에 "사진 준비 중" 자리표시를 보여 줍니다. 사진을 다 넣으면 false로 바꿉니다.
+
   overagePerPerson: 10000,   // 최대 수용 인원을 넘는 1인당 추가 요금
   packageDayPrice: 700000,   // 5개 공간 전체 1일(8시간) 요금
 
