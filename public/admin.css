@@ -176,3 +176,10 @@ body.adm { background: var(--neutral); }
 
 .acts .dng { color: var(--primary); border-color: var(--primary); }
 .badge.req { background: var(--primary); color: var(--on-tertiary); }
+
+.a-tabs button[aria-pressed=true], .filters button[aria-pressed=true] { background: var(--tertiary); color: var(--on-tertiary); }
+.acts .pri { background: var(--tertiary); border-color: var(--tertiary-deep); color: var(--on-tertiary); }
+.badge.req { background: var(--primary); color: #fff; }
+.price, .a-tabs button[aria-pressed=true] { color: var(--primary); }
+.a-tabs button[aria-pressed=true] { background: var(--tertiary); color: var(--on-tertiary); }
+.badge.confirmed { background: var(--success-soft); color: var(--success); }
