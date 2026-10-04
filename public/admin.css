@@ -54,7 +54,7 @@ body.adm { background: var(--neutral); }
 .acts { display: flex; gap: 8px; flex-wrap: wrap; }
 .acts button { min-height: 44px; padding: 0 18px; border-radius: var(--r-md); border: 1.5px solid var(--line); background: var(--surface); font-weight: 700; }
 .acts .pri { background: var(--tertiary); border-color: var(--tertiary); color: var(--on-tertiary); }
-.acts .dng { color: var(--danger); border-color: #E3B7B3; }
+.acts .dng { color: var(--danger); border-color: #DEDEDE; }
 .hist { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: .88rem; color: var(--secondary); }
 .empty { text-align: center; color: var(--muted); padding: 40px 0; }
 @media (max-width: 720px) {
@@ -94,9 +94,9 @@ body.adm { background: var(--neutral); }
   .qr-card .cap { font-size: 1.6rem; }
 }
 
-.stat.alert { background: #FDECEA; }
+.stat.alert { background: #F7EFD9; }
 .stat.alert b { color: var(--danger); }
-.badge.req { background: #FDECEA; color: var(--danger); }
+.badge.req { background: #F7EFD9; color: var(--danger); }
 
 .cal-bar { display: flex; align-items: center; gap: 10px; }
 .cal-bar h2 { min-width: 140px; text-align: center; font-variant-numeric: tabular-nums; }
@@ -165,6 +165,14 @@ body.adm { background: var(--neutral); }
 .a-tabs button[aria-pressed=true] { background: var(--select-soft); color: var(--tertiary-deep); }
 .a-top .a-btn { background: var(--surface); color: var(--primary); border-color: var(--line); }
 .filters button[aria-pressed=true] { background: var(--tertiary); color: var(--on-tertiary); }
-.badge.req { background: #FDECEA; color: var(--danger); }
+.badge.req { background: #F7EFD9; color: var(--danger); }
 .stat, .item, .blk, .ev, .dayline, .qr-card, .acal .cell { border-radius: var(--r-lg); }
 .btn, .a-btn, .acts button, .filters button, .a-tabs button, .toolbar input, .field input, .field select, .field textarea, .checks label { border-radius: var(--r-md); }
+
+.a-tabs button[aria-pressed=true] { background: var(--primary); color: var(--on-tertiary); }
+.filters button[aria-pressed=true] { background: var(--primary); color: var(--on-tertiary); }
+.acts .pri { background: var(--primary); border-color: var(--primary); color: var(--on-tertiary); }
+.item-head .badge.pending { background: var(--amber-soft); color: var(--on-amber-soft); }
+
+.acts .dng { color: var(--primary); border-color: var(--primary); }
+.badge.req { background: var(--primary); color: var(--on-tertiary); }
