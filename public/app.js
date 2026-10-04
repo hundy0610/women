@@ -176,7 +176,7 @@ function viewDate() {
     const dot = state.taken[date] && !small ? '<span class="dot"></span>' : '';
     cells += `<button type="button" class="${cls}" data-date="${date}" ${st === 'out' ? 'disabled' : ''} aria-pressed="${date === state.date}" aria-label="${formatKoreanDate(date)}${small ? ' ' + small : ''}">${d}${small ? `<small>${small}</small>` : ''}${dot}</button>`;
   }
-  return `<h1>이용할 날짜를<br>선택하세요</h1>
+  return `<h1>이용할 날짜를 선택하세요</h1>
     <p class="sub">이용 ${C.minLeadHours}시간 전까지 예약할 수 있고, 오늘부터 ${C.horizonDays}일 뒤까지 열려 있습니다.</p>
     <div class="body">
       <div class="card">
@@ -201,16 +201,13 @@ function viewSpace() {
     const photoBlock = isOpen
       ? `<div class="photos" role="group" aria-label="${s.name} 사진">${pics.map((src, i) => (src ? `<img src="${esc(src)}" alt="${s.name} 사진 ${i + 1}" loading="lazy" data-zoom="${s.id}" data-i="${i}">` : `<div class="ph" role="img" aria-label="${s.name} 사진 준비 중"><b>${s.name}</b><span>사진 준비 중</span></div>`)).join('')}${pics.length > 1 && !holder ? `<span class="pcount num">${pics.length}장</span>` : ''}</div>`
       : '';
-    return `<div class="opt-card"><button type="button" class="opt" data-id="${s.id}" aria-pressed="${state.spaceIds.includes(s.id)}">
-      <b>${s.name}</b>
-      <span class="meta num">${s.pyeong}평 · ${s.dims} · 최대 ${s.capacity}명${s.layout ? `(${s.layout})` : ''}</span>
-      <span class="meta">${s.note}</span>
-      <span class="price num">시간당 ${won(s.hourly)} · 1일 ${won(s.daily)}</span>
-      <span class="free num ${free >= C.minHours ? '' : 'none'}">${free >= C.minHours ? `이날 예약 가능 ${free}시간` : '이날 예약 가능한 시간이 없습니다'}</span>
-    </button>${pics.length ? `<button type="button" class="photo-toggle" data-photos="${s.id}" aria-expanded="${isOpen}">${isOpen ? '사진 접기' : holder ? '사진 보기' : `사진 ${pics.length}장 보기`}</button>` : ''}${photoBlock}</div>`;
+    return `<div class="opt-card"><div class="opt-main"><button type="button" class="opt" data-id="${s.id}" aria-pressed="${state.spaceIds.includes(s.id)}">
+      <span class="l1"><b>${s.name}</b><span class="meta num">${s.pyeong}평 · ${s.capacity}명</span></span>
+      <span class="l2"><span class="price num">시간당 ${won(s.hourly)} · 1일 ${won(s.daily)}</span><span class="free num ${free >= C.minHours ? '' : 'none'}">${free >= C.minHours ? `${free}시간 가능` : '예약 불가'}</span></span>
+    </button>${pics.length ? `<button type="button" class="photo-toggle" data-photos="${s.id}" aria-expanded="${isOpen}">${isOpen ? '접기' : holder ? '사진' : `사진 ${pics.length}`}</button>` : ''}</div>${photoBlock}</div>`;
   }).join('');
   const all = state.spaceIds.length === C.spaces.length;
-  return `<h1>사용할 공간을<br>선택하세요</h1>
+  return `<h1>사용할 공간을 선택하세요</h1>
     <p class="sub">${formatKoreanDate(state.date)} 기준입니다. 여러 공간을 함께 고를 수 있습니다.</p>
     <div class="body"><div class="options">${cards}
       <button type="button" class="opt all" data-id="__all" aria-pressed="${all}">
@@ -254,12 +251,12 @@ function viewTime() {
     endBlock = `<div><p class="time-label">몇 시에 끝나나요?</p><div class="chips">${e}</div></div>`;
   }
   const result = state.start != null && state.end != null ? `<p class="time-result num">${hh(state.start)} ~ ${hh(state.end)} (${state.end - state.start}시간)</p>` : '';
-  return `<h1>이용 시간을<br>선택하세요</h1>
+  return `<h1>이용 시간을 선택하세요</h1>
     <p class="sub">${formatKoreanDate(state.date)} · ${esc(spaceNames(ids))}. 최소 ${C.minHours}시간부터입니다. 선택한 공간이 모두 비어 있는 시간만 누를 수 있습니다.</p>
     <div class="body">
       <div><p class="time-label">몇 시에 시작하나요?</p><div class="chips">${s}</div></div>
       ${endBlock}${result}
-      <details class="status" open><summary>이날 예약 현황</summary>
+      <details class="status"><summary>이날 예약 현황</summary>
         <div class="table-scroll"><table class="grid">${statusTable()}</table></div>
         <div class="legend" style="margin-top:10px"><span><i></i>예약 가능</span><span><i class="l-pending"></i>입금 대기</span><span><i class="l-confirmed"></i>예약 완료</span><span><i class="l-blocked"></i>휴무</span></div>
       </details>
@@ -267,7 +264,7 @@ function viewTime() {
 }
 
 function viewPeople() {
-  return `<h1>이용 인원을<br>알려 주세요</h1>
+  return `<h1>이용 인원을 알려 주세요</h1>
     <p class="sub">선택한 공간의 최대 인원은 ${capacity()}명입니다. 넘으면 1인당 ${won(C.overagePerPerson)}이 추가됩니다.</p>
     <div class="body">
       <div class="stepper">
@@ -282,7 +279,7 @@ function viewPeople() {
 }
 
 function viewPerson() {
-  return `<h1>예약하시는 분의<br>정보를 입력하세요</h1>
+  return `<h1>예약하시는 분의 정보를 입력하세요</h1>
     <p class="sub">입금자명과 같은 이름을 입력하세요. 연락처는 예약과 입금 확인에만 쓰입니다.</p>
     <div class="body">
       <div class="field"><label for="f-name">이름</label>
@@ -311,19 +308,15 @@ function viewReview() {
     if (q.packageDiscount > 0) calc += `<div class="row minus"><span>전체 통대관 할인</span><span>-${won(q.packageDiscount)}</span></div>`;
     if (q.extraPeople > 0) calc += `<div class="row"><span>인원 초과 ${q.extraPeople}명 (최대 ${q.capacity}명)</span><span>${won(q.overageFee)}</span></div>`;
   }
-  const rules = [
-    `${C.holdHours}시간 안에 입금하세요. 입금이 확인되지 않으면 예약이 취소됩니다.`,
-    '입금이 확인되면 예약 현황에 "예약 완료"로 표시됩니다.',
-    state.info.contact ? `변경과 취소는 ${esc(state.info.contact)}로 문의하세요.` : '변경과 취소는 담당자에게 문의하세요.',
-  ].map((r) => `<li>${r}</li>`).join('');
-  return `<h1>예약 내용을<br>확인하세요</h1>
+  const rules = `${C.holdHours}시간 안에 입금하세요. 입금이 확인되면 예약이 확정됩니다. ${state.info.contact ? `변경과 취소는 ${esc(state.info.contact)}로 문의하세요.` : '변경과 취소는 담당자에게 문의하세요.'}`;
+  return `<h1>예약 내용을 확인하세요</h1>
     <p class="sub">아래 내용으로 예약하면 입금 계좌가 나옵니다.</p>
     <div class="body">
       <div class="card"><div class="sum-rows">${rows}</div></div>
       <div class="card"><div class="sum-rows">${calc}</div>
         <div class="total-row"><span class="label">입금할 금액</span><span class="price-lg num">${q ? won(q.total) : '0원'}</span></div></div>
       <label class="check"><input type="checkbox" id="f-agree" ${state.agree ? 'checked' : ''}><span>이용 안내를 확인했습니다.</span></label>
-      <ul class="rules">${rules}</ul>
+      <p class="hint">${rules}</p>
     </div>`;
 }
 
@@ -333,10 +326,10 @@ function viewDone() {
   const bank = b
     ? `<div class="bank"><h3>입금 계좌</h3><div class="acct num">${esc(b.name)} ${esc(b.number)}</div><p class="who">예금주 ${esc(b.holder)}</p><button type="button" class="copy" data-copy="${esc(b.number)}">계좌번호 복사</button></div>`
     : '<div class="bank"><h3>입금 계좌</h3><p class="hint">계좌 정보가 설정되지 않았습니다. 담당자에게 문의하세요.</p></div>';
-  return `<h1>아래 계좌로<br>입금해 주세요</h1>
+  return `<h1>아래 계좌로 입금해 주세요</h1>
     <p class="sub">입금이 확인되면 예약이 확정됩니다.</p>
     <div class="body">
-      <div><div class="amount num">${won(r.amount)}</div><button type="button" class="copy" data-copy="${r.amount}" style="margin-top:10px">금액 복사</button></div>
+      <div class="amount-row"><div class="amount num">${won(r.amount)}</div><button type="button" class="copy" data-copy="${r.amount}">금액 복사</button></div>
       ${bank}
       <div class="card"><dl class="info">
         <dt>예약번호</dt><dd>${esc(r.id)}</dd>
@@ -370,7 +363,7 @@ function viewLookup() {
       <dl class="info"><dt>예약번호</dt><dd>${esc(r.id)}</dd><dt>일정</dt><dd>${formatKoreanDate(r.date)} ${hh(r.start)}~${hh(r.end)}</dd><dt>공간</dt><dd>${esc(spaceNames(r.spaces))}</dd><dt>인원</dt><dd>${r.people}명</dd><dt>금액</dt><dd>${won(r.amount)}</dd></dl>
       ${note}${k.msg ? `<p class="notice-line ok">${esc(k.msg)}</p>` : ''}${cancelBox}</div>`;
   }
-  return `<h1>내 예약을<br>확인하세요</h1>
+  return `<h1>내 예약을 확인하세요</h1>
     <p class="sub">예약할 때 받은 예약번호와 휴대전화 번호를 입력하세요. 회원가입은 필요 없습니다.</p>
     <div class="body">
       <div class="field"><label for="f-lkid">예약번호</label><input id="f-lkid" maxlength="8" autocapitalize="characters" autocomplete="off" placeholder="예: AB12CD34" value="${esc(k.id)}"></div>
@@ -444,9 +437,9 @@ function paintLb() {
 function render(keepScroll = false) {
   normalizeTime();
   const views = { 1: viewDate, 2: viewSpace, 3: viewTime, 4: viewPeople, 5: viewPerson, 6: viewReview, 7: viewDone, 8: viewLookup };
-  const y = window.scrollY;
+  const y = $('#main').scrollTop;
   $('#main').innerHTML = `<section class="step" ${keepScroll ? 'style="animation:none"' : ''}>${views[state.step]()}</section>`;
-  if (keepScroll) window.scrollTo(0, y);
+  if (keepScroll) $('#main').scrollTop = y;
   else { const h = $('#main h1'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } }
   chrome();
 }
@@ -475,7 +468,6 @@ function chrome() {
   $('#ctaHint').style.color = state.error ? 'var(--danger)' : '';
 
   renderSide();
-  $('#foot').innerHTML = state.info.contact ? `<span>문의 ${esc(state.info.contact)}</span>` : '';
   renderLast();
 }
 
@@ -506,7 +498,7 @@ function renderSide() {
       <div class="total-row"><span class="label">예상 요금</span><span class="price-lg num">${q ? won(q.total) : '0원'}</span></div>
     </div>
     ${day}
-    <div class="card"><h2>입금 안내</h2>
+    <div class="card pay-card"><h2>입금 안내</h2>
       <p style="margin-top:8px">예약 후 ${C.holdHours}시간 안에 입금하세요.</p>
       ${b ? `<p class="num" style="font-weight:800;margin-top:6px">${esc(b.name)} ${esc(b.number)}</p><p class="hint">예금주 ${esc(b.holder)}</p>` : '<p class="hint">계좌 정보는 예약을 마치면 안내됩니다.</p>'}
     </div>`;
@@ -517,7 +509,7 @@ function go(step, push = true) {
   state.error = '';
   if (push) history.pushState({ step }, '');
   render();
-  window.scrollTo(0, 0);
+  $('#main').scrollTo(0, 0);
 }
 
 function renderLast() {
@@ -629,10 +621,12 @@ window.addEventListener('popstate', (e) => {
   state.step = step === 8 ? 8 : state.done && step === 7 ? 7 : Math.min(step, 6);
   state.error = '';
   render();
-  window.scrollTo(0, 0);
+  $('#main').scrollTo(0, 0);
 });
 $('#retryBtn').addEventListener('click', loadAvailability);
 $('#myres').addEventListener('click', () => go(8));
+$('#whereBtn').addEventListener('click', openWhere);
+$('#whereDlg').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
 $('#lastBtn').addEventListener('click', () => {
   try { state.done = JSON.parse(localStorage.getItem('women:last')); go(7); } catch { /* 무시 */ }
 });
@@ -700,7 +694,7 @@ function buildWhere() {
     ? `<iframe class="map-pane" data-map="google" title="센터 위치 지도(구글)" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=${mapQuery()}&hl=ko&z=17&output=embed" ${m === first ? '' : 'hidden'}></iframe>`
     : `<div class="map-pane" data-map="${m}" role="img" aria-label="${MAP_LABEL[m]} 지도" ${m === first ? '' : 'hidden'}></div>`).join('');
   $('#where').innerHTML = `<div class="card where-card">
-    <h2>오시는 길</h2>
+    <div class="dlg-head"><h2>오시는 길</h2><button type="button" class="dlg-x" data-close aria-label="닫기">&times;</button></div>
     <p class="addr">${esc(C.address)}</p>
     <p class="hint">${esc(C.access)}</p>
     ${choices.length > 1 ? `<div class="map-tabs" role="tablist" aria-label="지도 선택">${choices.map((m) => `<button type="button" role="tab" data-maptab="${m}" aria-selected="${m === first}">${MAP_LABEL[m]} 지도</button>`).join('')}</div>` : ''}
@@ -711,11 +705,20 @@ function buildWhere() {
       <button type="button" class="copy" data-copy="${esc(C.address)}">주소 복사</button>
     </div>
     <p class="hint">길찾기, 대중교통, 주차 정보는 네이버 지도나 카카오맵에서 확인할 수 있습니다.</p>
+    ${state.info.contact ? `<p class="hint">문의 ${esc(state.info.contact)}</p>` : ''}
   </div>`;
-  showMap(first);
+  mapCur = first;
+}
+let mapCur = 'google';
+
+function openWhere() {
+  const d = $('#whereDlg');
+  if (!d.open) d.showModal();
+  showMap(mapCur);
 }
 
 function showMap(m) {
+  mapCur = m;
   for (const el of document.querySelectorAll('#where [data-map]')) el.hidden = el.dataset.map !== m;
   for (const b of document.querySelectorAll('#where [data-maptab]')) b.setAttribute('aria-selected', String(b.dataset.maptab === m));
   if (mapInited[m]) return;
@@ -766,6 +769,7 @@ async function initKakaoMap() {
   } catch { mapFail('kakao'); }
 }
 $('#where').addEventListener('click', (e) => {
+  if (e.target.closest('[data-close]')) return $('#whereDlg').close();
   const t = e.target.closest('[data-maptab]');
   if (t) return showMap(t.dataset.maptab);
   const c = e.target.closest('[data-copy]');

@@ -18,7 +18,7 @@
       <div class="top-row">
         <button type="button" class="back" id="back" aria-label="이전 단계" hidden>&lsaquo;</button>
         <img class="wordmark" src="/logo.svg" alt="여성문화센터" width="152" height="40"><span class="brand">대관 예약</span>
-        <button type="button" class="myres" id="myres">내 예약 확인</button>
+        <span class="tools"><button type="button" class="myres" id="whereBtn">오시는 길</button><button type="button" class="myres" id="myres">내 예약</button></span>
       </div>
       <div class="progress" role="progressbar" aria-label="예약 진행" aria-valuemin="1" aria-valuemax="6" id="prog"><i id="progBar"></i></div>
     </header>
@@ -35,13 +35,12 @@
       <p class="cta-hint" id="ctaHint"></p>
     </div>
 
-    <section class="where" id="where" aria-label="오시는 길"></section>
-
-    <footer class="foot" id="foot"></footer>
     </div>
 
     <aside class="side" id="side" aria-label="예약 요약"></aside>
   </div>
+
+  <dialog id="whereDlg" aria-label="오시는 길"><div id="where"></div></dialog>
 
   <script type="module" src="/app.js"></script>
 </body>
