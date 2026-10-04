@@ -800,3 +800,6 @@ td.sel { background: var(--primary); color: var(--on-tertiary); border-color: va
 .copy.done { background: var(--tertiary); color: var(--on-tertiary); }
 .status-pill.confirmed, .badge.confirmed { background: var(--success-soft); color: var(--success); }
 .stepnav li.done b { background: var(--select-soft); }
+
+.wordmark { height: 28px; width: auto; }
+@media (min-width: 1000px) { .wordmark { height: 32px; } }
