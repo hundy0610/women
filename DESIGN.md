@@ -27,31 +27,38 @@ colors:
 typography:
   display:
     fontFamily: Pretendard Variable
-    fontSize: 1.5rem
+    fontSize: 1.625rem
     fontWeight: 700
     lineHeight: 1.3
-    letterSpacing: -0.01em
-  h2:
+    letterSpacing: -0.02em
+  title:
     fontFamily: Pretendard Variable
     fontSize: 1.25rem
-    fontWeight: 700
-    lineHeight: 1.35
-  body-md:
-    fontFamily: Pretendard Variable
-    fontSize: 1.02rem
-    fontWeight: 500
-    lineHeight: 1.6
-  label-md:
-    fontFamily: Pretendard Variable
-    fontSize: 1.05rem
     fontWeight: 600
     lineHeight: 1.4
+    letterSpacing: -0.01em
+  body:
+    fontFamily: Pretendard Variable
+    fontSize: 1rem
+    fontWeight: 400
+    lineHeight: 1.6
+    letterSpacing: -0.005em
+  label:
+    fontFamily: Pretendard Variable
+    fontSize: 1rem
+    fontWeight: 600
+    lineHeight: 1.4
+  body-sm:
+    fontFamily: Pretendard Variable
+    fontSize: 0.875rem
+    fontWeight: 400
+    lineHeight: 1.5
   caption:
     fontFamily: Pretendard Variable
-    fontSize: 0.9rem
-    fontWeight: 500
+    fontSize: 0.8125rem
+    fontWeight: 400
     lineHeight: 1.45
-  price-lg:
+  price:
     fontFamily: Pretendard Variable
     fontSize: 2rem
     fontWeight: 700
@@ -76,7 +83,7 @@ components:
   button-primary:
     backgroundColor: "{colors.tertiary}"
     textColor: "{colors.on-tertiary}"
-    typography: "{typography.label-md}"
+    typography: "{typography.label}"
     rounded: "{rounded.md}"
     height: 54px
     padding: 16px
@@ -163,7 +170,22 @@ components:
 
 ## Typography
 
-전부 Pretendard Variable이다. 본문은 500, 제목과 금액은 700이다. 800 이상의 굵기와 글자 사이를 벌린 대문자 소제목은 쓰지 않는다. 금액과 시간은 숫자 폭이 일정한 `tnum`을 쓴다. 본문 18px 안팎, 보조 글자도 14px 아래로 내리지 않는다.
+Pretendard Variable 한 가지 글꼴을 쓴다. 글자 크기는 7단계, 굵기는 400, 600, 700 세 가지로 제한한다. 단계가 많으면 화면이 어수선해 보이므로 새 크기를 추가하지 않는다.
+
+| 단계 | 크기 | 굵기 | 쓰는 곳 |
+| --- | --- | --- | --- |
+| display | 29px | 700 | 단계 제목 |
+| title | 22px | 600 | 패널 제목, 큰 이름 |
+| body | 18px | 400 | 본문, 안내 문장 |
+| label | 18px | 600 | 이름, 라벨, 버튼 |
+| body-sm | 16px | 400 | 보조 설명, 메타 정보 |
+| caption | 15px | 400 | 범례, 표의 작은 글자 |
+| price | 36px | 700 | 합계 금액 |
+
+- 제목은 글자 사이를 조금 좁히고(-0.02em), 본문은 줄 간격을 1.6으로 넉넉히 둔다. 제목은 `text-wrap: balance`로 줄바꿈을 고르게 한다.
+- 굵은 글씨는 이름, 라벨, 금액에만 쓴다. 가격표나 설명 문장 전체를 굵게 하지 않는다.
+- 금액, 시간, 번호는 숫자 폭이 일정한 `tnum`을 쓴다.
+- 14px 미만은 쓰지 않는다. 기준 글자(1rem)는 18px이다. 한 화면에서 서로 다른 글자 크기는 4가지 이하로 유지한다.
 
 ## Layout
 

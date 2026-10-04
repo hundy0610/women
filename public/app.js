@@ -557,7 +557,7 @@ function renderSide() {
     ${state.step === 3 ? '' : day}
     <div class="card pay-card"><h2>입금 안내</h2>
       <p style="margin-top:8px">예약 후 ${C.holdHours}시간 안에 입금하세요.</p>
-      ${b ? `<p class="num" style="font-weight:800;margin-top:6px"><span class="bn">${esc(b.name)}</span> <span class="nw">${esc(b.number)}</span></p><p class="hint">예금주 ${esc(b.holder)}</p>` : '<p class="hint">계좌 정보는 예약을 마치면 안내됩니다.</p>'}
+      ${b ? `<p class="num" style="font-weight:700;margin-top:6px"><span class="bn">${esc(b.name)}</span> <span class="nw">${esc(b.number)}</span></p><p class="hint">예금주 ${esc(b.holder)}</p>` : '<p class="hint">계좌 정보는 예약을 마치면 안내됩니다.</p>'}
     </div>`;
 }
 
