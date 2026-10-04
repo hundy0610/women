@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <meta name="theme-color" content="#F6F5F1">
+  <meta name="theme-color" content="#0F3D44">
   <title>여성문화센터 대관 예약</title>
   <link rel="icon" type="image/svg+xml" href="/icon.svg">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -12,16 +12,17 @@
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <div class="app">
-    <div class="col">
-    <header class="top">
+  <header class="top"><div class="top-in">
       <div class="top-row">
         <button type="button" class="back" id="back" aria-label="이전 단계" hidden>&lsaquo;</button>
-        <img class="wordmark" src="/logo.svg" alt="여성문화센터" width="137" height="30"><span class="brand">대관 예약</span>
+        <img class="wordmark" src="/logo-light.svg" alt="여성문화센터" width="137" height="30"><span class="brand">대관 예약</span>
         <span class="tools"><button type="button" class="myres" id="whereBtn">오시는 길</button><button type="button" class="myres" id="myres">내 예약</button></span>
       </div>
       <div class="progress" role="progressbar" aria-label="예약 진행" aria-valuemin="1" aria-valuemax="6" id="prog"><i id="progBar"></i></div>
-    </header>
+    </div></header>
+
+  <div class="app">
+    <div class="col">
 
     <div class="notice error" id="storeNotice" hidden>예약 저장소가 아직 설정되지 않아 예약할 수 없습니다. 관리자에게 알려 주세요.</div>
     <div class="notice" id="lastNotice" hidden><span id="lastText"></span><button type="button" id="lastBtn">입금 안내 보기</button></div>

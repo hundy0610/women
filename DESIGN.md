@@ -3,24 +3,24 @@ version: alpha
 name: Women Center Booking
 description: 여성문화센터 대관 예약 사이트. 아이보리 바탕, 짙은 잉크색 글자, 딥 틸 한 가지 강조색, 샌드 골드 보조색. 한 화면에 질문 하나씩 묻는 단계형 예약.
 colors:
-  primary: "#1F2A2E"
-  secondary: "#4A585D"
-  tertiary: "#1F5C63"
-  tertiary-deep: "#164650"
+  primary: "#14201F"
+  secondary: "#3A474B"
+  tertiary: "#17525A"
+  tertiary-deep: "#0F3D44"
   on-tertiary: "#FFFFFF"
-  neutral: "#F6F5F1"
+  neutral: "#F2EFE8"
   surface: "#FFFFFF"
-  sand: "#ECE9E1"
-  line: "#DCD8CD"
-  muted: "#5F6B70"
-  amber: "#D9B877"
-  amber-soft: "#F6EDD6"
-  on-amber-soft: "#5E4617"
-  taken: "#164650"
+  sand: "#E6E1D6"
+  line: "#CFC9BB"
+  muted: "#566268"
+  amber: "#C79A3E"
+  amber-soft: "#F3E5C0"
+  on-amber-soft: "#5A4010"
+  taken: "#55646A"
   on-taken: "#FFFFFF"
-  blocked: "#E9E7E0"
-  on-blocked: "#566166"
-  select-soft: "#DCEBEC"
+  blocked: "#E3DFD5"
+  on-blocked: "#4A5659"
+  select-soft: "#D5E6E6"
   danger: "#B3261E"
   success: "#2F6B4F"
 typography:
@@ -133,11 +133,11 @@ components:
 
 색은 중립 톤과 강조색 한 가지로 정리한다.
 
-- **Primary (#1F2A2E):** 본문과 제목의 짙은 잉크색.
-- **Secondary (#4A585D):** 보조 설명. 흰 바탕과 아이보리 바탕 모두에서 4.5:1을 넘긴다.
-- **Tertiary (#1F5C63):** 딥 틸. 선택 상태, 주 버튼, 진행 막대에만 쓴다.
-- **Neutral (#F6F5F1):** 페이지 바탕.
-- **Amber (#D9B877):** 샌드 골드. 입금 대기 칸, 내가 고른 시간 표시, 오늘 표시에 쓴다.
+- **Primary (#14201F):** 본문과 제목의 짙은 잉크색.
+- **Secondary (#3A474B):** 보조 설명. 흰 바탕과 아이보리 바탕 모두에서 4.5:1을 넘긴다.
+- **Tertiary (#17525A):** 딥 틸. 선택 상태, 주 버튼, 진행 막대에만 쓴다.
+- **Neutral (#F2EFE8):** 페이지 바탕.
+- **Amber (#C79A3E):** 샌드 골드. 입금 대기 칸, 내가 고른 시간 표시, 오늘 표시에 쓴다.
 - **Taken, Blocked:** 예약 현황 전용. 예약 가능은 흰 칸, 입금 대기는 골드 줄무늬, 예약 완료는 진한 초록, 휴무는 회색 빗금이다. 색만으로 구분하지 않고 칸 안에 "대기", "예약", "불가" 글자를 함께 쓴다.
 
 ## Typography
