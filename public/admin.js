@@ -249,7 +249,7 @@ function qrSvg(url) {
   let d = '';
   for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) d += `M${c + quiet} ${r + quiet}h1v1h-1z`;
   const size = n + quiet * 2;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" role="img" aria-label="QR 코드"><rect width="${size}" height="${size}" fill="#fff"/><path d="${d}" fill="#24302A"/></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" role="img" aria-label="QR 코드"><rect width="${size}" height="${size}" fill="#fff"/><path d="${d}" fill="#1F2A2E"/></svg>`;
 }
 function renderQr() {
   const url = $('#qr-url').value.trim();
@@ -280,7 +280,7 @@ $('#qr-png').addEventListener('click', () => {
     g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height);
     g.imageSmoothingEnabled = false;
     g.drawImage(img, 0, 0, px, px);
-    if (cap) { g.fillStyle = '#24302A'; g.font = '700 48px "Pretendard Variable", sans-serif'; g.textAlign = 'center'; g.fillText(cap, px / 2, px + 70); }
+    if (cap) { g.fillStyle = '#1F2A2E'; g.font = '700 48px "Pretendard Variable", sans-serif'; g.textAlign = 'center'; g.fillText(cap, px / 2, px + 70); }
     download('reservation-qr.png', cv.toDataURL('image/png'));
   };
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
