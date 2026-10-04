@@ -369,7 +369,7 @@ function viewDone() {
   const r = state.done;
   const b = state.info.bank;
   const bank = b
-    ? `<div class="bank"><h3>입금 계좌</h3><div class="acct num">${esc(b.name)} ${esc(b.number)}</div><p class="who">예금주 ${esc(b.holder)}</p><button type="button" class="copy" data-copy="${esc(b.number)}">계좌번호 복사</button></div>`
+    ? `<div class="bank"><h3>입금 계좌</h3><div class="acct num"><span class="bn">${esc(b.name)}</span> <span class="nw">${esc(b.number)}</span></div><p class="who">예금주 ${esc(b.holder)}</p><button type="button" class="copy" data-copy="${esc(b.number)}">계좌번호 복사</button></div>`
     : '<div class="bank"><h3>입금 계좌</h3><p class="hint">계좌 정보가 없습니다. 담당자에게 문의하세요.</p></div>';
   return `<h1>입금해 주세요</h1>
     <p class="sub">입금이 확인되면 예약이 확정됩니다.</p>
@@ -398,7 +398,7 @@ function viewLookup() {
   if (r) {
     const bank = state.info.bank;
     let note = '';
-    if (r.status === 'pending') note = `<p class="notice-line">${formatKstDateTime(r.holdUntil)}까지 입금해 주세요.</p>${bank ? `<div class="bank"><h3>입금 계좌</h3><div class="acct num">${esc(bank.name)} ${esc(bank.number)}</div><p class="who">예금주 ${esc(bank.holder)} · 입금자명 ${esc(r.name)}</p><button type="button" class="copy" data-copy="${esc(bank.number)}">계좌번호 복사</button></div>` : ''}`;
+    if (r.status === 'pending') note = `<p class="notice-line">${formatKstDateTime(r.holdUntil)}까지 입금해 주세요.</p>${bank ? `<div class="bank"><h3>입금 계좌</h3><div class="acct num"><span class="bn">${esc(bank.name)}</span> <span class="nw">${esc(bank.number)}</span></div><p class="who">예금주 ${esc(bank.holder)} · 입금자명 ${esc(r.name)}</p><button type="button" class="copy" data-copy="${esc(bank.number)}">계좌번호 복사</button></div>` : ''}`;
     else if (r.status === 'confirmed' && r.cancelRequested) note = '<p class="notice-line">취소 요청이 접수되었습니다. 담당자가 환불 방법을 안내합니다.</p>';
     else if (r.status === 'expired') note = '<p class="notice-line">입금 기한이 지났습니다. 다시 예약해 주세요.</p>';
     const canCancel = r.status === 'pending' || (r.status === 'confirmed' && !r.cancelRequested);
@@ -413,10 +413,10 @@ function viewLookup() {
       ${note}${k.msg ? `<p class="notice-line ok">${esc(k.msg)}</p>` : ''}${cancelBox}</div>`;
   }
   return `<h1>예약 확인</h1>
-    <p class="sub">예약번호와 휴대전화 번호를 입력하세요.</p>
+    ${r ? '' : '<p class="sub">예약번호와 휴대전화 번호를 입력하세요.</p>'}
     <div class="body">
-      <div class="field"><label for="f-lkid">예약번호</label><input id="f-lkid" maxlength="8" autocapitalize="characters" autocomplete="off" placeholder="예: AB12CD34" value="${esc(k.id)}"></div>
-      <div class="field"><label for="f-lkphone">휴대전화</label><input id="f-lkphone" type="tel" inputmode="tel" placeholder="010-0000-0000" maxlength="13" value="${esc(k.phone)}"></div>
+      ${r ? '<button type="button" class="link-btn" id="lkAgain">다른 예약 조회</button>' : `<div class="field"><label for="f-lkid">예약번호</label><input id="f-lkid" maxlength="8" autocapitalize="characters" autocomplete="off" placeholder="예: AB12CD34" value="${esc(k.id)}"></div>
+      <div class="field"><label for="f-lkphone">휴대전화</label><input id="f-lkphone" type="tel" inputmode="tel" placeholder="010-0000-0000" maxlength="13" value="${esc(k.phone)}"></div>`}
       ${k.err ? `<p class="err">${esc(k.err)}</p>` : ''}
       ${result}
     </div>`;
@@ -537,7 +537,7 @@ function renderSide() {
        <div class="legend" style="margin-top:10px"><span><i></i>예약 가능</span><span><i class="l-pending"></i>입금 대기</span><span><i class="l-confirmed"></i>예약 완료</span><span><i class="l-blocked"></i>휴무</span></div></div>`
     : '<div class="card"><h2>공간별 현황</h2><p class="placeholder" style="margin-top:8px">날짜를 선택하면 5개 공간의 시간별 예약 현황이 여기에 보입니다.</p></div>';
   $('#side').innerHTML = `
-    <div class="card"><h2>내 예약</h2>
+    <div class="card sum-side${state.step >= 6 ? ' dup' : ''}"><h2>내 예약</h2>
       <div class="sum-rows" style="margin-top:12px">
         <div class="row"><span>날짜</span><span>${state.date ? formatKoreanDate(state.date) : dash}</span></div>
         <div class="row"><span>공간</span><span>${state.spaceIds.length ? esc(spaceNames(state.spaceIds)) : dash}</span></div>
@@ -550,7 +550,7 @@ function renderSide() {
     ${state.step === 3 ? '' : day}
     <div class="card pay-card"><h2>입금 안내</h2>
       <p style="margin-top:8px">예약 후 ${C.holdHours}시간 안에 입금하세요.</p>
-      ${b ? `<p class="num" style="font-weight:800;margin-top:6px">${esc(b.name)} ${esc(b.number)}</p><p class="hint">예금주 ${esc(b.holder)}</p>` : '<p class="hint">계좌 정보는 예약을 마치면 안내됩니다.</p>'}
+      ${b ? `<p class="num" style="font-weight:800;margin-top:6px"><span class="bn">${esc(b.name)}</span> <span class="nw">${esc(b.number)}</span></p><p class="hint">예금주 ${esc(b.holder)}</p>` : '<p class="hint">계좌 정보는 예약을 마치면 안내됩니다.</p>'}
     </div>`;
 }
 
@@ -622,6 +622,7 @@ $('#main').addEventListener('click', (e) => {
   if (pt) { const id = pt.dataset.photos; if (state.openPhotos.has(id)) state.openPhotos.delete(id); else state.openPhotos.add(id); return render(true); }
   const z = t.closest('[data-zoom]');
   if (z) return openLightbox(z.dataset.zoom, Number(z.dataset.i));
+  if (t.closest('#lkAgain')) { state.lk.rec = null; state.lk.msg = ''; state.lk.cancelOpen = false; return render(); }
   if (t.closest('#lkCancelOpen')) { state.lk.cancelOpen = true; return render(true); }
   if (t.closest('#lkCancelClose')) { state.lk.cancelOpen = false; return render(true); }
   if (t.closest('#lkDoCancel')) return doCancel();
