@@ -4,6 +4,7 @@ import { blockLabel, dayFullyBlocked } from '/shared/rules.mjs';
 import { todayKst, parseYmd, addDays, kstEpoch, ymd, ymdNum, formatKoreanDate, formatKstDateTime, hh, DOW_LABELS } from '/shared/time.mjs';
 
 const $ = (s) => document.querySelector(s);
+const man = (n) => (n % 10000 === 0 ? `${n / 10000}만원` : `${Number(n).toLocaleString('ko-KR')}원`);
 const won = (n) => `${Number(n).toLocaleString('ko-KR')}원`;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const HOUR_MS = 3600 * 1000;
@@ -199,15 +200,15 @@ function viewSpace() {
     const pics = holder ? [null, null] : real;
     const isOpen = pics.length > 0 && state.openPhotos.has(s.id);
     const photoBlock = isOpen
-      ? `<div class="photos" role="group" aria-label="${s.name} 사진">${pics.map((src, i) => (src ? `<img src="${esc(src)}" alt="${s.name} 사진 ${i + 1}" loading="lazy" data-zoom="${s.id}" data-i="${i}">` : `<div class="ph" role="img" aria-label="${s.name} 사진 준비 중"><b>${s.name}</b><span>사진 준비 중</span></div>`)).join('')}${pics.length > 1 && !holder ? `<span class="pcount num">${pics.length}장</span>` : ''}</div>`
+      ? `<div class="photos" role="group" aria-label="${s.name} 사진">${pics.map((src, i) => (src ? `<img src="${esc(src)}" alt="${s.name} 사진 ${i + 1}" loading="lazy" data-zoom="${s.id}" data-i="${i}">` : `<div class="ph" role="img" aria-label="${s.name} 사진 준비 중"><span>사진 준비 중</span></div>`)).join('')}${pics.length > 1 && !holder ? `<span class="pcount num">${pics.length}장</span>` : ''}</div>`
       : '';
     const first = real[0];
     const cover = first
       ? `<div class="cover"><img src="${esc(first)}" alt="${s.name} 사진" loading="lazy" data-zoom="${s.id}" data-i="0">${real.length > 1 ? `<span class="pcount num">${real.length}장</span>` : ''}</div>`
-      : C.photoPlaceholders ? `<div class="cover"><div class="ph" role="img" aria-label="${s.name} 사진 준비 중"><b>${s.name}</b><span>사진 준비 중</span></div></div>` : '';
+      : C.photoPlaceholders ? `<div class="cover"><div class="ph" role="img" aria-label="${s.name} 사진 준비 중"><span>사진 준비 중</span></div></div>` : '';
     return `<div class="opt-card">${cover}<div class="opt-main"><button type="button" class="opt" data-id="${s.id}" aria-pressed="${state.spaceIds.includes(s.id)}">
       <span class="l1"><b>${s.name}</b><span class="meta num">${s.pyeong}평 · ${s.capacity}명</span></span>
-      <span class="l2"><span class="price num">시간당 ${won(s.hourly)} · 1일 ${won(s.daily)}</span><span class="free num ${free >= C.minHours ? '' : 'none'}">${free >= C.minHours ? `${free}시간 가능` : '예약 불가'}</span></span>
+      <span class="l2"><span class="price num">시간당 ${man(s.hourly)} · 1일 ${man(s.daily)}</span><span class="free num ${free >= C.minHours ? '' : 'none'}">${free >= C.minHours ? `${free}시간 가능` : '예약 불가'}</span></span>
     </button>${pics.length ? `<button type="button" class="photo-toggle" data-photos="${s.id}" aria-expanded="${isOpen}">${isOpen ? '접기' : holder ? '사진' : `사진 ${pics.length}`}</button>` : ''}</div>${photoBlock}</div>`;
   }).join('');
   const all = state.spaceIds.length === C.spaces.length;
@@ -487,7 +488,7 @@ function render(keepScroll = false) {
   normalizeTime();
   const views = { 1: viewDate, 2: viewSpace, 3: viewTime, 4: viewPeople, 5: viewPerson, 6: viewReview, 7: viewDone, 8: viewLookup };
   const y = $('#main').scrollTop;
-  $('#main').innerHTML = `<section class="step" ${keepScroll ? 'style="animation:none"' : ''}>${views[state.step]()}</section>`;
+  $('#main').innerHTML = `<section class="step s${state.step}" ${keepScroll ? 'style="animation:none"' : ''}>${views[state.step]()}</section>`;
   if (keepScroll) $('#main').scrollTop = y;
   else { const h = $('#main h1'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } }
   chrome();

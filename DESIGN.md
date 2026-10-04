@@ -1,28 +1,28 @@
 ---
 version: alpha
 name: Women Center Booking
-description: 여성문화센터 대관 예약 사이트. 아이보리 바탕, 짙은 잉크색 글자, 딥 틸 한 가지 강조색, 샌드 골드 보조색. 한 화면에 질문 하나씩 묻는 단계형 예약.
+description: 여성문화센터 대관 예약 사이트. 스톤 아이보리 바탕, 짙은 잉크색 글자, 딥 네이비 한 가지 강조색, 골드 보조색. 한 화면에 질문 하나씩 묻는 단계형 예약.
 colors:
-  primary: "#14201F"
-  secondary: "#3A474B"
-  tertiary: "#17525A"
-  tertiary-deep: "#0F3D44"
+  primary: "#16202B"
+  secondary: "#3B4856"
+  tertiary: "#1E3A5F"
+  tertiary-deep: "#132A47"
   on-tertiary: "#FFFFFF"
-  neutral: "#F2EFE8"
+  neutral: "#EFEDE8"
   surface: "#FFFFFF"
-  sand: "#E6E1D6"
-  line: "#CFC9BB"
-  muted: "#566268"
+  sand: "#E4E1D9"
+  line: "#CBC7BD"
+  muted: "#566370"
   amber: "#C79A3E"
   amber-soft: "#F3E5C0"
   on-amber-soft: "#5A4010"
-  taken: "#55646A"
+  taken: "#66717D"
   on-taken: "#FFFFFF"
-  blocked: "#E3DFD5"
-  on-blocked: "#4A5659"
-  select-soft: "#D5E6E6"
+  blocked: "#E3E1DA"
+  on-blocked: "#4C5762"
+  select-soft: "#DCE6F2"
   danger: "#B3261E"
-  success: "#2F6B4F"
+  success: "#2B6A4F"
 typography:
   display:
     fontFamily: Pretendard Variable
@@ -133,11 +133,11 @@ components:
 
 색은 중립 톤과 강조색 한 가지로 정리한다.
 
-- **Primary (#14201F):** 본문과 제목의 짙은 잉크색.
-- **Secondary (#3A474B):** 보조 설명. 흰 바탕과 아이보리 바탕 모두에서 4.5:1을 넘긴다.
-- **Tertiary (#17525A):** 딥 틸. 선택 상태, 주 버튼, 진행 막대에만 쓴다.
-- **Neutral (#F2EFE8):** 페이지 바탕.
-- **Amber (#C79A3E):** 샌드 골드. 입금 대기 칸, 내가 고른 시간 표시, 오늘 표시에 쓴다.
+- **Primary (#16202B):** 본문과 제목의 짙은 잉크색.
+- **Secondary (#3B4856):** 보조 설명. 흰 바탕과 스톤 아이보리 바탕 모두에서 4.5:1을 넘긴다.
+- **Tertiary (#1E3A5F):** 딥 네이비. 선택 상태, 주 버튼, 진행 막대에만 쓴다.
+- **Neutral (#EFEDE8):** 페이지 바탕.
+- **Amber (#C79A3E):** 골드. 입금 대기 칸, 내가 고른 시간 표시, 오늘 표시에 쓴다.
 - **Taken, Blocked:** 예약 현황 전용. 예약 가능은 흰 칸, 입금 대기는 골드 줄무늬, 예약 완료는 진한 초록, 휴무는 회색 빗금이다. 색만으로 구분하지 않고 칸 안에 "대기", "예약", "불가" 글자를 함께 쓴다.
 
 ## Typography
