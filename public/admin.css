@@ -183,3 +183,11 @@ body.adm { background: var(--neutral); }
 .price, .a-tabs button[aria-pressed=true] { color: var(--primary); }
 .a-tabs button[aria-pressed=true] { background: var(--tertiary); color: var(--on-tertiary); }
 .badge.confirmed { background: var(--success-soft); color: var(--success); }
+
+.badge.req { background: var(--taken); color: #fff; }
+.acal .tag.confirmed { background: var(--taken); color: #fff; }
+.badge.confirmed { background: var(--success-soft); color: var(--success); }
+
+.a-tabs button[aria-pressed=true], .filters button[aria-pressed=true], .acts .pri { background: var(--tertiary); color: var(--on-tertiary); border-color: var(--tertiary-deep); }
+.badge.confirmed { background: var(--success-soft); color: var(--success); }
+.badge.req { background: var(--taken); color: #fff; }

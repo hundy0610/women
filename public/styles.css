@@ -102,7 +102,7 @@ main { flex: 1; padding: 0 20px 24px; }
   border: 2px solid var(--line); background: var(--surface);
 }
 .opt[aria-pressed=true]::after {
-  border-color: var(--tertiary); background: var(--tertiary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3.2 3.2L15 6.8' fill='none' stroke='%2310222E' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/18px no-repeat;
+  border-color: var(--tertiary); background: var(--tertiary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3.2 3.2L15 6.8' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/18px no-repeat;
 }
 .opt.all { grid-template-columns: 1fr auto; align-items: center; background: var(--sand); box-shadow: none; border: 2px solid transparent; border-radius: var(--r-lg); }
 .opt.all .price { margin: 0; text-align: right; font-size: 1.1rem; }
@@ -206,7 +206,7 @@ ol.todo { margin: 0; padding-left: 20px; color: var(--secondary); display: grid;
 .photos { position: relative; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; background: var(--sand); }
 .photos::-webkit-scrollbar { display: none; }
 .photos img { flex: 0 0 100%; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; scroll-snap-align: center; cursor: zoom-in; display: block; }
-.pcount { position: absolute; right: 10px; bottom: 10px; background: rgba(20, 32, 43, .78); color: #fff; font-size: .8rem; font-weight: 600; padding: 2px 10px; border-radius: var(--r-full); pointer-events: none; }
+.pcount { position: absolute; right: 10px; bottom: 10px; background: rgba(47, 43, 74, .78); color: #fff; font-size: .8rem; font-weight: 600; padding: 2px 10px; border-radius: var(--r-full); pointer-events: none; }
 dialog#lightbox { border: 0; padding: 0; background: transparent; max-width: 100vw; max-height: 100vh; width: 100%; height: 100%; }
 dialog#lightbox::backdrop { background: rgba(17, 17, 17, .9); }
 .lb { position: relative; width: 100%; height: 100%; display: grid; place-items: center; padding: 56px 16px 48px; }
@@ -765,7 +765,7 @@ td.sel { background: var(--primary); color: var(--on-tertiary); border-color: va
 .tools { gap: 6px; }
 @media (min-width: 1000px) { .wordmark { height: 32px; } }
 
-/* ===== 하늘색(#87CEEB) 브랜드: 하늘색 위에는 어두운 글자 ===== */
+/* ===== 바이올렛 브랜드(이전 규칙은 아래 최종 블록이 덮어씀) ===== */
 :focus-visible { outline: 3px solid var(--tertiary-deep); outline-offset: 2px; }
 .btn { background: var(--tertiary); color: var(--on-tertiary); }
 .btn:hover:not(:disabled) { background: var(--tertiary-deep); color: var(--on-tertiary); }
@@ -776,9 +776,9 @@ td.sel { background: var(--primary); color: var(--on-tertiary); border-color: va
 .opt[aria-pressed=true]::after { background-color: var(--tertiary); border-color: var(--tertiary-deep); }
 .day.sel, .chip[aria-pressed=true], .qbtn[aria-pressed=true], .tcell.sel, td.sel { background: var(--tertiary); border-color: var(--tertiary-deep); color: var(--on-tertiary); }
 .tcell.endable { background: var(--select-soft); border-color: var(--tertiary-deep); }
-.tcell.start { box-shadow: 0 0 0 3px rgba(79, 169, 210, .45); }
+.tcell.start { box-shadow: 0 0 0 3px rgba(107, 92, 165, .45); }
 .legend .l-sel { background: var(--tertiary); }
-.field input:focus { border-color: var(--tertiary-deep); box-shadow: 0 0 0 3px rgba(135, 206, 235, .5); }
+.field input:focus { border-color: var(--tertiary-deep); box-shadow: 0 0 0 3px rgba(107, 92, 165, .28); }
 .badge.req { background: var(--primary); color: #fff; }
 .acal .tag.confirmed { background: var(--success); color: #fff; }
 .filters button[aria-pressed=true], .a-tabs button[aria-pressed=true] { background: var(--tertiary); color: var(--on-tertiary); }
@@ -803,3 +803,26 @@ td.sel { background: var(--primary); color: var(--on-tertiary); border-color: va
 
 .wordmark { height: 28px; width: auto; }
 @media (min-width: 1000px) { .wordmark { height: 32px; } }
+
+/* ===== 검정 없는 파랑 계열 정리 ===== */
+.btn { border: 1px solid var(--tertiary-deep); }
+.btn:disabled { border-color: var(--line); }
+.chip[aria-pressed=true], .qbtn[aria-pressed=true], .day.sel { border: 1px solid var(--tertiary-deep); }
+.price-lg { font-size: 2.3rem; }
+.badge.req, .acal .tag.confirmed { background: var(--taken); color: #fff; }
+.badge.confirmed, .status-pill.confirmed { background: var(--success-soft); color: var(--success); }
+.notice.error, .stat.alert { background: var(--amber-soft); color: var(--danger); }
+.err { color: var(--danger); }
+.sum-rows .minus span:last-child { color: var(--success); }
+
+/* ===== 더스티 바이올렛 + 버터 옐로 ===== */
+.btn, .chip[aria-pressed=true], .qbtn[aria-pressed=true], .day.sel, .tcell.sel { color: var(--on-tertiary); }
+.btn { border: 1px solid var(--tertiary-deep); }
+.stepnav li.cur { color: var(--primary); border-bottom-color: var(--tertiary); }
+.legend .l-sel { background: var(--tertiary); }
+.price-lg { font-size: 2.3rem; color: var(--primary); }
+.amount { color: var(--primary); }
+.badge.confirmed, .status-pill.confirmed, .acal .tag.confirmed { background: var(--success-soft); color: var(--success); }
+.acal .tag.confirmed { background: var(--success); color: #fff; }
+.badge.req { background: var(--taken); color: #fff; }
+td.sel { background: var(--tertiary); color: var(--on-tertiary); border-color: var(--tertiary-deep); }
