@@ -26,40 +26,40 @@ colors:
   success-soft: "#E9E4F7"
 typography:
   display:
-    fontFamily: Pretendard Variable
+    fontFamily: NanumSquare
     fontSize: 1.625rem
     fontWeight: 700
     lineHeight: 1.3
     letterSpacing: -0.02em
   title:
-    fontFamily: Pretendard Variable
+    fontFamily: NanumSquare
     fontSize: 1.25rem
-    fontWeight: 600
+    fontWeight: 700
     lineHeight: 1.4
     letterSpacing: -0.01em
   body:
-    fontFamily: Pretendard Variable
+    fontFamily: NanumSquare
     fontSize: 1rem
     fontWeight: 400
     lineHeight: 1.6
     letterSpacing: -0.005em
   label:
-    fontFamily: Pretendard Variable
+    fontFamily: NanumSquare
     fontSize: 1rem
-    fontWeight: 600
+    fontWeight: 700
     lineHeight: 1.4
   body-sm:
-    fontFamily: Pretendard Variable
+    fontFamily: NanumSquare
     fontSize: 0.875rem
     fontWeight: 400
     lineHeight: 1.5
   caption:
-    fontFamily: Pretendard Variable
+    fontFamily: NanumSquare
     fontSize: 0.8125rem
     fontWeight: 400
     lineHeight: 1.45
   price:
-    fontFamily: Pretendard Variable
+    fontFamily: NanumSquare
     fontSize: 2rem
     fontWeight: 700
     lineHeight: 1.1
@@ -170,14 +170,14 @@ components:
 
 ## Typography
 
-Pretendard Variable 한 가지 글꼴을 쓴다. 글자 크기는 7단계, 굵기는 400, 600, 700 세 가지로 제한한다. 단계가 많으면 화면이 어수선해 보이므로 새 크기를 추가하지 않는다.
+나눔스퀘어(NanumSquare) 한 가지 글꼴을 쓴다. 정방형에 가까운 단정한 글자꼴이라 또렷하고, 이 글꼴이 제공하는 굵기는 400(Regular)과 700(Bold)이다. 그래서 굵기도 두 가지로 제한한다. 글자 크기는 7단계로 제한한다. 단계가 많으면 화면이 어수선해 보이므로 새 크기를 추가하지 않는다.
 
 | 단계 | 크기 | 굵기 | 쓰는 곳 |
 | --- | --- | --- | --- |
 | display | 29px | 700 | 단계 제목 |
-| title | 22px | 600 | 패널 제목, 큰 이름 |
+| title | 22px | 700 | 패널 제목, 큰 이름 |
 | body | 18px | 400 | 본문, 안내 문장 |
-| label | 18px | 600 | 이름, 라벨, 버튼 |
+| label | 18px | 700 | 이름, 라벨, 버튼 |
 | body-sm | 16px | 400 | 보조 설명, 메타 정보 |
 | caption | 15px | 400 | 범례, 표의 작은 글자 |
 | price | 36px | 700 | 합계 금액 |
@@ -185,7 +185,7 @@ Pretendard Variable 한 가지 글꼴을 쓴다. 글자 크기는 7단계, 굵�
 - 제목은 글자 사이를 조금 좁히고(-0.02em), 본문은 줄 간격을 1.6으로 넉넉히 둔다. 제목은 `text-wrap: balance`로 줄바꿈을 고르게 한다.
 - 굵은 글씨는 이름, 라벨, 금액에만 쓴다. 가격표나 설명 문장 전체를 굵게 하지 않는다.
 - 금액, 시간, 번호는 숫자 폭이 일정한 `tnum`을 쓴다.
-- 14px 미만은 쓰지 않는다. 기준 글자(1rem)는 18px이다. 한 화면에서 서로 다른 글자 크기는 4가지 이하로 유지한다.
+- 14px 미만은 쓰지 않는다. 기준 글자(1rem)는 18px이다.
 
 ## Layout
 

@@ -280,7 +280,7 @@ $('#qr-png').addEventListener('click', () => {
     g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height);
     g.imageSmoothingEnabled = false;
     g.drawImage(img, 0, 0, px, px);
-    if (cap) { g.fillStyle = '#2F2B4A'; g.font = '700 48px "Pretendard Variable", sans-serif'; g.textAlign = 'center'; g.fillText(cap, px / 2, px + 70); }
+    if (cap) { g.fillStyle = '#2F2B4A'; g.font = '700 48px "NanumSquare", sans-serif'; g.textAlign = 'center'; g.fillText(cap, px / 2, px + 70); }
     download('reservation-qr.png', cv.toDataURL('image/png'));
   };
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);

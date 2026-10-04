@@ -59,7 +59,7 @@ export const COMPONENTS = {
   'notice-error': ['.notice.error'],
 };
 
-const FONT_STACK = '"Pretendard Variable", Pretendard, "Noto Sans KR", system-ui, sans-serif';
+const FONT_STACK = '"NanumSquare", "Pretendard Variable", "Noto Sans KR", system-ui, sans-serif';
 
 export function buildCss(md) {
   const t = parseTokens(md);
