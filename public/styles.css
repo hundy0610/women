@@ -10,7 +10,7 @@ body {
   font-family: var(--font); line-height: 1.6; word-break: keep-all; overflow-wrap: break-word;
 }
 h1, h2, h3, p { margin: 0; }
-button, input, textarea { font: inherit; color: inherit; }
+button, input, textarea, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 3px solid var(--tertiary); outline-offset: 2px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
