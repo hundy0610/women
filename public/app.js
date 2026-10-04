@@ -454,7 +454,7 @@ function chrome() {
 
   const q = currentQuote();
   const peek = $('#peek');
-  if (st >= 3 && st <= 6) {
+  if (st >= 3 && st <= 5) {
     const bits = [formatKoreanDate(state.date), spaceNames(state.spaceIds)].join(' · ');
     peek.innerHTML = `<span>${esc(bits)}</span>${q ? `<b>예상 ${won(q.total)}</b>` : ''}`;
     peek.hidden = false;

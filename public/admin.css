@@ -128,3 +128,16 @@ body.adm { background: var(--neutral); }
 .item-head .left.warn { color: var(--danger); font-weight: 700; }
 .quick { padding: 0 18px 14px; }
 .quick button { min-height: 44px; padding: 0 18px; border-radius: var(--r-md); border: 0; background: var(--tertiary); color: var(--on-tertiary); font-weight: 700; }
+
+@media (max-width: 720px) {
+  .a-top .a-wrap { gap: 4px 8px; padding-top: 8px; padding-bottom: 4px; }
+  .a-brand { flex: 1; }
+  .a-btn { margin-left: auto; }
+  .a-tabs { order: 3; flex: 1 0 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+  .a-tabs::-webkit-scrollbar { display: none; }
+  .a-tabs button { white-space: nowrap; flex: none; }
+  .a-wrap { padding-left: 14px; padding-right: 14px; }
+  .toolbar input { max-width: none; min-width: 0; width: 100%; }
+}
+
+.toast:empty { display: none; }
