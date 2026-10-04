@@ -7,6 +7,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node dev-server.js",
+    "design": "node scripts/design-tokens.mjs",
+    "design:lint": "npx -p @google/design.md designmd lint DESIGN.md",
     "test": "node --test"
   },
   "engines": {

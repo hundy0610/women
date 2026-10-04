@@ -489,6 +489,8 @@ function render(keepScroll = false) {
   const views = { 1: viewDate, 2: viewSpace, 3: viewTime, 4: viewPeople, 5: viewPerson, 6: viewReview, 7: viewDone, 8: viewLookup };
   const y = $('#main').scrollTop;
   $('#main').innerHTML = `<section class="step s${state.step}" ${keepScroll ? 'style="animation:none"' : ''}>${views[state.step]()}</section>`;
+  const h1 = $('#main h1');
+  if (h1) h1.dataset.eyebrow = state.step <= 6 ? `STEP ${state.step} / 6` : state.step === 7 ? 'COMPLETE' : 'MY RESERVATION';
   if (keepScroll) $('#main').scrollTop = y;
   else { const h = $('#main h1'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } }
   chrome();
@@ -502,6 +504,10 @@ function chrome() {
   $('#prog').setAttribute('aria-valuenow', String(Math.min(st, STEPS)));
   $('#prog').hidden = st >= 7;
 
+  const NAMES = ['날짜', '공간', '시간', '인원', '예약자', '확인'];
+  $('#stepnav').innerHTML = NAMES.map((n, i) => `<li class="${st === 7 || i + 1 < st ? 'done' : i + 1 === st ? 'cur' : ''}"><b>${st === 7 || i + 1 < st ? '&#10003;' : i + 1}</b>${n}</li>`).join('');
+  const hot = $('#hotline');
+  if (state.info.contact) { hot.hidden = false; hot.textContent = `대관 문의 ${state.info.contact}`; hot.href = `tel:${state.info.contact.replace(/[^0-9+]/g, '')}`; }
   const q = currentQuote();
   const peek = $('#peek');
   if (st >= 3 && st <= 5) {
@@ -757,6 +763,12 @@ function mapChoices() {
   return list;
 }
 
+function bizHtml() {
+  const b = C.business || {};
+  const parts = [b.name && `상호 ${esc(b.name)}`, b.rep && `대표 ${esc(b.rep)}`, b.regNo && `사업자등록번호 ${esc(b.regNo)}`, b.phone && `대표전화 ${esc(b.phone)}`].filter(Boolean);
+  return parts.length ? `<p class="hint biz">${parts.join(' · ')}</p>` : '';
+}
+
 function buildWhere() {
   const choices = mapChoices();
   const first = choices[0];
@@ -775,7 +787,8 @@ function buildWhere() {
       <button type="button" class="copy" data-copy="${esc(C.address)}">주소 복사</button>
     </div>
     <p class="hint">길찾기와 대중교통은 네이버 지도나 카카오맵에서 확인하세요.</p>
-    ${state.info.contact ? `<p class="hint">문의 ${esc(state.info.contact)}</p>` : ''}
+    ${state.info.contact ? `<p class="hint">대관 문의 ${esc(state.info.contact)}</p>` : ''}
+    ${bizHtml()}
   </div>`;
   mapCur = first;
 }

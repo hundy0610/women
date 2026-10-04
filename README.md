@@ -45,3 +45,7 @@ node --test
 요금, 운영 시간, 휴관 요일은 `public/shared/config.mjs`에서 바꿉니다.
 
 공간 사진은 `public/photos/`에 `room1-1.jpg`처럼 `공간ID-번호.확장자`로 넣으면 자동으로 표시됩니다. 자세한 규칙은 그 폴더의 `README.txt`를 보세요.
+
+## 디자인 시스템
+
+`DESIGN.md`(Google design.md 형식)가 색, 모서리, 글자, 주요 구성요소의 원본입니다. 값을 바꾼 뒤 `npm run design`으로 `public/tokens.css`를 다시 만들고, `npm run design:lint`와 `npm test`(글자와 바탕 대비 검사 포함)로 확인합니다.

@@ -4,21 +4,23 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <meta name="theme-color" content="#132A47">
+  <meta name="theme-color" content="#FFFFFF">
   <title>여성문화센터 대관 예약</title>
   <link rel="icon" type="image/svg+xml" href="/icon.svg">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/tokens.css">
 </head>
 <body>
   <header class="top"><div class="top-in">
       <div class="top-row">
         <button type="button" class="back" id="back" aria-label="이전 단계" hidden>&lsaquo;</button>
-        <img class="wordmark" src="/logo-light.svg" alt="여성문화센터" width="137" height="30"><span class="brand">대관 예약</span>
-        <span class="tools"><button type="button" class="myres" id="whereBtn">오시는 길</button><button type="button" class="myres" id="myres">내 예약</button></span>
+        <img class="wordmark" src="/logo.svg" alt="여성문화센터" width="137" height="30"><span class="brand">대관 예약</span>
+        <span class="tools"><a class="hotline" id="hotline" hidden></a><button type="button" class="myres" id="whereBtn">오시는 길</button><button type="button" class="myres" id="myres">내 예약</button></span>
       </div>
       <div class="progress" role="progressbar" aria-label="예약 진행" aria-valuemin="1" aria-valuemax="6" id="prog"><i id="progBar"></i></div>
+      <ol class="stepnav" id="stepnav" aria-label="진행 단계"></ol>
     </div></header>
 
   <div class="app">

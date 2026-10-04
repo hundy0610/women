@@ -1,0 +1,138 @@
+/* 자동 생성 파일입니다. DESIGN.md를 고친 뒤 npm run design 으로 다시 만드세요. */
+:root {
+  --primary: #22212A;
+  --secondary: #4D4A55;
+  --tertiary: #D63A58;
+  --tertiary-deep: #B92D48;
+  --on-tertiary: #FFFFFF;
+  --neutral: #FAF7F6;
+  --surface: #FFFFFF;
+  --sand: #F5EFEE;
+  --line: #EBE0E1;
+  --muted: #6A6169;
+  --amber: #FFC145;
+  --amber-soft: #FFF4D9;
+  --on-amber-soft: #6B4700;
+  --taken: #5B5560;
+  --on-taken: #FFFFFF;
+  --blocked: #F1EEEE;
+  --on-blocked: #5B5560;
+  --select-soft: #FFEDF0;
+  --danger: #B42318;
+  --success: #12805C;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-full: 999px;
+  --s-xs: 4px;
+  --s-sm: 8px;
+  --s-md: 16px;
+  --s-lg: 24px;
+  --s-xl: 40px;
+  --t-display-size: 1.6rem;
+  --t-display-weight: 800;
+  --t-display-line: 1.3;
+  --t-display-track: -0.015em;
+  --t-h2-size: 1.25rem;
+  --t-h2-weight: 700;
+  --t-h2-line: 1.35;
+  --t-body-md-size: 1.02rem;
+  --t-body-md-weight: 500;
+  --t-body-md-line: 1.6;
+  --t-label-md-size: 1.05rem;
+  --t-label-md-weight: 700;
+  --t-label-md-line: 1.4;
+  --t-caption-size: 0.9rem;
+  --t-caption-weight: 500;
+  --t-caption-line: 1.45;
+  --t-eyebrow-size: 0.78rem;
+  --t-eyebrow-weight: 800;
+  --t-eyebrow-line: 1.2;
+  --t-eyebrow-track: 0.14em;
+  --t-price-lg-size: 2.1rem;
+  --t-price-lg-weight: 800;
+  --t-price-lg-line: 1.1;
+  --t-price-lg-track: -0.02em;
+  --font: "Pretendard Variable", Pretendard, "Noto Sans KR", system-ui, sans-serif;
+}
+
+.top {
+  background: var(--surface);
+  color: var(--primary);
+}
+.btn {
+  background: var(--tertiary);
+  color: var(--on-tertiary);
+  font-size: var(--t-label-md-size);
+  font-weight: var(--t-label-md-weight);
+  line-height: var(--t-label-md-line);
+  border-radius: var(--r-md);
+  height: 54px;
+  padding: 0 16px;
+}
+.btn:hover:not(:disabled) {
+  background: var(--tertiary-deep);
+  color: var(--on-tertiary);
+}
+.card {
+  background: var(--surface);
+  color: var(--primary);
+  border-radius: var(--r-lg);
+}
+.side .card > h2 {
+  background: var(--sand);
+  color: var(--primary);
+  font-size: var(--t-caption-size);
+  font-weight: var(--t-caption-weight);
+  line-height: var(--t-caption-line);
+}
+.opt-card:has(.opt[aria-pressed=true]) {
+  background: var(--select-soft);
+  color: var(--tertiary-deep);
+  border-radius: var(--r-md);
+}
+.chip,
+.qbtn {
+  background: var(--surface);
+  color: var(--primary);
+  border-radius: var(--r-md);
+  height: 46px;
+}
+.chip[aria-pressed=true],
+.qbtn[aria-pressed=true] {
+  background: var(--tertiary);
+  color: var(--on-tertiary);
+}
+td.pending,
+.legend .l-pending {
+  background: var(--amber-soft);
+  color: var(--on-amber-soft);
+}
+td.confirmed,
+.legend .l-confirmed {
+  background: var(--taken);
+  color: var(--on-taken);
+}
+td.blocked,
+.legend .l-blocked {
+  background: var(--blocked);
+  color: var(--on-blocked);
+}
+td.sel,
+.legend .l-sel {
+  background: var(--amber);
+  color: var(--primary);
+}
+.tcell.sel {
+  background: var(--tertiary);
+  color: var(--on-tertiary);
+}
+.notice.error {
+  background: var(--surface);
+  color: var(--danger);
+}
+.bank {
+  background: var(--sand);
+  color: var(--primary);
+  border-radius: var(--r-md);
+}

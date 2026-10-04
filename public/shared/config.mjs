@@ -5,6 +5,9 @@ export const CONFIG = {
   access: '마두역(3호선) 도보 3~5분',
   placeName: '강촌프라자',   // 네이버 지도 검색에 함께 쓰는 건물 이름
 
+  // 사업자 정보. 값을 넣으면 오시는 길 창에 표시됩니다.
+  business: { name: '', rep: '', regNo: '', phone: '' },
+
   openHour: 9,          // 09:00부터
   closeHour: 21,        // 21:00까지 (마지막 종료 시각)
   minHours: 2,          // 최소 이용 시간
