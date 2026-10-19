@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "여성문화센터 대관 예약",
+  "description": "드림 문화센터 대관 예약",
   "scripts": {
     "start": "node server.js",
     "dev": "node dev-server.js",

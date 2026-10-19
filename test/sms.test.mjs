@@ -32,20 +32,20 @@ test('짧은 글은 SMS, 긴 글은 LMS(제목 포함), 번호는 숫자만', ()
   clear(); setAll();
   assert.deepEqual(buildMessage('010-1234-5678', '안녕하세요'), { to: '01012345678', from: '0212345678', text: '안녕하세요', type: 'SMS' });
   const l = buildMessage('01012345678', '가'.repeat(60));
-  assert.equal(l.type, 'LMS'); assert.equal(l.subject, '여성문화센터');
+  assert.equal(l.type, 'LMS'); assert.equal(l.subject, '드림 문화센터');
 });
 
 test('송금 안내는 날짜, 시간, 공간, 금액, 계좌, 기한만 담아 단문에 들어간다', () => {
   clear(); setAll();
   const t = payGuideText(rec);
-  assert.equal(t, '[여성문화센터] 10/22 10~13시 세미나실 90,000원\n111-22-333\n10/20 12시까지 입금');
+  assert.equal(t, '[드림문화센터] 10/22 10~13시 세미나실 90,000원\n111-22-333\n10/20 12시까지 입금');
   assert.equal(buildMessage('01012345678', t).type, 'SMS');
 });
 
 test('송금 완료는 한 줄 단문이다', () => {
   clear(); setAll();
   const t = paidText(rec);
-  assert.equal(t, '[여성문화센터] 10/22 10~13시 세미나실 예약 확정');
+  assert.equal(t, '[드림문화센터] 10/22 10~13시 세미나실 예약 확정');
   assert.equal(buildMessage('01012345678', t).type, 'SMS');
 });
 
