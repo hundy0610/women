@@ -1010,3 +1010,14 @@ body .btn:disabled { background: #E4DEF1; color: #6B6585; }
 @media (min-width: 1000px) { .dock { background: transparent; } }
 body .field input { border-radius: 14px; }
 .wordmark { height: 30px; }
+
+/* ===== 다음 행동이 보이는 버튼 ===== */
+#next { display: inline-flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: -.01em; }
+#next:not(:disabled)::after { content: ""; width: 18px; height: 18px; flex: none; background: currentColor; transition: transform .2s ease;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M4 10h11M11 5l5 5-5 5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M4 10h11M11 5l5 5-5 5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; }
+#next:not(:disabled):hover::after { transform: translateX(3px); }
+.cta-hint { color: var(--muted); }
+.peek { background: var(--select-soft); border-radius: var(--r-full); padding: 8px 16px; margin: 0 4px 10px; color: var(--tertiary-deep); }
+.peek b { color: var(--tertiary-deep); }
+@media (prefers-reduced-motion: reduce) { #next:not(:disabled):hover::after { transform: none; } }

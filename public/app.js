@@ -148,11 +148,11 @@ function formatPhone(s) {
 function stepProblem(step) {
   if (!state.info.storeReady) return '지금은 예약할 수 없습니다.';
   switch (step) {
-    case 1: return state.date ? '' : '날짜를 선택하세요.';
-    case 2: return state.spaceIds.length ? '' : '공간을 하나 이상 선택하세요.';
-    case 3: return state.start == null ? '시작 시간을 선택하세요.' : state.end == null ? '종료 시간을 선택하세요.' : '';
-    case 4: return state.people >= 1 ? '' : '인원을 입력하세요.';
-    case 5: return state.name.trim().length < 2 ? '이름을 입력하세요.' : !phoneOk(state.phone) ? '휴대전화 번호를 입력하세요.' : '';
+    case 1: return state.date ? '' : '이용하실 날짜를 먼저 골라 주세요.';
+    case 2: return state.spaceIds.length ? '' : '공간을 하나 이상 골라 주세요.';
+    case 3: return state.start == null ? '시작 시간을 골라 주세요.' : state.end == null ? '끝나는 시간도 골라 주세요.' : '';
+    case 4: return state.people >= 1 ? '' : '오시는 인원을 알려 주세요.';
+    case 5: return state.name.trim().length < 2 ? '이름을 알려 주세요.' : !phoneOk(state.phone) ? '연락받을 휴대전화 번호를 알려 주세요.' : '';
     case 6: return state.agree ? '' : '이용 안내 확인에 체크하세요.';
     case 8: return state.lk.rec ? '' : state.lk.id.trim().length < 6 ? '예약번호를 입력하세요.' : !phoneOk(state.lk.phone) ? '휴대전화 번호를 입력하세요.' : '';
     default: return '';
@@ -177,8 +177,8 @@ function viewDate() {
     const dot = state.taken[date] && !small ? '<span class="dot"></span>' : '';
     cells += `<button type="button" class="${cls}" data-date="${date}" ${st === 'out' ? 'disabled' : ''} aria-pressed="${date === state.date}" aria-label="${formatKoreanDate(date)}${small ? ' ' + small : ''}">${d}${small ? `<small>${small}</small>` : ''}${dot}</button>`;
   }
-  return `<h1>날짜를 선택하세요</h1>
-    <p class="sub">이용 ${C.minLeadHours}시간 전까지 예약할 수 있습니다.</p>
+  return `<h1>언제 이용하실 건가요?</h1>
+    <p class="sub">이용 ${C.minLeadHours}시간 전까지 신청할 수 있어요.</p>
     <div class="body">
       <div class="card">
         <div class="cal-head">
@@ -212,8 +212,8 @@ function viewSpace() {
     </button>${pics.length ? `<button type="button" class="photo-toggle" data-photos="${s.id}" aria-expanded="${isOpen}">${isOpen ? '접기' : holder ? '사진' : `사진 ${pics.length}`}</button>` : ''}</div>${photoBlock}</div>`;
   }).join('');
   const all = state.spaceIds.length === C.spaces.length;
-  return `<h1>공간을 선택하세요</h1>
-    <p class="sub">${formatKoreanDate(state.date)} · 여러 공간을 함께 선택할 수 있습니다.</p>
+  return `<h1>어떤 공간이 필요하세요?</h1>
+    <p class="sub">${formatKoreanDate(state.date)} · 여러 공간을 함께 고를 수 있어요.</p>
     <div class="body"><div class="options">${cards}
       <button type="button" class="opt all" data-id="__all" aria-pressed="${all}">
         <span><b>전체 통대관</b><br><span class="meta">5개 공간 전부 · 1일(${C.dayHours}시간)</span></span>
@@ -282,9 +282,9 @@ function viewTime() {
     endBlock = `<div><p class="time-label">종료 시간</p><div class="chips">${e}</div></div>`;
   }
   const result = state.start != null && state.end != null ? `<p class="time-result num">${hh(state.start)} ~ ${hh(state.end)} (${state.end - state.start}시간)</p>` : '';
-  const deskHint = state.start == null ? '시작하는 칸을 누르세요.' : state.end == null ? '마지막 칸을 누르세요.' : '';
-  return `<h1>시간을 선택하세요</h1>
-    <p class="sub">최소 ${C.minHours}시간부터 예약할 수 있습니다.</p>
+  const deskHint = state.start == null ? '시작하는 칸을 눌러 보세요.' : state.end == null ? '끝나는 칸을 눌러 주세요.' : '';
+  return `<h1>몇 시부터 몇 시까지 쓰실까요?</h1>
+    <p class="sub">최소 ${C.minHours}시간부터 신청할 수 있어요.</p>
     <div class="body">
       <div class="mob-only"><p class="time-label">시작 시간</p><div class="chips">${s}</div></div>
       <div class="mob-only">${endBlock}</div>
@@ -310,7 +310,7 @@ function overNote() {
 }
 
 function viewPeople() {
-  return `<h1>인원을 입력하세요</h1>
+  return `<h1>몇 분이 오시나요?</h1>
     <p class="sub" id="overnote">${overNote()}, 초과 시 1인당 ${won(C.overagePerPerson)}</p>
     <div class="body">
       <div class="stepper">
@@ -327,14 +327,14 @@ function viewPeople() {
 }
 
 function viewPerson() {
-  return `<h1>예약자 정보를 입력하세요</h1>
+  return `<h1>예약하시는 분을 알려 주세요</h1>
     <div class="body">
       <div class="field"><label for="f-name">이름</label>
         <input id="f-name" autocomplete="name" maxlength="20" value="${esc(state.name)}"><span class="err" id="e-name"></span></div>
       <div class="field"><label for="f-phone">휴대전화</label>
         <input id="f-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000" maxlength="13" value="${esc(state.phone)}"><span class="err" id="e-phone"></span></div>
       <input class="hp" type="text" id="f-website" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <p class="note">입금자명과 같은 이름을 입력하세요. 연락처는 예약 확인에만 사용합니다.</p>
+      <p class="note">입금하실 분 이름과 같게 적어 주세요. 연락처는 예약 안내와 확인에만 써요.</p>
     </div>`;
 }
 
@@ -356,13 +356,13 @@ function viewReview() {
     if (q.packageDiscount > 0) calc += `<div class="row minus"><span>전체 통대관 할인</span><span>-${won(q.packageDiscount)}</span></div>`;
     if (q.extraPeople > 0) calc += `<div class="row"><span>인원 초과 ${q.extraPeople}명 (최대 ${q.capacity}명)</span><span>${won(q.overageFee)}</span></div>`;
   }
-  const rules = `${C.holdHours}시간 안에 입금하면 확정됩니다.${state.info.contact ? ` 문의 ${esc(state.info.contact)}` : ''}`;
-  return `<h1>예약 내용을 확인하세요</h1>
+  const rules = `${C.holdHours}시간 안에 입금하시면 예약이 확정돼요.${state.info.contact ? ` 문의 ${esc(state.info.contact)}` : ''}`;
+  return `<h1>마지막으로 확인해 주세요</h1>
     <div class="body cols">
       <div class="card"><div class="sum-rows">${rows}</div></div>
       <div class="card"><div class="sum-rows">${calc}</div>
         <div class="total-row"><span class="label">입금할 금액</span><span class="price-lg num">${q ? won(q.total) : '0원'}</span></div></div>
-      <label class="check full"><input type="checkbox" id="f-agree" ${state.agree ? 'checked' : ''}><span>내용을 확인했습니다. ${rules}</span></label>
+      <label class="check full"><input type="checkbox" id="f-agree" ${state.agree ? 'checked' : ''}><span>내용을 확인했어요. ${rules}</span></label>
     </div>`;
 }
 
@@ -370,7 +370,7 @@ function viewDone() {
   const r = state.done;
   const b = state.info.bank;
   const bank = b
-    ? `<div class="bank"><h3>입금 계좌</h3><div class="acct num"><span class="bn">${esc(b.name)}</span> <span class="nw">${esc(b.number)}</span></div><p class="who">예금주 ${esc(b.holder)}</p><button type="button" class="copy" data-copy="${esc(b.number)}">계좌번호 복사</button></div>`
+    ? `<div class="bank"><h3>입금 계좌</h3><div class="acct num"><span class="bn">${esc(b.name)}</span> <span class="nw">${esc(b.number)}</span></div><p class="who">예금주 ${esc(b.holder)}</p><button type="button" class="copy" data-copy="${esc(b.number)}">계좌번호 복사하기</button></div>`
     : '<div class="bank"><h3>입금 계좌</h3><p class="hint">계좌 정보가 없습니다. 담당자에게 문의하세요.</p></div>';
   return `<h1>입금해 주세요</h1>
     <p class="sub">입금이 확인되면 예약이 확정됩니다.</p>
@@ -518,7 +518,8 @@ function chrome() {
 
   const btn = $('#next');
   const problem = state.submitting ? '' : stepProblem(st);
-  btn.textContent = st === 6 ? (state.submitting ? '예약하는 중' : '예약하기') : st === 7 ? '처음으로' : st === 8 ? (state.lk.rec ? '처음으로' : state.lk.busy ? '조회하는 중' : '조회하기') : '다음';
+  const NEXT_LABEL = { 1: '공간 고르기', 2: '시간 정하기', 3: '인원 정하기', 4: '예약자 정보 입력', 5: '내용 확인하기' };
+  btn.textContent = st === 6 ? (state.submitting ? '신청하는 중…' : q ? `${won(q.total)} 예약 신청하기` : '예약 신청하기') : st === 7 ? '확인했어요' : st === 8 ? (state.lk.rec ? '확인했어요' : state.lk.busy ? '찾는 중…' : '내 예약 찾기') : NEXT_LABEL[st] || '다음';
   btn.disabled = st === 7 || (st === 8 && state.lk.rec) ? false : Boolean(problem) || state.submitting || state.lk.busy;
   $('#ctaHint').textContent = state.error || (st === 7 || (st === 8 && state.lk.rec) ? '' : problem);
   $('#ctaHint').style.color = state.error ? 'var(--danger)' : '';
@@ -678,7 +679,7 @@ async function copyText(btn) {
     const t = document.createElement('textarea'); t.value = btn.dataset.copy; document.body.append(t); t.select(); document.execCommand('copy'); t.remove();
   }
   const old = btn.textContent;
-  btn.textContent = '복사했습니다';
+  btn.textContent = '복사됐어요';
   btn.classList.add('done');
   setTimeout(() => { btn.textContent = old; btn.classList.remove('done'); }, 1800);
 }

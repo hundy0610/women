@@ -2,7 +2,7 @@ import { handle } from '../lib/http.js';
 import { createReservation } from '../lib/booking.js';
 import { configWith } from '../lib/blocks.js';
 import { notifyAdmin, adminLink } from '../lib/notify.js';
-import { sendPayGuide } from '../lib/alimtalk.js';
+import { sendPayGuide } from '../lib/sms.js';
 import { formatKoreanDate, hh } from '../public/shared/time.mjs';
 import { CONFIG } from '../public/shared/config.mjs';
 

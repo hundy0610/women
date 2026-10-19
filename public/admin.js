@@ -166,7 +166,7 @@ $('#tabs').addEventListener('click', (e) => {
   for (const x of document.querySelectorAll('#tabs button')) x.setAttribute('aria-pressed', String(x === b));
   for (const t of ['list', 'cal', 'log', 'new', 'block', 'qr', 'set']) $(`#tab-${t}`).hidden = t !== b.dataset.t;
   if (['list', 'cal', 'log', 'block'].includes(b.dataset.t)) refresh();
-  if (b.dataset.t === 'set') { loadNotify(); loadAlimtalk(); }
+  if (b.dataset.t === 'set') { loadNotify(); loadSms(); }
 });
 
 $('#filters').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (b) { filter = b.dataset.f; renderFilters(); renderRows(); } });
@@ -394,13 +394,13 @@ $('#blockList').addEventListener('click', async (e) => {
 });
 
 /* ---------- 알림 ---------- */
-async function loadAlimtalk() {
+async function loadSms() {
   try {
-    const s = await call({ action: 'alimtalk_status' });
-    $('#alimState').textContent = !s.enabled
-      ? '아직 연결되지 않았습니다. Render 환경변수에 Solapi 키와 카카오 채널 정보를 넣으면 켜집니다. 방법은 docs/alimtalk.md에 있습니다.'
-      : `연결되어 있습니다. 송금 안내(예약 직후) ${s.pay ? '켜짐' : '템플릿 없음'}, 송금 완료(입금 확인 시) ${s.paid ? '켜짐' : '템플릿 없음'}.`;
-  } catch (e) { $('#alimState').textContent = e.message; }
+    const { enabled } = await call({ action: 'sms_status' });
+    $('#smsState').textContent = enabled
+      ? '연결되어 있습니다. 예약 직후 송금 안내, 입금 확인 시 송금 완료 문자가 예약자에게 갑니다.'
+      : '아직 연결되지 않았습니다. Render 환경변수에 SOLAPI_API_KEY, SOLAPI_API_SECRET, SOLAPI_SENDER(등록한 발신번호)를 넣으면 켜집니다. 방법은 docs/sms.md에 있습니다.';
+  } catch (e) { $('#smsState').textContent = e.message; }
 }
 async function loadNotify() {
   try {
