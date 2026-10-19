@@ -1,6 +1,7 @@
 import { CONFIG as C } from '/shared/config.mjs';
 import { quote } from '/shared/pricing.mjs';
 import { blockLabel, dayFullyBlocked } from '/shared/rules.mjs';
+import { icon } from '/icons.js';
 import { todayKst, parseYmd, addDays, kstEpoch, ymd, ymdNum, formatKoreanDate, formatKstDateTime, hh, DOW_LABELS } from '/shared/time.mjs';
 
 const $ = (s) => document.querySelector(s);
@@ -182,9 +183,9 @@ function viewDate() {
     <div class="body">
       <div class="card">
         <div class="cal-head">
-          <button type="button" class="icon-btn" id="prevM" aria-label="이전 달" ${y === tp.y && m === tp.m ? 'disabled' : ''}>&lsaquo;</button>
+          <button type="button" class="icon-btn" id="prevM" aria-label="이전 달" ${y === tp.y && m === tp.m ? 'disabled' : ''}>${icon('chevron-left', 20)}</button>
           <strong class="num">${y}년 ${m}월</strong>
-          <button type="button" class="icon-btn" id="nextM" aria-label="다음 달" ${y === lastDate.y && m === lastDate.m ? 'disabled' : ''}>&rsaquo;</button>
+          <button type="button" class="icon-btn" id="nextM" aria-label="다음 달" ${y === lastDate.y && m === lastDate.m ? 'disabled' : ''}>${icon('chevron-right', 20)}</button>
         </div>
         <div class="cal">${cells}</div>
       </div>
@@ -208,8 +209,8 @@ function viewSpace() {
       ? `<div class="cover"><div class="track" data-track="${s.id}" role="group" aria-label="${s.name} 사진, 옆으로 밀어서 넘기기">${real.map((src, i) => `<img src="${esc(src)}" alt="${s.name} 사진 ${i + 1}" ${i ? 'loading="lazy"' : ''} data-zoom="${s.id}" data-i="${i}" draggable="false">`).join('')}</div>${real.length > 1 ? `<span class="pcount num" data-count="${s.id}">${(coverIdx[s.id] || 0) + 1}/${real.length}</span>` : ''}</div>`
       : C.photoPlaceholders ? `<div class="cover"><div class="ph" role="img" aria-label="${s.name} 사진 준비 중"><span>사진 준비 중</span></div></div>` : '';
     return `<div class="opt-card">${cover}<div class="opt-main"><button type="button" class="opt" data-id="${s.id}" aria-pressed="${state.spaceIds.includes(s.id)}">
-      <span class="l1"><b>${s.name}</b><span class="meta num">${s.pyeong}평 · ${s.capacity}명</span></span>
-      <span class="l2"><span class="price num">시간당 ${man(s.hourly)} · 1일 ${man(s.daily)}</span><span class="free num ${free >= C.minHours ? '' : 'none'}">${free >= C.minHours ? `${free}시간 가능` : '예약 불가'}</span></span>
+      <span class="l1"><b>${s.name}</b><span class="meta num">${icon('users', 15)} ${s.capacity}명 <i class="dotsep">·</i> ${s.pyeong}평</span></span>
+      <span class="l2"><span class="price num">시간당 ${man(s.hourly)} · 1일 ${man(s.daily)}</span><span class="free num ${free >= C.minHours ? '' : 'none'}">${icon(free >= C.minHours ? 'clock' : 'x-circle', 14)} ${free >= C.minHours ? `${free}시간 가능` : '예약 불가'}</span></span>
     </button>${pics.length ? `<button type="button" class="photo-toggle" data-photos="${s.id}" aria-expanded="${isOpen}">${isOpen ? '접기' : holder ? '사진' : `사진 ${pics.length}`}</button>` : ''}</div>${photoBlock}</div>`;
   }).join('');
   const all = state.spaceIds.length === C.spaces.length;
@@ -371,13 +372,13 @@ function viewDone() {
   const r = state.done;
   const b = state.info.bank;
   const bank = b
-    ? `<div class="bank"><h3>입금 계좌</h3><div class="acct num"><span class="bn">${esc(b.name)}</span> <span class="nw">${esc(b.number)}</span></div><p class="who">예금주 ${esc(b.holder)}</p><button type="button" class="copy" data-copy="${esc(b.number)}">계좌번호 복사하기</button></div>`
+    ? `<div class="bank"><h3>입금 계좌</h3><div class="acct num"><span class="bn">${esc(b.name)}</span> <span class="nw">${esc(b.number)}</span></div><p class="who">예금주 ${esc(b.holder)}</p><button type="button" class="copy" data-copy="${esc(b.number)}">${icon('copy', 16)}계좌번호 복사하기</button></div>`
     : '<div class="bank"><h3>입금 계좌</h3><p class="hint">계좌 정보가 없습니다. 담당자에게 문의하세요.</p></div>';
-  return `<h1>입금해 주세요</h1>
+  return `<div class="done-ic">${icon('check', 30)}</div><h1>입금해 주세요</h1>
     <p class="sub">입금이 확인되면 예약이 확정됩니다.</p>
     <div class="body cols">
       <div class="stack">
-        <div class="amount-row"><div class="amount num">${won(r.amount)}</div><button type="button" class="copy" data-copy="${r.amount}">금액 복사</button></div>
+        <div class="amount-row"><div class="amount num">${won(r.amount)}</div><button type="button" class="copy" data-copy="${r.amount}">${icon('copy', 16)}금액 복사</button></div>
         ${bank}
       </div>
       <div class="stack">
@@ -400,7 +401,7 @@ function viewLookup() {
   if (r) {
     const bank = state.info.bank;
     let note = '';
-    if (r.status === 'pending') note = `<p class="notice-line">${formatKstDateTime(r.holdUntil)}까지 입금해 주세요.</p>${bank ? `<div class="bank"><h3>입금 계좌</h3><div class="acct num"><span class="bn">${esc(bank.name)}</span> <span class="nw">${esc(bank.number)}</span></div><p class="who">예금주 ${esc(bank.holder)} · 입금자명 ${esc(r.name)}</p><button type="button" class="copy" data-copy="${esc(bank.number)}">계좌번호 복사</button></div>` : ''}`;
+    if (r.status === 'pending') note = `<p class="notice-line">${formatKstDateTime(r.holdUntil)}까지 입금해 주세요.</p>${bank ? `<div class="bank"><h3>입금 계좌</h3><div class="acct num"><span class="bn">${esc(bank.name)}</span> <span class="nw">${esc(bank.number)}</span></div><p class="who">예금주 ${esc(bank.holder)} · 입금자명 ${esc(r.name)}</p><button type="button" class="copy" data-copy="${esc(bank.number)}">${icon('copy', 16)}계좌번호 복사</button></div>` : ''}`;
     else if (r.status === 'confirmed' && r.cancelRequested) note = '<p class="notice-line">취소 요청이 접수되었습니다. 담당자가 환불 방법을 안내합니다.</p>';
     else if (r.status === 'expired') note = '<p class="notice-line">입금 기한이 지났습니다. 다시 예약해 주세요.</p>';
     const canCancel = r.status === 'pending' || (r.status === 'confirmed' && !r.cancelRequested);
@@ -491,9 +492,9 @@ function openLightbox(spaceId, i) {
 }
 function paintLb() {
   const many = lb.list.length > 1;
-  $('#lightbox').innerHTML = `<div class="lb"><button type="button" class="lb-x" data-lb="close" aria-label="닫기">&times;</button>
+  $('#lightbox').innerHTML = `<div class="lb"><button type="button" class="lb-x" data-lb="close" aria-label="닫기">${icon('x', 24)}</button>
     <img class="${lb.dir > 0 ? 'in-next' : lb.dir < 0 ? 'in-prev' : ''}" src="${esc(lb.list[lb.i])}" alt="${esc(lb.name)} 사진 ${lb.i + 1}" draggable="false">
-    ${many ? `<button type="button" class="lb-n prev" data-lb="prev" aria-label="이전 사진">&lsaquo;</button><button type="button" class="lb-n next" data-lb="next" aria-label="다음 사진">&rsaquo;</button>` : ''}
+    ${many ? `<button type="button" class="lb-n prev" data-lb="prev" aria-label="이전 사진">${icon('chevron-left', 26)}</button><button type="button" class="lb-n next" data-lb="next" aria-label="다음 사진">${icon('chevron-right', 26)}</button>` : ''}
     <p class="lb-c num">${esc(lb.name)} ${lb.i + 1} / ${lb.list.length}</p></div>`;
   lb.dir = 0;
   // 다음 사진을 미리 불러 둡니다.
@@ -534,9 +535,9 @@ function chrome() {
   $('#prog').hidden = st >= 7;
 
   const NAMES = ['날짜', '공간', '시간', '인원', '예약자', '확인'];
-  $('#stepnav').innerHTML = NAMES.map((n, i) => `<li class="${st === 7 || i + 1 < st ? 'done' : i + 1 === st ? 'cur' : ''}"><b>${st === 7 || i + 1 < st ? '&#10003;' : i + 1}</b>${n}</li>`).join('');
+  $('#stepnav').innerHTML = NAMES.map((n, i) => `<li class="${st === 7 || i + 1 < st ? 'done' : i + 1 === st ? 'cur' : ''}"><b>${st === 7 || i + 1 < st ? icon('check', 14) : i + 1}</b>${n}</li>`).join('');
   const hot = $('#hotline');
-  if (state.info.contact) { hot.hidden = false; hot.textContent = `대관 문의 ${state.info.contact}`; hot.href = `tel:${state.info.contact.replace(/[^0-9+]/g, '')}`; }
+  if (state.info.contact) { hot.hidden = false; hot.innerHTML = `${icon('phone', 16)}<span>대관 문의 ${esc(state.info.contact)}</span>`; hot.href = `tel:${state.info.contact.replace(/[^0-9+]/g, '')}`; }
   const q = currentQuote();
   const peek = $('#peek');
   if (st >= 3 && st <= 5) {
@@ -576,16 +577,16 @@ function renderSide() {
   $('#side').innerHTML = `
     <div class="card sum-side${state.step >= 6 ? ' dup' : ''}"><h2>내 예약</h2>
       <div class="sum-rows" style="margin-top:12px">
-        <div class="row"><span>날짜</span><span>${state.date ? formatKoreanDate(state.date) : dash}</span></div>
-        <div class="row"><span>공간</span><span>${state.spaceIds.length ? esc(spaceNames(state.spaceIds)) : dash}</span></div>
-        <div class="row"><span>시간</span><span>${t}</span></div>
-        <div class="row"><span>인원</span><span>${state.step >= 4 ? `${state.people}명` : dash}</span></div>
+        <div class="row"><span>${icon('calendar', 16)}날짜</span><span>${state.date ? formatKoreanDate(state.date) : dash}</span></div>
+        <div class="row"><span>${icon('home', 16)}공간</span><span>${state.spaceIds.length ? esc(spaceNames(state.spaceIds)) : dash}</span></div>
+        <div class="row"><span>${icon('clock', 16)}시간</span><span>${t}</span></div>
+        <div class="row"><span>${icon('users', 16)}인원</span><span>${state.step >= 4 ? `${state.people}명` : dash}</span></div>
         ${calc}
       </div>
       <div class="total-row"><span class="label">예상 요금</span><span class="price-lg num">${q ? won(q.total) : '0원'}</span></div>
     </div>
     ${state.step === 3 ? '' : day}
-    <div class="card pay-card"><h2>입금 안내</h2>
+    <div class="card pay-card"><h2>${icon('wallet', 18)}입금 안내</h2>
       <p style="margin-top:8px">예약 후 ${C.holdHours}시간 안에 입금하세요.</p>
       ${b ? `<p class="num" style="font-weight:700;margin-top:6px"><span class="bn">${esc(b.name)}</span> <span class="nw">${esc(b.number)}</span></p><p class="hint">예금주 ${esc(b.holder)}</p>` : '<p class="hint">계좌 정보는 예약을 마치면 안내됩니다.</p>'}
     </div>`;
@@ -707,10 +708,10 @@ async function copyText(btn) {
   try { await navigator.clipboard.writeText(btn.dataset.copy); } catch {
     const t = document.createElement('textarea'); t.value = btn.dataset.copy; document.body.append(t); t.select(); document.execCommand('copy'); t.remove();
   }
-  const old = btn.textContent;
-  btn.textContent = '복사됐어요';
+  const old = btn.innerHTML;
+  btn.innerHTML = `${icon('check', 16)}복사됐어요`;
   btn.classList.add('done');
-  setTimeout(() => { btn.textContent = old; btn.classList.remove('done'); }, 1800);
+  setTimeout(() => { btn.innerHTML = old; btn.classList.remove('done'); }, 1800);
 }
 
 $('#next').addEventListener('click', () => {
@@ -730,6 +731,9 @@ window.addEventListener('popstate', (e) => {
   $('#main').scrollTo(0, 0);
 });
 $('#retryBtn').addEventListener('click', loadAvailability);
+$('#back').innerHTML = icon('chevron-left', 26);
+$('#whereBtn').innerHTML = `${icon('map-pin', 16)}<span>오시는 길</span>`;
+$('#myres').innerHTML = `${icon('calendar-check', 16)}<span>내 예약</span>`;
 $('#myres').addEventListener('click', () => go(8));
 $('#whereBtn').addEventListener('click', openWhere);
 $('#whereDlg').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
@@ -814,7 +818,7 @@ function buildWhere() {
     <div class="where-actions">
       <a class="btn small" href="${naverUrl()}" target="_blank" rel="noopener">네이버 지도에서 열기</a>
       <a class="btn small ghost" href="https://map.kakao.com/?q=${mapQuery()}" target="_blank" rel="noopener">카카오맵에서 열기</a>
-      <button type="button" class="copy" data-copy="${esc(C.address)}">주소 복사</button>
+      <button type="button" class="copy" data-copy="${esc(C.address)}">${icon('copy', 16)}주소 복사</button>
     </div>
     <p class="hint">길찾기와 대중교통은 네이버 지도나 카카오맵에서 확인하세요.</p>
     ${state.info.contact ? `<p class="hint">대관 문의 ${esc(state.info.contact)}</p>` : ''}

@@ -1,5 +1,5 @@
 /* 관리자 화면. 색과 모서리는 tokens.css(DESIGN.md)를 따릅니다. */
-:root { --a-shadow: 0 1px 2px rgba(47, 43, 74, .04), 0 8px 24px rgba(83, 70, 138, .08); --a-side: 248px; }
+:root { --a-shadow: 0 1px 2px rgba(30, 27, 59, .04), 0 8px 24px rgba(78, 47, 181, .08); --a-side: 248px; }
 body.adm { background: var(--page); font-weight: 400; }
 
 /* ---------- 로그인 ---------- */
@@ -90,7 +90,7 @@ body.adm { background: var(--page); font-weight: 400; }
 /* ---------- 예약 목록 ---------- */
 .rows { display: grid; gap: 12px; }
 .item { overflow: hidden; transition: box-shadow .2s ease; }
-.item:hover { box-shadow: 0 1px 2px rgba(47, 43, 74, .05), 0 12px 30px rgba(83, 70, 138, .13); }
+.item:hover { box-shadow: 0 1px 2px rgba(30, 27, 59, .05), 0 12px 30px rgba(78, 47, 181, .13); }
 .item-head { display: grid; grid-template-columns: 150px 1fr auto auto; gap: 8px 16px; align-items: center; padding: 16px 20px; width: 100%; text-align: left; border: 0; background: transparent; cursor: pointer; }
 .item-head .when b, .item-head .who b, .item-head .amt { font-weight: 700; display: block; font-variant-numeric: tabular-nums; }
 .item-head .when small, .item-head .who small { color: var(--muted); font-weight: 400; font-size: var(--t-caption-size); }
@@ -109,8 +109,8 @@ body.adm { background: var(--page); font-weight: 400; }
 .acts button { min-height: 44px; padding: 0 20px; border-radius: var(--r-full); border: 1.5px solid var(--line); background: var(--surface); font-weight: 700; cursor: pointer; transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease; }
 .acts button:hover { border-color: var(--tertiary); background: var(--select-soft); }
 .acts .pri { background: linear-gradient(135deg, var(--tertiary), var(--tertiary-deep)); border-color: transparent; color: var(--on-tertiary); }
-.acts .pri:hover { background: linear-gradient(135deg, var(--tertiary-deep), var(--tertiary-deep)); border-color: transparent; box-shadow: 0 4px 12px rgba(83, 70, 138, .3); }
-.acts .dng { color: var(--danger); border-color: #E8D9A4; background: var(--surface); }
+.acts .pri:hover { background: linear-gradient(135deg, var(--tertiary-deep), var(--tertiary-deep)); border-color: transparent; box-shadow: 0 4px 12px rgba(78, 47, 181, .3); }
+.acts .dng { color: var(--danger); border-color: #F3C2BC; background: var(--surface); }
 .acts .dng:hover { background: var(--amber-soft); border-color: var(--amber); }
 .quick { padding: 0 20px 16px; }
 .quick button { min-height: 44px; padding: 0 20px; border-radius: var(--r-full); border: 0; background: var(--tertiary); color: var(--on-tertiary); font-weight: 700; cursor: pointer; }
@@ -137,7 +137,7 @@ body.adm { background: var(--page); font-weight: 400; }
 .item.has-pick .item-head { padding-left: 56px; }
 .item.has-pick .quick { padding-left: 56px; }
 .item .pick { position: absolute; left: 0; top: 0; width: 56px; height: 66px; display: grid; place-items: center; cursor: pointer; z-index: 1; }
-.item.picked { box-shadow: 0 0 0 2px var(--tertiary), 0 10px 28px rgba(83, 70, 138, .14); }
+.item.picked { box-shadow: 0 0 0 2px var(--tertiary), 0 10px 28px rgba(78, 47, 181, .14); }
 @media (max-width: 720px) { .item .pick { height: 56px; } .item.has-pick .item-head { padding-left: 52px; } .bulk { gap: 8px; } }
 
 /* ---------- 이력 ---------- */
@@ -168,7 +168,7 @@ body.adm { background: var(--page); font-weight: 400; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--t-body-sm-size); color: var(--secondary); }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .legend i { width: 16px; height: 16px; border-radius: 5px; border: 1px solid var(--line); display: inline-block; background: var(--surface); }
-.legend .l-pending { background: var(--amber-soft); border-color: #D4B773; }
+.legend .l-pending { background: var(--amber-soft); border-color: #E6C46A; }
 .legend .l-confirmed { background: var(--taken); border-color: var(--taken); }
 .legend .l-blocked { background: var(--blocked); }
 .dayline { padding: 18px 20px; display: grid; gap: 10px; }
@@ -207,3 +207,36 @@ body.adm { background: var(--page); font-weight: 400; }
   .two { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; } }
+
+/* ===== 아이콘과 새 색 체계 ===== */
+.ic { flex: none; vertical-align: -.2em; }
+.a-tabs button { display: flex; align-items: center; gap: 10px; }
+.a-tabs button .ic { color: var(--muted); transition: color .2s ease; }
+.a-tabs button:hover .ic { color: var(--tertiary); }
+.a-tabs button[aria-pressed=true] .ic { color: #fff; }
+.a-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.a-top .a-btn .ic { color: var(--muted); }
+@media (min-width: 1000px) {
+  .a-tabs button::before { display: none; }
+  .a-tabs button { padding: 11px 14px; font-weight: 700; }
+  .a-tabs button[aria-pressed=true] { box-shadow: 0 6px 16px rgba(78, 47, 181, .28); }
+}
+.stat { padding-right: 64px; }
+.stat-ic { position: absolute; right: 16px; top: 16px; width: 40px; height: 40px; border-radius: 14px; display: grid; place-items: center; font-style: normal; }
+.stat-ic.amber { background: var(--amber-soft); color: #8A6100; }
+.stat-ic.mint { background: var(--success-soft); color: var(--success); }
+.stat-ic.violet { background: var(--select-soft); color: var(--tertiary-deep); }
+.stat-ic.coral { background: var(--danger-soft); color: var(--danger); }
+.stat.alert { background: var(--danger-soft); }
+.stat.alert::before { background: var(--danger); }
+.stat.alert b { color: var(--danger); }
+.stat.alert .stat-ic.coral { background: #fff; }
+.item-body .tel { display: inline-flex; align-items: center; gap: 6px; color: var(--tertiary-deep); font-weight: 700; text-decoration: none; }
+.item-body .tel:hover { text-decoration: underline; }
+.acts .dng { color: var(--danger); border-color: #F3C2BC; }
+.acts .dng:hover { background: var(--danger-soft); border-color: var(--danger); }
+.bulk .a-btn.danger:not(:disabled) { background: var(--danger-soft); border-color: #F3C2BC; color: var(--danger); }
+.bulk .a-btn.danger:not(:disabled):hover { background: var(--danger); border-color: var(--danger); color: #fff; }
+.stat::before { background: linear-gradient(180deg, var(--tertiary), var(--tertiary-deep)); }
+.badge.req { background: var(--danger-soft); color: var(--danger); }
+.item.picked { box-shadow: 0 0 0 2px var(--tertiary), 0 10px 28px rgba(78, 47, 181, .14); }

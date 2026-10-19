@@ -1,3 +1,4 @@
+import { icon } from '/icons.js';
 import { CONFIG as C } from '/shared/config.mjs';
 import { quote } from '/shared/pricing.mjs';
 import { formatKoreanDate, formatKstDateTime, hh, todayKst } from '/shared/time.mjs';
@@ -7,6 +8,11 @@ const won = (n) => `${Number(n).toLocaleString('ko-KR')}원`;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const LABEL = { pending: '입금 대기', confirmed: '확정', canceled: '취소', expired: '기한 만료' };
 const ACTION = { created: '예약 접수', admin_created: '직접 등록', confirmed: '입금 확인(확정)', canceled: '취소', memo: '메모 수정', password_changed: '비밀번호 변경', cancel_requested: '취소 요청', cancel_dismissed: '취소 요청 반려', block_added: '휴관일 추가', block_removed: '휴관일 해제' };
+const TAB_ICON = { list: 'list', cal: 'calendar', log: 'history', new: 'calendar-plus', block: 'calendar-x', qr: 'qr-code', set: 'settings' };
+document.querySelectorAll('#tabs [data-t]').forEach((b) => { b.innerHTML = `${icon(TAB_ICON[b.dataset.t] || 'list', 18)}<span>${b.textContent.trim()}</span>`; });
+const lo = document.getElementById('logout'); if (lo) lo.innerHTML = `${icon('log-out', 16)}<span>나가기</span>`;
+const cp = document.getElementById('cal-prev'); if (cp) cp.innerHTML = icon('chevron-left', 18);
+const cn = document.getElementById('cal-next'); if (cn) cn.innerHTML = icon('chevron-right', 18);
 const spaceNames = (ids) => ids.map((id) => C.spaces.find((s) => s.id === id)?.name || id).join(', ');
 
 let pw = '';
@@ -21,7 +27,7 @@ const holdText = (r) => { const h = holdLeft(r); return h <= 0 ? '지남' : h < 
 function badge() {
   const n = items.filter((r) => r.status === 'pending').length + items.filter((r) => r.status === 'confirmed' && r.cancelRequest).length;
   document.title = n ? `(${n}) 예약 관리` : '예약 관리';
-  const b = document.querySelector('[data-t="list"]');
+  const b = document.querySelector('[data-t="list"] span');
   if (b) b.textContent = n ? `예약 목록 ${n}` : '예약 목록';
 }
 let blocks = [];
@@ -62,10 +68,10 @@ function stats() {
   const todays = confirmed.filter((r) => r.date === today).length;
   const reqs = confirmed.filter((r) => r.cancelRequest).length;
   $('#stats').innerHTML = `
-    <div class="stat"><span>입금 대기</span><b>${pending.length}건</b><small>${won(pending.reduce((a, r) => a + r.amount, 0))}</small></div>
-    <div class="stat"><span>확정 예약</span><b>${confirmed.length}건</b><small>이번 달 ${won(monthSum)}</small></div>
-    <div class="stat"><span>오늘 이용</span><b>${todays}건</b><small>${formatKoreanDate(today)}</small></div>
-    <div class="stat ${reqs ? 'alert' : ''}"><span>취소 요청</span><b>${reqs}건</b><small>${reqs ? '환불 처리가 필요합니다' : '없음'}</small></div>`;
+    <div class="stat"><i class="stat-ic amber">${icon('hourglass', 20)}</i><span>입금 대기</span><b>${pending.length}건</b><small>${won(pending.reduce((a, r) => a + r.amount, 0))}</small></div>
+    <div class="stat"><i class="stat-ic mint">${icon('badge-check', 20)}</i><span>확정 예약</span><b>${confirmed.length}건</b><small>이번 달 ${won(monthSum)}</small></div>
+    <div class="stat"><i class="stat-ic violet">${icon('calendar-check', 20)}</i><span>오늘 이용</span><b>${todays}건</b><small>${formatKoreanDate(today)}</small></div>
+    <div class="stat ${reqs ? 'alert' : ''}"><i class="stat-ic coral">${icon('alert', 20)}</i><span>취소 요청</span><b>${reqs}건</b><small>${reqs ? '환불 처리가 필요합니다' : '없음'}</small></div>`;
 }
 
 function filtered() {
@@ -105,7 +111,7 @@ function renderRows() {
     const body = open ? `<div class="item-body">
       <dl>
         <dt>예약번호</dt><dd>${esc(r.id)}${r.source === 'admin' ? ' (직접 등록)' : ''}</dd>
-        <dt>연락처</dt><dd><a href="tel:${esc(r.phone)}">${esc(r.phone)}</a></dd>
+        <dt>연락처</dt><dd><a class="tel" href="tel:${esc(r.phone)}">${icon('phone', 15)}${esc(r.phone)}</a></dd>
         <dt>인원</dt><dd>${r.people}명</dd>
         <dt>이용 목적</dt><dd>${esc(r.purpose) || '-'}</dd>
         <dt>접수</dt><dd>${formatKstDateTime(r.createdAt)}</dd>
@@ -139,8 +145,8 @@ function renderBulk(list) {
   const all = n === cancelable.length;
   bar.innerHTML = `<label class="all"><input type="checkbox" id="pickAll" ${all ? 'checked' : ''}> 전체 선택 <small>(현재 목록 ${cancelable.length}건)</small></label>
     <span class="cnt">${n ? `<b>${n}건</b> 선택됨` : '취소할 예약을 선택하세요'}</span>
-    <button type="button" class="a-btn" id="pickClear" ${n ? '' : 'disabled'}>선택 해제</button>
-    <button type="button" class="a-btn danger" id="bulkCancel" ${n ? '' : 'disabled'}>선택 취소${n ? ` (${n})` : ''}</button>`;
+    <button type="button" class="a-btn" id="pickClear" ${n ? '' : 'disabled'}>${icon('x', 16)}선택 해제</button>
+    <button type="button" class="a-btn danger" id="bulkCancel" ${n ? '' : 'disabled'}>${icon('x-circle', 16)}선택 취소${n ? ` (${n})` : ''}</button>`;
   const pa = $('#pickAll');
   if (pa) pa.indeterminate = n > 0 && !all;
 }
@@ -303,7 +309,7 @@ function qrSvg(url) {
   let d = '';
   for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) d += `M${c + quiet} ${r + quiet}h1v1h-1z`;
   const size = n + quiet * 2;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" role="img" aria-label="QR 코드"><rect width="${size}" height="${size}" fill="#fff"/><path d="${d}" fill="#2F2B4A"/></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" role="img" aria-label="QR 코드"><rect width="${size}" height="${size}" fill="#fff"/><path d="${d}" fill="#1E1B3B"/></svg>`;
 }
 function renderQr() {
   const url = $('#qr-url').value.trim();
@@ -334,7 +340,7 @@ $('#qr-png').addEventListener('click', () => {
     g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height);
     g.imageSmoothingEnabled = false;
     g.drawImage(img, 0, 0, px, px);
-    if (cap) { g.fillStyle = '#2F2B4A'; g.font = '700 48px "NanumSquare", sans-serif'; g.textAlign = 'center'; g.fillText(cap, px / 2, px + 70); }
+    if (cap) { g.fillStyle = '#1E1B3B'; g.font = '700 48px "NanumSquare", sans-serif'; g.textAlign = 'center'; g.fillText(cap, px / 2, px + 70); }
     download('reservation-qr.png', cv.toDataURL('image/png'));
   };
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);

@@ -5,7 +5,7 @@ from fontTools.pens.svgPathPen import SVGPathPen
 from fontTools.pens.transformPen import TransformPen
 
 FD = os.environ.get("FONT_DIR", r"C:\Windows\Fonts")
-VIOLET, INDIGO, AMBER, WHITE = "#6B5CA5", "#2F2B4A", "#F2C94C", "#FFFFFF"
+VIOLET, INDIGO, AMBER, WHITE = "#6C47E0", "#1E1B3B", "#FFC53D", "#FFFFFF"
 _cache = {}
 
 def font(weight):
