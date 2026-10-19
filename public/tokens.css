@@ -32,32 +32,32 @@
   --s-md: 16px;
   --s-lg: 24px;
   --s-xl: 40px;
-  --t-display-size: 1.625rem;
-  --t-display-weight: 700;
-  --t-display-line: 1.3;
-  --t-display-track: -0.02em;
+  --t-display-size: 1.875rem;
+  --t-display-weight: 800;
+  --t-display-line: 1.25;
+  --t-display-track: -0.035em;
   --t-title-size: 1.25rem;
   --t-title-weight: 700;
   --t-title-line: 1.4;
-  --t-title-track: -0.01em;
+  --t-title-track: -0.025em;
   --t-body-size: 1rem;
   --t-body-weight: 400;
   --t-body-line: 1.6;
-  --t-body-track: -0.005em;
+  --t-body-track: -0.01em;
   --t-label-size: 1rem;
-  --t-label-weight: 700;
+  --t-label-weight: 600;
   --t-label-line: 1.4;
   --t-body-sm-size: 0.875rem;
   --t-body-sm-weight: 400;
   --t-body-sm-line: 1.5;
   --t-caption-size: 0.8125rem;
-  --t-caption-weight: 400;
+  --t-caption-weight: 500;
   --t-caption-line: 1.45;
-  --t-price-size: 2rem;
-  --t-price-weight: 700;
+  --t-price-size: 2.25rem;
+  --t-price-weight: 800;
   --t-price-line: 1.1;
-  --t-price-track: -0.02em;
-  --font: "NanumSquare", "Pretendard Variable", "Noto Sans KR", system-ui, sans-serif;
+  --t-price-track: -0.035em;
+  --font: "Pretendard Variable", Pretendard, "Noto Sans KR", system-ui, -apple-system, sans-serif;
 }
 
 .top {

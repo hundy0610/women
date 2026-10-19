@@ -8,6 +8,20 @@ const won = (n) => `${Number(n).toLocaleString('ko-KR')}원`;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const LABEL = { pending: '입금 대기', confirmed: '확정', canceled: '취소', expired: '기한 만료' };
 const ACTION = { created: '예약 접수', admin_created: '직접 등록', confirmed: '입금 확인(확정)', canceled: '취소', memo: '메모 수정', password_changed: '비밀번호 변경', cancel_requested: '취소 요청', cancel_dismissed: '취소 요청 반려', block_added: '휴관일 추가', block_removed: '휴관일 해제' };
+const TITLES = { list: '예약 목록', cal: '달력', log: '변경 이력', new: '직접 등록', block: '휴관일', qr: 'QR 코드', set: '설정' };
+function pageHead(tab) {
+  $('#aTitle').textContent = TITLES[tab] || '';
+  $('#density').hidden = tab !== 'list';
+  const t = todayKst(Date.now());
+  const n = items.filter((r) => r.status === 'confirmed' && r.date === t).length;
+  $('#aDate').textContent = `${formatKoreanDate(t)}${n ? ` · 오늘 이용 ${n}건` : ''}`;
+}
+let density = 'card';
+try { density = localStorage.getItem('women:density') || 'card'; } catch { /* 무시 */ }
+function applyDensity() {
+  $('#rows').classList.toggle('dense', density === 'dense');
+  document.querySelectorAll('#density [data-d]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.d === density)));
+}
 const TAB_ICON = { list: 'list', cal: 'calendar', log: 'history', new: 'calendar-plus', block: 'calendar-x', qr: 'qr-code', set: 'settings' };
 document.querySelectorAll('#tabs [data-t]').forEach((b) => { b.innerHTML = `${icon(TAB_ICON[b.dataset.t] || 'list', 18)}<span>${b.textContent.trim()}</span>`; });
 const lo = document.getElementById('logout'); if (lo) lo.innerHTML = `${icon('log-out', 16)}<span>나가기</span>`;
@@ -165,6 +179,7 @@ async function load() {
   items = a.items.sort((x, y) => (y.date + String(y.start).padStart(2, '0')).localeCompare(x.date + String(x.start).padStart(2, '0')));
   events = b.events;
   stats(); renderFilters(); renderRows(); renderLog(); renderBlocks(); renderCal(); badge();
+  pageHead(document.querySelector('#tabs [aria-pressed=true]')?.dataset.t || 'list'); applyDensity();
 }
 
 async function refresh() {
@@ -191,6 +206,7 @@ $('#tabs').addEventListener('click', (e) => {
   if (!b) return;
   for (const x of document.querySelectorAll('#tabs button')) x.setAttribute('aria-pressed', String(x === b));
   for (const t of ['list', 'cal', 'log', 'new', 'block', 'qr', 'set']) $(`#tab-${t}`).hidden = t !== b.dataset.t;
+  pageHead(b.dataset.t);
   if (['list', 'cal', 'log', 'block'].includes(b.dataset.t)) refresh();
   if (b.dataset.t === 'set') { loadNotify(); loadSms(); }
 });
@@ -203,6 +219,14 @@ $('#rows').addEventListener('change', (e) => {
   if (!c) return;
   if (c.checked) selected.add(c.dataset.pick); else selected.delete(c.dataset.pick);
   renderRows();
+});
+
+$('#density').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-d]');
+  if (!b) return;
+  density = b.dataset.d;
+  try { localStorage.setItem('women:density', density); } catch { /* 무시 */ }
+  applyDensity();
 });
 
 $('#bulk').addEventListener('change', (e) => {
@@ -340,7 +364,7 @@ $('#qr-png').addEventListener('click', () => {
     g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height);
     g.imageSmoothingEnabled = false;
     g.drawImage(img, 0, 0, px, px);
-    if (cap) { g.fillStyle = '#1E1B3B'; g.font = '700 48px "NanumSquare", sans-serif'; g.textAlign = 'center'; g.fillText(cap, px / 2, px + 70); }
+    if (cap) { g.fillStyle = '#1E1B3B'; g.font = '700 48px "Pretendard Variable", Pretendard, sans-serif'; g.textAlign = 'center'; g.fillText(cap, px / 2, px + 70); }
     download('reservation-qr.png', cv.toDataURL('image/png'));
   };
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);

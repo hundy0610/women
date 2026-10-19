@@ -1,7 +1,7 @@
 ---
 version: alpha
 name: Women Center Booking
-description: 여성문화센터 대관 사업의 예약 사이트. 흰 바탕에 깊은 인디고 글자, 브랜드와 강조에는 더스티 바이올렛 하나, 짝으로 버터 옐로를 쓰는 차분한 업무용 화면.
+description: 여성문화센터 대관 사업의 예약 사이트. 연한 라일락 오로라 바탕 위의 흰 카드, 선명한 바이올렛 브랜드색과 민트(확정)·코랄(경고)·버터 옐로(대기) 상태색, 프리텐다드 가변 글꼴, 선 아이콘, 알약 버튼.
 colors:
   primary: "#1E1B3B"
   secondary: "#484466"
@@ -28,44 +28,44 @@ colors:
   success-soft: "#DDF5EC"
 typography:
   display:
-    fontFamily: NanumSquare
-    fontSize: 1.625rem
-    fontWeight: 700
-    lineHeight: 1.3
-    letterSpacing: -0.02em
+    fontFamily: Pretendard
+    fontSize: 1.875rem
+    fontWeight: 800
+    lineHeight: 1.25
+    letterSpacing: -0.035em
   title:
-    fontFamily: NanumSquare
+    fontFamily: Pretendard
     fontSize: 1.25rem
     fontWeight: 700
     lineHeight: 1.4
-    letterSpacing: -0.01em
+    letterSpacing: -0.025em
   body:
-    fontFamily: NanumSquare
+    fontFamily: Pretendard
     fontSize: 1rem
     fontWeight: 400
     lineHeight: 1.6
-    letterSpacing: -0.005em
+    letterSpacing: -0.01em
   label:
-    fontFamily: NanumSquare
+    fontFamily: Pretendard
     fontSize: 1rem
-    fontWeight: 700
+    fontWeight: 600
     lineHeight: 1.4
   body-sm:
-    fontFamily: NanumSquare
+    fontFamily: Pretendard
     fontSize: 0.875rem
     fontWeight: 400
     lineHeight: 1.5
   caption:
-    fontFamily: NanumSquare
+    fontFamily: Pretendard
     fontSize: 0.8125rem
-    fontWeight: 400
+    fontWeight: 500
     lineHeight: 1.45
   price:
-    fontFamily: NanumSquare
-    fontSize: 2rem
-    fontWeight: 700
+    fontFamily: Pretendard
+    fontSize: 2.25rem
+    fontWeight: 800
     lineHeight: 1.1
-    letterSpacing: -0.02em
+    letterSpacing: -0.035em
     fontFeature: tnum
 rounded:
   sm: 6px
@@ -172,17 +172,17 @@ components:
 
 ## Typography
 
-나눔스퀘어(NanumSquare) 한 가지 글꼴을 쓴다. 정방형에 가까운 단정한 글자꼴이라 또렷하고, 이 글꼴이 제공하는 굵기는 400(Regular)과 700(Bold)이다. 그래서 굵기도 두 가지로 제한한다. 글자 크기는 7단계로 제한한다. 단계가 많으면 화면이 어수선해 보이므로 새 크기를 추가하지 않는다.
+프리텐다드(Pretendard Variable) 한 가지 글꼴을 쓴다. 굵기를 400부터 800까지 자유롭게 쓸 수 있는 가변 글꼴이라, 굵기 차이로 위계를 만든다. 제목은 800에 자간을 좁게(-0.035em), 라벨은 600, 본문은 400, 보조 글자는 500이다. 글자 크기는 7단계로 제한한다. 단계가 많으면 화면이 어수선해 보이므로 새 크기를 추가하지 않는다.
 
 | 단계 | 크기 | 굵기 | 쓰는 곳 |
 | --- | --- | --- | --- |
-| display | 29px | 700 | 단계 제목 |
+| display | 34px | 800 | 단계 제목 |
 | title | 22px | 700 | 패널 제목, 큰 이름 |
 | body | 18px | 400 | 본문, 안내 문장 |
-| label | 18px | 700 | 이름, 라벨, 버튼 |
+| label | 18px | 600 | 이름, 라벨, 버튼 |
 | body-sm | 16px | 400 | 보조 설명, 메타 정보 |
 | caption | 15px | 400 | 범례, 표의 작은 글자 |
-| price | 36px | 700 | 합계 금액 |
+| price | 40px | 800 | 합계 금액 |
 
 - 제목은 글자 사이를 조금 좁히고(-0.02em), 본문은 줄 간격을 1.6으로 넉넉히 둔다. 제목은 `text-wrap: balance`로 줄바꿈을 고르게 한다.
 - 굵은 글씨는 이름, 라벨, 금액에만 쓴다. 가격표나 설명 문장 전체를 굵게 하지 않는다.

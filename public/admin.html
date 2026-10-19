@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#FFFFFF">
   <title>예약 관리</title>
   <link rel="icon" type="image/svg+xml" href="/icon.svg">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@2.0/nanumsquare.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/tokens.css">
   <link rel="stylesheet" href="/admin.css">
@@ -42,6 +42,16 @@
     </header>
 
     <main class="a-wrap a-main">
+      <header class="a-hd">
+        <div>
+          <p class="a-eyebrow" id="aDate"></p>
+          <h1 id="aTitle">예약 목록</h1>
+        </div>
+        <div class="seg" id="density" role="group" aria-label="목록 보기 방식" hidden>
+          <button type="button" data-d="card" aria-pressed="true">카드</button>
+          <button type="button" data-d="dense" aria-pressed="false">목록</button>
+        </div>
+      </header>
       <p class="toast" id="toast" role="status"></p>
 
       <section id="tab-list">
