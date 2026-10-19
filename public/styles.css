@@ -895,3 +895,24 @@ table.grid th[scope=row] { font-size: var(--t-body-sm-size); font-weight: 700; }
 /* 나눔스퀘어는 400과 700만 있다 */
 body, button, input, textarea, select { font-family: var(--font); }
 .step h1, h2 { letter-spacing: -.02em; }
+
+/* ===== ui-ux-pro-max 점검 반영: 공간 사진 카드, 전환, 포커스, 모션 ===== */
+.opt-card { overflow: hidden; transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+.opt-card:hover { box-shadow: 0 6px 18px rgba(47, 43, 74, .10); }
+.opt-card:has(.opt[aria-pressed=true]) { border-color: var(--tertiary); box-shadow: 0 0 0 1px var(--tertiary); }
+.cover { overflow: hidden; }
+.cover img { transition: transform .35s ease; }
+.opt-card:hover .cover img { transform: scale(1.04); }
+.pcount { display: inline-flex; align-items: center; gap: 4px; backdrop-filter: blur(4px); }
+@media (min-width: 1000px) {
+  .cover img { aspect-ratio: 16 / 9; }
+  .options { gap: 16px; }
+  .opt { padding: 14px 18px 12px; }
+}
+button, .day, .tcell, .opt, .chip, .qbtn, .photo-toggle { cursor: pointer; transition: background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease; }
+button:disabled, .tcell:disabled, .day:disabled { cursor: not-allowed; }
+:focus-visible { outline: 3px solid var(--tertiary); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; scroll-behavior: auto !important; }
+  .opt-card:hover .cover img { transform: none; }
+}

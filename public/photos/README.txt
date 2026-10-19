@@ -1,7 +1,7 @@
 공간 사진을 넣는 폴더입니다.
 
 파일 이름: 공간ID-번호.jpg
-  lobby-1.jpg, lobby-2.jpg      로비
+  lobby-1.jpg, lobby-2.jpg, lobby-3.jpg  로비
   seminar-1.jpg, seminar-2.jpg  세미나실
   room1-1.jpg, room1-2.jpg      방1
   room2-1.jpg, room2-2.jpg      방2
