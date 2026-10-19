@@ -1021,3 +1021,20 @@ body .field input { border-radius: 14px; }
 .peek { background: var(--select-soft); border-radius: var(--r-full); padding: 8px 16px; margin: 0 4px 10px; color: var(--tertiary-deep); }
 .peek b { color: var(--tertiary-deep); }
 @media (prefers-reduced-motion: reduce) { #next:not(:disabled):hover::after { transform: none; } }
+
+/* ===== 사진: 카드에서 밀어서 넘기기, 확대 화면에서 좌우로 넘기기 ===== */
+.cover .track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.cover .track::-webkit-scrollbar { display: none; }
+.cover .track img { flex: 0 0 100%; width: 100%; scroll-snap-align: start; scroll-snap-stop: always; aspect-ratio: 16 / 8; object-fit: cover; display: block; cursor: zoom-in; -webkit-user-drag: none; user-select: none; }
+@media (min-width: 1000px) {
+  .cover .track { overflow: hidden; }
+  .cover .track img { aspect-ratio: 16 / 9; }
+}
+.pcount { letter-spacing: .02em; }
+dialog#lightbox .lb { touch-action: pan-y; user-select: none; }
+dialog#lightbox .lb img { -webkit-user-drag: none; touch-action: pan-y; }
+@keyframes lbNext { from { opacity: 0; transform: translateX(36px); } to { opacity: 1; transform: none; } }
+@keyframes lbPrev { from { opacity: 0; transform: translateX(-36px); } to { opacity: 1; transform: none; } }
+.lb img.in-next { animation: lbNext .22s ease both; }
+.lb img.in-prev { animation: lbPrev .22s ease both; }
+@media (prefers-reduced-motion: reduce) { .lb img.in-next, .lb img.in-prev { animation: none; } }

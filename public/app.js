@@ -192,6 +192,7 @@ function viewDate() {
     </div>`;
 }
 
+const coverIdx = {}; // 공간별로 지금 보고 있는 커버 사진 번호
 function viewSpace() {
   const cards = C.spaces.map((s) => {
     const free = freeHours(state.date, s.id);
@@ -204,7 +205,7 @@ function viewSpace() {
       : '';
     const first = real[0];
     const cover = first
-      ? `<div class="cover"><img src="${esc(first)}" alt="${s.name} 사진" loading="lazy" data-zoom="${s.id}" data-i="0">${real.length > 1 ? `<span class="pcount num">${real.length}장</span>` : ''}</div>`
+      ? `<div class="cover"><div class="track" data-track="${s.id}" role="group" aria-label="${s.name} 사진, 옆으로 밀어서 넘기기">${real.map((src, i) => `<img src="${esc(src)}" alt="${s.name} 사진 ${i + 1}" ${i ? 'loading="lazy"' : ''} data-zoom="${s.id}" data-i="${i}" draggable="false">`).join('')}</div>${real.length > 1 ? `<span class="pcount num" data-count="${s.id}">${(coverIdx[s.id] || 0) + 1}/${real.length}</span>` : ''}</div>`
       : C.photoPlaceholders ? `<div class="cover"><div class="ph" role="img" aria-label="${s.name} 사진 준비 중"><span>사진 준비 중</span></div></div>` : '';
     return `<div class="opt-card">${cover}<div class="opt-main"><button type="button" class="opt" data-id="${s.id}" aria-pressed="${state.spaceIds.includes(s.id)}">
       <span class="l1"><b>${s.name}</b><span class="meta num">${s.pyeong}평 · ${s.capacity}명</span></span>
@@ -451,7 +452,8 @@ async function doCancel() {
 }
 
 /* ---------- 사진 확대 ---------- */
-const lb = { list: [], i: 0, name: '' };
+const lb = { list: [], i: 0, name: '', dir: 0 };
+const lbGo = (step) => { lb.dir = step; lb.i = (lb.i + step + lb.list.length) % lb.list.length; paintLb(); };
 function openLightbox(spaceId, i) {
   lb.list = state.photos[spaceId] || [];
   lb.i = i;
@@ -461,14 +463,26 @@ function openLightbox(spaceId, i) {
     d = document.createElement('dialog');
     d.id = 'lightbox';
     d.setAttribute('aria-label', '사진 보기');
+    let swipedAt = 0;
     d.addEventListener('click', (e) => {
-      if (e.target.closest('[data-lb=close]') || e.target === d) d.close();
-      else if (e.target.closest('[data-lb=prev]')) { lb.i = (lb.i + lb.list.length - 1) % lb.list.length; paintLb(); }
-      else if (e.target.closest('[data-lb=next]')) { lb.i = (lb.i + 1) % lb.list.length; paintLb(); }
+      if (Date.now() - swipedAt < 400) return; // 넘기는 동작 끝에 생기는 클릭은 무시
+      if (e.target.closest('[data-lb=close]') || e.target === d || e.target.classList.contains('lb')) d.close();
+      else if (e.target.closest('[data-lb=prev]')) lbGo(-1);
+      else if (e.target.closest('[data-lb=next]')) lbGo(1);
     });
     d.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft') { lb.i = (lb.i + lb.list.length - 1) % lb.list.length; paintLb(); }
-      if (e.key === 'ArrowRight') { lb.i = (lb.i + 1) % lb.list.length; paintLb(); }
+      if (e.key === 'ArrowLeft') lbGo(-1);
+      if (e.key === 'ArrowRight') lbGo(1);
+    });
+    // 화면을 좌우로 밀어서 사진 넘기기 (터치, 마우스 드래그 모두)
+    let sx = 0; let sy = 0; let track = false;
+    d.addEventListener('pointerdown', (e) => { if (e.target.closest('button')) return; sx = e.clientX; sy = e.clientY; track = true; });
+    d.addEventListener('pointercancel', () => { track = false; });
+    d.addEventListener('pointerup', (e) => {
+      if (!track) return;
+      track = false;
+      const dx = e.clientX - sx; const dy = e.clientY - sy;
+      if (lb.list.length > 1 && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.3) { swipedAt = Date.now(); lbGo(dx < 0 ? 1 : -1); }
     });
     document.body.append(d);
   }
@@ -478,10 +492,24 @@ function openLightbox(spaceId, i) {
 function paintLb() {
   const many = lb.list.length > 1;
   $('#lightbox').innerHTML = `<div class="lb"><button type="button" class="lb-x" data-lb="close" aria-label="닫기">&times;</button>
-    <img src="${esc(lb.list[lb.i])}" alt="${esc(lb.name)} 사진 ${lb.i + 1}">
+    <img class="${lb.dir > 0 ? 'in-next' : lb.dir < 0 ? 'in-prev' : ''}" src="${esc(lb.list[lb.i])}" alt="${esc(lb.name)} 사진 ${lb.i + 1}" draggable="false">
     ${many ? `<button type="button" class="lb-n prev" data-lb="prev" aria-label="이전 사진">&lsaquo;</button><button type="button" class="lb-n next" data-lb="next" aria-label="다음 사진">&rsaquo;</button>` : ''}
     <p class="lb-c num">${esc(lb.name)} ${lb.i + 1} / ${lb.list.length}</p></div>`;
+  lb.dir = 0;
+  // 다음 사진을 미리 불러 둡니다.
+  for (const k of [1, -1]) { const s = lb.list[(lb.i + k + lb.list.length) % lb.list.length]; if (s) new Image().src = s; }
 }
+
+/* 카드의 사진 줄을 밀면 "2/3"처럼 번호가 바뀝니다. scroll은 버블링하지 않아 캡처로 받습니다. */
+document.addEventListener('scroll', (e) => {
+  const t = e.target;
+  if (!t || !t.matches || !t.matches('[data-track]')) return;
+  const n = t.children.length;
+  const i = Math.min(n - 1, Math.max(0, Math.round(t.scrollLeft / (t.clientWidth || 1))));
+  coverIdx[t.dataset.track] = i;
+  const c = t.parentElement.querySelector('[data-count]');
+  if (c) c.textContent = `${i + 1}/${n}`;
+}, { capture: true, passive: true });
 
 /* ---------- 렌더 ---------- */
 function render(keepScroll = false) {
@@ -491,6 +519,7 @@ function render(keepScroll = false) {
   $('#main').innerHTML = `<section class="step s${state.step}" ${keepScroll ? 'style="animation:none"' : ''}>${views[state.step]()}</section>`;
   const h1 = $('#main h1');
   if (h1) h1.dataset.eyebrow = state.step <= 6 ? `STEP ${state.step} / 6` : state.step === 7 ? 'COMPLETE' : 'MY RESERVATION';
+  document.querySelectorAll('[data-track]').forEach((t) => { const i = coverIdx[t.dataset.track] || 0; if (i) t.scrollLeft = i * t.clientWidth; });
   if (keepScroll) $('#main').scrollTop = y;
   else { const h = $('#main h1'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } }
   chrome();
