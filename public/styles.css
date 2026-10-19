@@ -1009,3 +1009,4 @@ body .bank { border-radius: 16px; }
 body .btn:disabled { background: #E4DEF1; color: #6B6585; }
 @media (min-width: 1000px) { .dock { background: transparent; } }
 body .field input { border-radius: 14px; }
+.wordmark { height: 30px; }
