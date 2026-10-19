@@ -4,6 +4,7 @@ import { configWith, getBlocks, addBlock, removeBlock } from '../lib/blocks.js';
 import { listLog, logEvent } from '../lib/history.js';
 import { changePassword } from '../lib/adminpw.js';
 import { notifyAdmin, notifyEnabled, adminLink } from '../lib/notify.js';
+import { alimtalkStatus, sendPaidNotice } from '../lib/alimtalk.js';
 
 export default handle('POST', async (ctx) => {
   await requireAdmin(ctx);
@@ -16,8 +17,12 @@ export default handle('POST', async (ctx) => {
     case 'history':
       return { events: await listLog(store, 1000) };
     case 'confirm':
-      await confirmReservation(store, id, nowMs, note);
+    {
+      const rec = await confirmReservation(store, id, nowMs, note);
+      // 이번 호출로 처음 확정된 경우에만 송금 완료 알림톡을 보냅니다.
+      if (rec.confirmedAt === nowMs) await sendPaidNotice(rec);
       return {};
+    }
     case 'cancel':
       await cancelReservation(store, id, nowMs, note);
       return {};
@@ -38,6 +43,8 @@ export default handle('POST', async (ctx) => {
     case 'block_remove':
       await removeBlock(store, String(body.blockId || ''), nowMs);
       return {};
+    case 'alimtalk_status':
+      return alimtalkStatus();
     case 'notify_status':
       return { enabled: notifyEnabled() };
     case 'notify_test':
