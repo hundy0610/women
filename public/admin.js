@@ -15,6 +15,7 @@ let events = [];
 let filter = 'pending';
 let query = '';
 let openId = null;
+const selected = new Set();
 const holdLeft = (r) => (r.holdUntil - Date.now()) / 3600000;
 const holdText = (r) => { const h = holdLeft(r); return h <= 0 ? '지남' : h < 1 ? `${Math.ceil(h * 60)}분 남음` : `${Math.floor(h)}시간 남음`; };
 function badge() {
@@ -115,7 +116,8 @@ function renderRows() {
       <div class="acts">${acts.join('')}<button data-act="memo" data-id="${esc(r.id)}">메모 저장</button></div>
       <div><p class="hint" style="margin-bottom:6px">이력</p>${historyFor(r.id)}</div>
     </div>` : '';
-    return `<article class="item">
+    const pick = r.status !== 'canceled' ? `<label class="pick"><input type="checkbox" data-pick="${esc(r.id)}" ${selected.has(r.id) ? 'checked' : ''} aria-label="${esc(r.name)}님 예약 선택"></label>` : '';
+    return `<article class="item${pick ? ' has-pick' : ''}${selected.has(r.id) ? ' picked' : ''}">${pick}
       <button type="button" class="item-head" data-open="${esc(r.id)}" aria-expanded="${open}">
         <span class="when"><b>${formatKoreanDate(r.date)}</b><small>${hh(r.start)}~${hh(r.end)}</small></span>
         <span class="who"><b>${esc(r.name)}</b> <small>${esc(spaceNames(r.spaces))}${r.memo ? ' · 메모 있음' : ''}</small>${r.status === 'pending' ? `<small class="left ${holdLeft(r) < 6 ? 'warn' : ''}">입금 기한 ${holdText(r)}</small>` : ''}</span>
@@ -123,6 +125,24 @@ function renderRows() {
         <span class="badge ${r.cancelRequest && r.status === 'confirmed' ? 'req' : r.status}">${r.cancelRequest && r.status === 'confirmed' ? '취소 요청' : LABEL[r.status]}</span>
       </button>${!open && (r.status === 'pending') ? `<div class="quick"><button class="pri" data-act="confirm" data-id="${esc(r.id)}">입금 확인(확정)</button></div>` : ''}${body}</article>`;
   }).join('') : '<p class="empty">해당하는 예약이 없습니다.</p>';
+  renderBulk(list);
+}
+
+// 선택 취소 막대: 현재 목록에서 취소할 수 있는 건만 고를 수 있습니다.
+function renderBulk(list) {
+  const cancelable = list.filter((r) => r.status !== 'canceled');
+  for (const id of [...selected]) if (!cancelable.some((r) => r.id === id)) selected.delete(id);
+  const bar = $('#bulk');
+  bar.hidden = !cancelable.length;
+  if (!cancelable.length) return;
+  const n = selected.size;
+  const all = n === cancelable.length;
+  bar.innerHTML = `<label class="all"><input type="checkbox" id="pickAll" ${all ? 'checked' : ''}> 전체 선택 <small>(현재 목록 ${cancelable.length}건)</small></label>
+    <span class="cnt">${n ? `<b>${n}건</b> 선택됨` : '취소할 예약을 선택하세요'}</span>
+    <button type="button" class="a-btn" id="pickClear" ${n ? '' : 'disabled'}>선택 해제</button>
+    <button type="button" class="a-btn danger" id="bulkCancel" ${n ? '' : 'disabled'}>선택 취소${n ? ` (${n})` : ''}</button>`;
+  const pa = $('#pickAll');
+  if (pa) pa.indeterminate = n > 0 && !all;
 }
 
 function renderLog() {
@@ -169,8 +189,42 @@ $('#tabs').addEventListener('click', (e) => {
   if (b.dataset.t === 'set') { loadNotify(); loadSms(); }
 });
 
-$('#filters').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (b) { filter = b.dataset.f; renderFilters(); renderRows(); } });
-$('#q').addEventListener('input', (e) => { query = e.target.value; renderRows(); });
+$('#filters').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (b) { filter = b.dataset.f; selected.clear(); renderFilters(); renderRows(); } });
+$('#q').addEventListener('input', (e) => { query = e.target.value; selected.clear(); renderRows(); });
+
+$('#rows').addEventListener('change', (e) => {
+  const c = e.target.closest('[data-pick]');
+  if (!c) return;
+  if (c.checked) selected.add(c.dataset.pick); else selected.delete(c.dataset.pick);
+  renderRows();
+});
+
+$('#bulk').addEventListener('change', (e) => {
+  if (e.target.id !== 'pickAll') return;
+  const ids = filtered().filter((r) => r.status !== 'canceled').map((r) => r.id);
+  selected.clear();
+  if (e.target.checked) ids.forEach((id) => selected.add(id));
+  renderRows();
+});
+
+$('#bulk').addEventListener('click', async (e) => {
+  if (e.target.closest('#pickClear')) { selected.clear(); return renderRows(); }
+  if (!e.target.closest('#bulkCancel') || !selected.size) return;
+  const picked = items.filter((r) => selected.has(r.id));
+  const confirmed = picked.filter((r) => r.status === 'confirmed').length;
+  const lines = [`선택한 ${picked.length}건을 모두 취소합니다. 해당 시간이 다시 열립니다.`];
+  if (confirmed) lines.push(`입금이 확정된 예약 ${confirmed}건이 들어 있습니다. 환불은 따로 처리해야 합니다.`);
+  const note = prompt(`${lines.join('\n')}\n\n취소 사유를 적으세요(선택). 확인을 누르면 바로 취소됩니다.`);
+  if (note === null) return;
+  const btn = $('#bulkCancel');
+  btn.disabled = true;
+  try {
+    const { canceled, skipped } = await call({ action: 'cancel_many', ids: [...selected], note });
+    selected.clear();
+    toast(skipped.length ? `${canceled.length}건을 취소했고, ${skipped.length}건은 취소하지 못했습니다.` : `${canceled.length}건을 취소했습니다.`, skipped.length > 0);
+    await load();
+  } catch (err) { toast(err.message, true); btn.disabled = false; }
+});
 
 $('#rows').addEventListener('click', async (e) => {
   const head = e.target.closest('[data-open]');

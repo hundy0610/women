@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import http from 'node:http';
 import { createMemoryStore } from '../lib/store-memory.js';
 import { createUpstashStore } from '../lib/store-upstash.js';
-import { createReservation, publicAvailability, adminList, confirmReservation, cancelReservation, BookingError } from '../lib/booking.js';
+import { createReservation, publicAvailability, adminList, confirmReservation, cancelReservation, cancelMany, BookingError } from '../lib/booking.js';
 import { todayKst, addDays, kstEpoch, dowOf } from '../public/shared/time.mjs';
 
 const NOW = kstEpoch('2026-10-05', 12); // 월요일 12:00 KST
@@ -216,4 +216,26 @@ test('예약자 조회와 취소: 번호가 맞아야 보이고, 입금 전은 �
   assert.equal(userView(g3, NOW).cancelRequested, true);
   await dismissCancelRequest(store, r2.id, NOW);
   assert.equal(userView(await findForUser(store, r2.id, '010-7777-2222', c), NOW).cancelRequested, false);
+});
+
+test('관리자 여러 건 취소: 고른 것만 취소되고 자리가 풀리며, 중복·이미 취소·없는 건은 건너뛴다', async () => {
+  const store = createMemoryStore();
+  const a = (await createReservation(store, fresh({ spaces: ['seminar'] }), ctx())).rec;
+  const b = (await createReservation(store, fresh({ spaces: ['room1'] }), ctx())).rec;
+  const c = (await createReservation(store, fresh({ spaces: ['room2'] }), ctx())).rec;
+  await confirmReservation(store, b.id, NOW);
+  await cancelReservation(store, c.id, NOW);
+  const r = await cancelMany(store, [a.id, a.id, b.id, c.id, 'nope'], NOW + 1000, '일괄 취소');
+  assert.deepEqual(r.canceled.sort(), [a.id, b.id].sort());
+  assert.deepEqual(r.skipped.map((s) => s.id).sort(), [c.id, 'nope'].sort());
+  const list = await adminList(store, NOW + 2000);
+  assert.ok([a.id, b.id, c.id].every((id) => list.find((x) => x.id === id).status === 'canceled'));
+  // 자리가 풀려 같은 시간에 다시 예약할 수 있다
+  assert.equal(await code(createReservation(store, fresh({ spaces: ['seminar'] }), ctx({ nowMs: NOW + 3000 }))), null);
+});
+
+test('관리자 여러 건 취소: 빈 선택과 너무 많은 선택은 거절한다', async () => {
+  const store = createMemoryStore();
+  assert.equal(await code(cancelMany(store, [], NOW)), 'EMPTY');
+  assert.equal(await code(cancelMany(store, Array.from({ length: 201 }, (_, i) => `id${i}`), NOW)), 'TOO_MANY');
 });

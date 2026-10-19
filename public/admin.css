@@ -122,6 +122,24 @@ body.adm { background: var(--page); font-weight: 400; }
   .item-head .who { grid-column: 1 / -1; grid-row: 2; }
 }
 
+/* 선택 취소 */
+.bulk { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: var(--surface); border-radius: 16px; padding: 10px 16px; box-shadow: var(--a-shadow); }
+.bulk[hidden] { display: none; }
+.bulk .all { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer; min-height: 40px; }
+.bulk .all small { color: var(--muted); font-weight: 400; }
+.bulk .cnt { color: var(--secondary); flex: 1; min-width: 120px; }
+.bulk .cnt b { color: var(--tertiary-deep); }
+.bulk input[type=checkbox], .pick input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--tertiary); cursor: pointer; margin: 0; }
+.bulk .a-btn:disabled { opacity: .45; cursor: not-allowed; }
+.bulk .a-btn.danger:not(:disabled) { background: var(--amber-soft); border-color: var(--amber); color: var(--danger); }
+.bulk .a-btn.danger:not(:disabled):hover { background: var(--amber); color: var(--primary); }
+.item { position: relative; }
+.item.has-pick .item-head { padding-left: 56px; }
+.item.has-pick .quick { padding-left: 56px; }
+.item .pick { position: absolute; left: 0; top: 0; width: 56px; height: 66px; display: grid; place-items: center; cursor: pointer; z-index: 1; }
+.item.picked { box-shadow: 0 0 0 2px var(--tertiary), 0 10px 28px rgba(83, 70, 138, .14); }
+@media (max-width: 720px) { .item .pick { height: 56px; } .item.has-pick .item-head { padding-left: 52px; } .bulk { gap: 8px; } }
+
 /* ---------- 이력 ---------- */
 .log { display: grid; gap: 10px; }
 .ev { border-radius: 16px; padding: 14px 18px; display: grid; grid-template-columns: 150px 120px 1fr; gap: 4px 16px; align-items: baseline; }

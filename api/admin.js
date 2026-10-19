@@ -1,5 +1,5 @@
 import { handle, requireAdmin } from '../lib/http.js';
-import { BookingError, adminList, confirmReservation, cancelReservation, createReservation, setMemo, dismissCancelRequest } from '../lib/booking.js';
+import { BookingError, adminList, confirmReservation, cancelReservation, cancelMany, createReservation, setMemo, dismissCancelRequest } from '../lib/booking.js';
 import { configWith, getBlocks, addBlock, removeBlock } from '../lib/blocks.js';
 import { listLog, logEvent } from '../lib/history.js';
 import { changePassword } from '../lib/adminpw.js';
@@ -26,6 +26,8 @@ export default handle('POST', async (ctx) => {
     case 'cancel':
       await cancelReservation(store, id, nowMs, note);
       return {};
+    case 'cancel_many':
+      return await cancelMany(store, body.ids, nowMs, note);
     case 'memo':
       await setMemo(store, id, body.memo, nowMs);
       return {};
