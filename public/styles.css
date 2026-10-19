@@ -1,6 +1,6 @@
 /* 색, 모서리, 글자 크기 토큰은 tokens.css(DESIGN.md에서 생성)에서 옵니다. */
 :root {
-  --shadow: 0 2px 10px rgba(17, 17, 17, .06);
+  --shadow: 0 1px 2px rgba(47, 43, 74, .05), 0 4px 14px rgba(47, 43, 74, .06);
 }
 
 * { box-sizing: border-box; }
@@ -916,3 +916,34 @@ button:disabled, .tcell:disabled, .day:disabled { cursor: not-allowed; }
   *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; scroll-behavior: auto !important; }
   .opt-card:hover .cover img { transform: none; }
 }
+
+/* ===== 전체 다듬기: 부드러운 모서리와 옅은 그림자, 단계 탭, 시간표, 버튼 ===== */
+.card, .opt-card, .stat, .item, .blk, .ev, .dayline, .qr-card, details.status { box-shadow: var(--shadow); border-color: var(--line); }
+.side .card, .side .pay-card { box-shadow: var(--shadow); }
+.side .pay-card { box-shadow: none; }
+.tcell, .day, table.grid td { border-radius: var(--r-md); }
+.legend i { border-radius: var(--r-sm); }
+.opt::after { border-radius: var(--r-sm); }
+.top { background: rgba(255, 255, 255, .92); backdrop-filter: saturate(1.4) blur(8px); }
+.dock { background: linear-gradient(to top, var(--neutral) 80%, rgba(255, 255, 255, 0)); }
+.btn { box-shadow: 0 1px 2px rgba(47, 43, 74, .18); }
+.btn:hover:not(:disabled) { box-shadow: 0 4px 12px rgba(83, 70, 138, .28); transform: translateY(-1px); }
+.btn:active:not(:disabled) { transform: none; box-shadow: none; }
+.btn:disabled, .btn.ghost { box-shadow: none; }
+.btn { transition: background-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+.day:not(:disabled):hover { background: var(--select-soft); }
+.chip:hover, .qbtn:hover { border-color: var(--tertiary); background: var(--select-soft); }
+.chip[aria-pressed=true]:hover, .qbtn[aria-pressed=true]:hover { background: var(--tertiary-deep); }
+.stepnav li { transition: color .2s ease, border-color .2s ease; }
+.stepnav li.cur b { box-shadow: 0 0 0 4px var(--select-soft); }
+.field input { border-radius: var(--r-md); transition: border-color .2s ease, box-shadow .2s ease; }
+.field input:focus { border-color: var(--tertiary); box-shadow: 0 0 0 3px var(--select-soft); outline: none; }
+.notice { border-radius: var(--r-md); }
+
+/* 모바일도 커버 사진을 카드 위에 보여 줍니다. 눌러서 3장을 넘겨 봅니다. */
+.options { gap: 12px; }
+.opt-card { display: flex; flex-direction: column; }
+.cover { display: block; position: relative; background: var(--sand); }
+.cover img { display: block; width: 100%; aspect-ratio: 16 / 8; object-fit: cover; cursor: zoom-in; }
+.photo-toggle, .photos { display: none !important; }
+.opt .l1 { padding-right: 36px; }
