@@ -199,3 +199,18 @@ body.adm { font-weight: 400; }
 .item-head .when b, .item-head .who b, .item-head .amt { font-weight: 700; }
 .item-head .when small, .item-head .who small { font-weight: 400; font-size: var(--t-caption-size); }
 .badge { font-size: var(--t-caption-size); font-weight: 700; }
+
+/* ===== 관리자: 예약 화면과 같은 톤 ===== */
+body.adm { background: var(--page); }
+.a-top { background: rgba(255, 255, 255, .88); backdrop-filter: saturate(1.4) blur(8px); }
+.a-top img { height: 28px; width: auto; }
+.a-tabs button { transition: background-color .2s ease, color .2s ease; }
+.a-tabs button:hover { background: var(--sand); }
+.a-btn { border-radius: var(--r-full); transition: border-color .2s ease, background-color .2s ease; }
+.a-btn:hover { border-color: var(--tertiary); background: var(--select-soft); }
+.stat, .item, .blk, .ev, .dayline { border: 0; border-radius: 20px; box-shadow: 0 1px 2px rgba(47, 43, 74, .04), 0 8px 24px rgba(83, 70, 138, .08); }
+.stat b { color: var(--tertiary-deep); }
+.field input, .field select, .field textarea, .toolbar input { border: 1.5px solid var(--line); border-radius: 14px; }
+.field input:focus, .field select:focus, .field textarea:focus { box-shadow: 0 0 0 3px var(--select-soft); }
+.login h1 { letter-spacing: -.02em; }
+.login img { height: 36px; width: auto; }

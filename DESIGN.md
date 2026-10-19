@@ -11,6 +11,7 @@ colors:
   neutral: "#FFFFFF"
   surface: "#FFFFFF"
   sand: "#F4F2F8"
+  page: "#F5F2FC"
   line: "#E3DFEC"
   muted: "#626080"
   amber: "#F2C94C"
