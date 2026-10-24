@@ -35,11 +35,11 @@ test('짧은 글은 SMS, 긴 글은 LMS(제목 포함), 번호는 숫자만', ()
   assert.equal(l.type, 'LMS'); assert.equal(l.subject, '드림 문화센터');
 });
 
-test('송금 안내는 날짜, 시간, 공간, 금액, 계좌, 기한만 담아 단문에 들어간다', () => {
+test('송금 안내는 날짜, 시간, 공간, 금액, 은행·계좌·예금주, 기한만 담는다(90바이트를 넘으면 장문)', () => {
   clear(); setAll();
   const t = payGuideText(rec);
-  assert.equal(t, '[드림문화센터] 10/22 10~13시 세미나실 90,000원\n111-22-333\n10/20 12시까지 입금');
-  assert.equal(buildMessage('01012345678', t).type, 'SMS');
+  assert.equal(t, '[드림문화센터] 10/22 10~13시 세미나실 90,000원\n은행 111-22-333 센터\n10/20 12시까지 입금');
+  assert.equal(buildMessage('01012345678', t).type, 'LMS');
 });
 
 test('송금 완료는 한 줄 단문이다', () => {
@@ -49,11 +49,11 @@ test('송금 완료는 한 줄 단문이다', () => {
   assert.equal(buildMessage('01012345678', t).type, 'SMS');
 });
 
-test('공간이 여러 개면 "첫 공간 외N"으로 줄이고, 은행 접미사 은행은 뺀다', () => {
+test('공간이 여러 개면 "첫 공간 외N"으로 줄이고, 은행 이름과 예금주를 모두 넣는다', () => {
   clear(); setAll(); process.env.BANK_NAME = '국민은행';
   const t = payGuideText({ ...rec, spaces: ['seminar', 'room1', 'room2'], holdUntil: Date.UTC(2026, 9, 20, 3, 30) });
   assert.ok(t.includes('세미나실 외2'));
-  assert.ok(t.includes('국민 111-22-333'));
+  assert.ok(t.includes('국민은행 111-22-333 센터'));
   assert.ok(t.includes('10/20 12시30분까지 입금'));
 });
 
