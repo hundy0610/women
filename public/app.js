@@ -575,7 +575,19 @@ function chrome() {
 
   renderSide();
   renderLast();
+  fitVars();
 }
+
+// 화면 높이에 맞춰 본문을 가운데에 놓거나 채울 수 있도록 머리글·하단 영역 높이를 CSS 변수로 알려 줍니다.
+function fitVars() {
+  const root = document.documentElement.style;
+  const wrap = document.querySelector('.wrap');
+  root.setProperty('--top-h', `${Math.round(wrap.getBoundingClientRect().top + window.scrollY)}px`);
+  const dock = $('#dock');
+  const fixed = getComputedStyle(dock).position === 'fixed';
+  root.setProperty('--dock-h', fixed && !dock.hidden ? `${Math.round(dock.getBoundingClientRect().height)}px` : '0px');
+}
+window.addEventListener('resize', () => fitVars());
 
 function renderSide() {
   if (state.step >= 7) { $('#side').innerHTML = ''; return; }

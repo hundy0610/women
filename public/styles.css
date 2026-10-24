@@ -437,3 +437,37 @@ ol.notes li::before{width:26px;height:26px;font-size:14px}
 }
 #side .status-card{display:none}
 @media (min-width:1000px) and (min-height:900px){#side .status-card{display:block}}
+
+/* ===== 화면 가운데 배치와 꽉 채우기 ===== */
+.wrap{min-height:calc(100dvh - var(--top-h,89px));padding-bottom:calc(var(--dock-h,100px) + 16px);align-content:stretch}
+.work{display:flex;flex-direction:column;min-width:0}
+#main{flex:1;display:flex;flex-direction:column}
+.view{flex:1;display:flex;flex-direction:column}
+/* 내용이 화면보다 짧으면 위아래 여백이 같아지게(길어지면 자동으로 위에서부터) */
+.view>:first-child{margin-top:auto}
+.view>:last-child{margin-bottom:auto}
+/* 길어지는 화면(공간, 입금 안내)은 위에서부터 */
+.view.s2>:first-child,.view.s7>:first-child{margin-top:0}
+.view.s2>:last-child,.view.s7>:last-child{margin-bottom:0}
+/* 날짜: 달력이 남는 높이를 채움 */
+.view.s1>:first-child{margin-top:0}
+.view.s1>.card{flex:1;display:flex;flex-direction:column;max-height:640px}
+.view.s1 .cal{flex:1;grid-auto-rows:minmax(44px,1fr);align-content:stretch}
+.view.s1 .legend{margin-top:12px!important}
+.view.s1>:last-child{margin-bottom:0}
+@media (min-width:1000px){
+  .wrap{align-content:center;align-items:center;padding-bottom:32px}
+  .aside{align-self:center}
+  .view.s1 .cal{flex:none;grid-auto-rows:clamp(46px,6.4vh,84px)}
+  .view.s1>.card{max-height:none}
+  .view{justify-content:center}
+  .view.s2,.view.s7,.view.s1{justify-content:flex-start}
+  .wrap{--pad:max(24px,calc((100vw - var(--maxw))/2))}
+}
+#lastNotice{flex-wrap:nowrap;align-items:center;padding:8px 12px;gap:10px}
+#lastNotice>span{flex:1;min-width:0;font-size:15px;line-height:1.35}
+#lastNotice .btn{flex:none;min-height:44px;padding:0 14px;font-size:15px}
+#netNotice,#storeNotice{padding:8px 12px}
+/* 큰 화면에서는 가로로도 넓게 쓰되 항상 가운데에 둡니다 */
+:root{--maxw:min(1440px,94vw)}
+@media (min-width:1000px){.wrap{grid-template-columns:minmax(0,1fr) clamp(400px,26vw,460px)}}
