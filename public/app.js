@@ -2,6 +2,7 @@ import { CONFIG as C } from '/shared/config.mjs';
 import { quote } from '/shared/pricing.mjs';
 import { blockLabel, dayFullyBlocked } from '/shared/rules.mjs';
 import { ic } from '/icons.js';
+import { watchOverlay, openOverlay, closeOverlay, overlayPop } from '/overlay.js';
 import { todayKst, parseYmd, addDays, kstEpoch, ymd, ymdNum, formatKoreanDate, formatKstDateTime, hh, DOW_LABELS } from '/shared/time.mjs';
 
 const $ = (s) => document.querySelector(s);
@@ -469,7 +470,7 @@ function openLightbox(spaceId, i) {
     let swipedAt = 0;
     d.addEventListener('click', (e) => {
       if (Date.now() - swipedAt < 400) return; // 넘기는 동작 끝에 생기는 클릭은 무시
-      if (e.target.closest('[data-lb=close]') || e.target === d) d.close();
+      if (e.target.closest('[data-lb=close]') || e.target === d) closeOverlay(d);
       else if (e.target.closest('[data-lb=prev]')) lbGo(-1);
       else if (e.target.closest('[data-lb=next]')) lbGo(1);
     });
@@ -488,9 +489,10 @@ function openLightbox(spaceId, i) {
       if (lb.list.length > 1 && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.3) { swipedAt = Date.now(); lbGo(dx < 0 ? 1 : -1); }
     });
     document.body.append(d);
+    watchOverlay(d);
   }
   paintLb();
-  if (!d.open) d.showModal();
+  openOverlay(d);
 }
 function paintLb() {
   const many = lb.list.length > 1;
@@ -590,6 +592,12 @@ function fitVars() {
 window.addEventListener('resize', () => fitVars());
 
 function renderSide() {
+  // 입금 안내 화면(7단계)에서만 입금 기한과 계좌 요약을 보여 줍니다.
+  if (state.step === 7 && state.done) {
+    const b7 = state.info.bank;
+    $('#side').innerHTML = `<div class="card soft slim"><p class="row-f b">${ic('clock', 20)}${C.holdHours}시간 안에 입금해 주세요</p><p class="sm">${b7 ? `${esc(b7.name)} ${esc(b7.number)} · 예금주 ${esc(b7.holder)}` : '입금 계좌는 담당자에게 문의해 주세요.'}</p><p class="sm" style="color:var(--c-pend-fg);font-weight:700">입금 기한 ${formatKstDateTime(state.done.holdUntil)}까지</p></div>`;
+    return;
+  }
   if (state.step >= 7) { $('#side').innerHTML = ''; return; }
   const q = currentQuote();
   const dash = '<span class="muted">선택 전</span>';
@@ -608,8 +616,7 @@ function renderSide() {
       <dl class="kv"><dt>날짜</dt><dd>${state.date ? formatKoreanDate(state.date) : dash}</dd><dt>공간</dt><dd>${state.spaceIds.length ? esc(spaceNames(state.spaceIds)) : dash}</dd><dt>시간</dt><dd>${t}</dd><dt>인원</dt><dd>${state.step >= 4 ? `${state.people}명` : dash}</dd></dl>
       <div class="hr"></div><div class="stack" style="gap:8px">${calc}</div><div class="hr"></div>
       <div class="pr" style="align-items:baseline"><b>예상 요금</b><span class="amount num">${q ? won(q.total) : '—'}</span></div></div>
-    ${status}
-    <div class="card soft slim"><p class="row-f b">${ic('clock', 20)}${C.holdHours}시간 안에 입금해 주세요</p><p class="sm">${b ? `${esc(b.name)} ${esc(b.number)} · ${esc(b.holder)}` : '계좌는 예약을 마치면 안내돼요.'}</p></div>`;
+    ${status}`;
 }
 
 function go(step, push = true) {
@@ -763,6 +770,7 @@ $('#next').addEventListener('click', () => {
 });
 $('#back').addEventListener('click', () => history.back());
 window.addEventListener('popstate', (e) => {
+  if (overlayPop()) return;
   const step = e.state?.step || 1;
   state.step = step === 8 ? 8 : state.done && step === 7 ? 7 : Math.min(step, 6);
   state.error = '';
@@ -775,7 +783,8 @@ $('#whereBtn').innerHTML = `${ic('pin', 20)}오시는 길`;
 $('#myres').innerHTML = `${ic('search', 20)}내 예약`;
 $('#myres').addEventListener('click', () => go(8));
 $('#whereBtn').addEventListener('click', openWhere);
-$('#whereDlg').addEventListener('click', (e) => { if (e.target.classList.contains('scrim')) e.currentTarget.close(); });
+watchOverlay($('#whereDlg'));
+$('#whereDlg').addEventListener('click', (e) => { if (e.target.classList.contains('scrim')) closeOverlay(e.currentTarget); });
 $('#lastBtn').addEventListener('click', () => {
   try { state.done = JSON.parse(localStorage.getItem('women:last')); go(7); } catch { /* 무시 */ }
 });
@@ -864,7 +873,7 @@ let mapCur = 'google';
 
 function openWhere() {
   const d = $('#whereDlg');
-  if (!d.open) d.showModal();
+  openOverlay(d);
   showMap(mapCur);
 }
 
@@ -920,7 +929,7 @@ async function initKakaoMap() {
   } catch { mapFail('kakao'); }
 }
 $('#where').addEventListener('click', (e) => {
-  if (e.target.closest('[data-close]')) return $('#whereDlg').close();
+  if (e.target.closest('[data-close]')) return closeOverlay($('#whereDlg'));
   const t = e.target.closest('[data-maptab]');
   if (t) return showMap(t.dataset.maptab);
   const c = e.target.closest('[data-copy]');

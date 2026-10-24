@@ -1,4 +1,5 @@
 import { ic } from '/icons.js';
+import { watchOverlay, openOverlay, closeOverlay, overlayPop } from '/overlay.js';
 import { CONFIG as C } from '/shared/config.mjs';
 import { quote } from '/shared/pricing.mjs';
 import { blockLabel } from '/shared/rules.mjs';
@@ -78,7 +79,7 @@ function ask({ title, body = '', reason = null, ok = '확인', okClass = 'primar
       done = true;
       d.removeEventListener('click', onClick);
       d.removeEventListener('close', onClose);
-      if (d.open) d.close();
+      closeOverlay(d);
       resolve(v);
     };
     const onClick = (e) => {
@@ -88,7 +89,7 @@ function ask({ title, body = '', reason = null, ok = '확인', okClass = 'primar
     const onClose = () => finish(null);
     d.addEventListener('click', onClick);
     d.addEventListener('close', onClose);
-    d.showModal();
+    openOverlay(d);
     ($('#adlgR') || $('#adlgBox [data-ok]')).focus();
   });
 }
@@ -612,6 +613,8 @@ $('#notifyTest').addEventListener('click', async () => {
 });
 
 /* ---------- 시작 ---------- */
+watchOverlay($('#adlg'));
+window.addEventListener('popstate', () => { overlayPop(); });
 decorateStatic();
 applyDensity();
 renderQr();
