@@ -285,3 +285,155 @@ dialog.dark .lb{position:fixed;inset:0}
 .lb{grid-template-columns:minmax(0,100%);overflow:hidden}
 .lb-mid{min-width:0;min-height:0;overflow:hidden}
 .lb-mid img{flex:1 1 0;width:0;height:100%;min-width:0}
+
+/* ===== 스크롤 줄이기: 머리글, 하단 버튼, 카드와 칩을 한 화면에 들어오게 압축 ===== */
+/* 모바일(기본): 요약 패널은 숨기고 하단 버튼만 고정 */
+.aside{display:contents}
+#side{display:none}
+.hd-in{min-height:56px}
+.logo .t{font-size:20px}
+.logo small{font-size:13px;line-height:1.1}
+.prog{display:flex;align-items:center;gap:10px;padding:0 16px 8px}
+.prog .bar{flex:1;height:6px}
+.prog .t{margin:0;font-size:15px;white-space:nowrap}
+.banner{margin-top:8px}.banner .alert{padding:10px 14px;font-size:16px}
+.wrap{padding:12px 16px 120px;gap:16px}
+h1{font-size:28px;line-height:1.2}
+.lead{margin:4px 0 14px;font-size:17px}
+.card{padding:14px}
+.stack{gap:12px}
+.dock{padding:10px 16px calc(10px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0}
+.dock-in{gap:6px}
+#next{min-height:52px;font-size:18px}
+.dsum{font-size:16px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsum.hint{display:flex;gap:6px;justify-content:center;align-items:center;font-weight:600;color:var(--c-ink-2)}
+.dsum.hint .i{flex:none}
+
+/* 날짜 */
+.calhd{margin-bottom:6px}
+.circ{width:44px;height:44px}
+.cal{gap:3px}
+.cal .dw{padding:2px 0;font-size:15px}
+.day{min-height:48px;font-size:18px;border-radius:10px}
+.day small{font-size:12px}
+.legend{font-size:15px;gap:4px 14px}
+
+/* 공간: 가로로 압축한 카드. 사진은 왼쪽, 정보 전체가 선택 버튼 */
+.sps{gap:10px}
+.sp{display:grid;grid-template-columns:112px minmax(0,1fr);border-radius:var(--r-lg);overflow:hidden}
+.sp .stripw{min-height:112px;height:100%}
+.sp .strip{height:100%}
+.sp .ph{aspect-ratio:auto;height:100%;min-height:112px}
+.sp .cnt{right:6px;bottom:6px;padding:0 8px;font-size:13px}
+.spb{position:relative;display:grid;gap:2px;align-content:center;justify-items:start;text-align:left;padding:10px 52px 10px 14px;border:0;background:none;font:inherit;color:inherit;cursor:pointer;width:100%}
+.spb:disabled{cursor:not-allowed}
+.spb:focus-visible{outline:none;box-shadow:inset var(--focus)}
+.spb h3{font-size:20px;line-height:1.25;margin:0}
+.spb .meta{font-size:15px}
+.sp-price{font-size:15px;line-height:1.35}
+.sp-price b{font-weight:700}
+.spb .badge{font-size:14px;padding:1px 10px;margin-top:2px}
+.spb .chk{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:50%;background:#fff;border:2px solid var(--c-line-strong);display:grid;place-items:center;color:#fff}
+.sp.on .spb .chk{background:var(--c-brand);border-color:var(--c-brand)}
+.sp.dis .spb .chk{display:none}
+.sp.on{box-shadow:0 0 0 3px var(--c-brand-soft)}
+.all{padding:12px 14px;gap:12px;margin-top:0}
+.all h3{font-size:19px}
+.all .sm{font-size:15px;line-height:1.4}
+.pick-all{width:auto;min-width:96px;min-height:var(--tap);padding:0 14px;margin:0;border-radius:var(--r-pill);border:2px solid var(--c-brand);background:#fff;color:var(--c-brand-strong);font:700 17px var(--font);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;flex:none}
+.all.on .pick-all{background:var(--c-brand);color:#fff}
+
+/* 시간: 칩을 4열로 */
+.only-m .chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.only-m .chip{justify-content:center;padding:0 4px;font-size:17px;min-height:48px}
+.only-m .lab,.lab{margin-bottom:6px}
+details.card summary{min-height:48px}
+.muted.row-f{font-size:16px}
+
+/* 인원 */
+.counter{gap:12px}
+.counter .circ{width:56px;height:56px}
+.counter .num{min-width:0}
+.counter .cnum{font-size:48px;width:104px}
+.chips.five{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.chips.five .chip{padding:0;justify-content:center;font-size:17px}
+.input{font-size:19px}
+textarea.input{min-height:72px}
+
+/* 예약자, 확인 */
+.field label,.lab{margin-bottom:4px}
+.kv{gap:8px 14px}
+.hr{margin:10px 0}
+.check{padding:12px 14px;gap:12px}
+.amount{font-size:34px}
+
+/* 입금 안내, 내 예약 찾기 */
+.state{padding:12px 16px 4px;gap:6px}
+.state .ico{width:56px;height:56px}
+.state .ico .i{width:30px;height:30px}
+.acct{padding:14px;gap:8px}
+.acct .no{font-size:clamp(22px,6.4vw,28px)}
+ol.notes{gap:6px}
+ol.notes li{font-size:16px;line-height:1.45}
+
+@media (min-width:1000px){
+  .wrap{padding:16px 24px 32px;gap:24px}
+  .hd-in{min-height:56px}
+  .steps{padding:0 24px 8px}
+  .step{padding:4px 12px 4px 4px;font-size:16px}
+  .step .n{width:28px;height:28px}
+  h1{font-size:30px}
+  .lead{margin:4px 0 14px}
+  .card{padding:16px}
+  .day{min-height:48px}
+  /* 요약 패널과 하단 버튼을 한 묶음으로 따라다니게 해서 본문이 짧아지도록 */
+  .aside{display:grid;gap:12px;position:sticky;top:112px;align-self:start}
+  #side{display:grid;gap:12px}
+  .dock{position:static;margin-top:0;padding:14px;border-radius:var(--r-lg)}
+  .dsum{white-space:normal}
+  .sps{grid-template-columns:1fr 1fr}
+  .card.soft.slim{padding:12px 14px;gap:2px}
+  #side .card h2{font-size:20px;margin-bottom:8px!important}
+  #side .kv{gap:6px 12px}
+  #side .amount{font-size:32px}
+  .hgrid{gap:3px}
+  .hc{min-height:48px}
+}
+@media (min-width:700px) and (max-width:999px){
+  .sps{grid-template-columns:1fr 1fr}
+  .wrap{padding-bottom:128px}
+}
+@media (max-height:700px) and (max-width:999px){
+  .hd-in{min-height:52px}
+  .day{min-height:44px}
+}
+.card.soft.slim{display:grid;gap:2px;padding:12px 14px}
+
+/* 공간 카드 2차 압축, 시간·입금 안내 압축 */
+.sp{grid-template-columns:100px minmax(0,1fr)}
+.sp .stripw{min-height:92px}
+.sp .ph{min-height:92px}
+.spb{padding:8px 12px;gap:1px}
+.spb .spt{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.spb .chk{display:none}
+.sp .stripw .chk{position:absolute;top:6px;left:6px;width:30px;height:30px;border-radius:50%;background:#fff;border:2px solid var(--c-line-strong);display:grid;place-items:center;color:#fff}
+.sp.on .stripw .chk{background:var(--c-brand);border-color:var(--c-brand)}
+.sp.dis .stripw .chk{display:none}
+.sel-txt{display:inline-flex;align-items:center;gap:2px;color:var(--c-brand-strong)}
+.sp-price{font-size:15px}
+.paytop{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+.paytop h1{margin:0}
+.paytop p{margin:0;font-size:16px}
+.ico-ok{flex:none;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:var(--c-ok-bg);color:var(--c-ok-fg)}
+.amt-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.amt-row .amount{font-size:32px}
+.acct .btn{min-height:var(--tap)}
+ol.notes{gap:6px}
+ol.notes li::before{width:26px;height:26px;font-size:14px}
+@media (max-width:999px){.view.s2 .lead{display:none}.view.s2 h1{margin-bottom:10px}}
+@media (min-width:1000px){
+  .prog{display:none}
+  .paygrid{grid-template-columns:1fr 1fr;align-items:start}
+}
+#side .status-card{display:none}
+@media (min-width:1000px) and (min-height:900px){#side .status-card{display:block}}

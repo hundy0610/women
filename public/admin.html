@@ -89,18 +89,24 @@
           <section id="tab-new" class="stack" hidden>
             <div class="alert a-info"><span class="ai"></span><span>전화·방문 접수용이에요. 24시간 규칙과 하루 3건 제한은 적용되지 않고, 같은 시간 중복은 막혀요.</span></div>
             <form class="card stack" id="newForm" novalidate>
-              <div class="field"><label for="n-date">날짜</label><input class="input" id="n-date" type="date" required></div>
-              <div><p class="lab" id="n-sp-lab">공간</p><div class="chips" id="n-spaces" role="group" aria-labelledby="n-sp-lab"></div></div>
-              <div class="cols2">
+              <div class="cols3">
+                <div class="field"><label for="n-date">날짜</label><input class="input" id="n-date" type="date" required></div>
                 <div class="field"><label for="n-start">시작</label><select class="input" id="n-start"></select></div>
                 <div class="field"><label for="n-end">종료</label><select class="input" id="n-end"></select></div>
               </div>
-              <div class="field"><label for="n-name">이름</label><input class="input" id="n-name" maxlength="20" required></div>
-              <div class="field"><label for="n-phone">휴대전화</label><input class="input" id="n-phone" type="tel" inputmode="tel" placeholder="010-0000-0000" required></div>
-              <div class="field"><label for="n-people">인원</label><input class="input" id="n-people" type="number" min="1" value="10"></div>
-              <div class="field"><label for="n-purpose">이용 목적</label><input class="input" id="n-purpose" maxlength="100"></div>
-              <label class="check on" id="n-confirmed-l"><input type="checkbox" id="n-confirmed" class="sr-only" checked><span class="box on"></span><span>입금 확인 완료(확정으로 등록)</span></label>
-              <div class="result"><span class="ri"></span><span>금액</span><span style="margin-left:auto" class="num" id="n-price"></span></div>
+              <div><p class="lab" id="n-sp-lab">공간</p><div class="chips" id="n-spaces" role="group" aria-labelledby="n-sp-lab"></div></div>
+              <div class="cols2">
+                <div class="field"><label for="n-name">이름</label><input class="input" id="n-name" maxlength="20" required></div>
+                <div class="field"><label for="n-phone">휴대전화</label><input class="input" id="n-phone" type="tel" inputmode="tel" placeholder="010-0000-0000" required></div>
+              </div>
+              <div class="cols2">
+                <div class="field"><label for="n-people">인원</label><input class="input" id="n-people" type="number" min="1" value="10"></div>
+                <div class="field"><label for="n-purpose">이용 목적</label><input class="input" id="n-purpose" maxlength="100"></div>
+              </div>
+              <div class="cols2 nrow">
+                <label class="check on" id="n-confirmed-l"><input type="checkbox" id="n-confirmed" class="sr-only" checked><span class="box on"></span><span>입금 확인 완료(확정으로 등록)</span></label>
+                <div class="result"><span class="ri"></span><span>금액</span><span style="margin-left:auto" class="num" id="n-price"></span></div>
+              </div>
               <div id="n-err" role="alert" aria-live="polite"></div>
               <button class="btn primary block" type="submit" id="n-submit">등록하기</button>
             </form>
@@ -127,7 +133,7 @@
                 <div class="field"><label for="qr-url">주소</label><input class="input" id="qr-url" type="url" inputmode="url" placeholder="https://"></div>
                 <div class="field"><label for="qr-title">QR 아래에 넣을 문구 (선택)</label><input class="input" id="qr-title" maxlength="40" value="드림 문화센터 대관 예약"></div>
                 <div class="row-f wrapf"><button type="button" class="btn primary s" id="qr-png"></button><button type="button" class="btn secondary s" id="qr-svg"></button><button type="button" class="btn secondary s" id="qr-print"></button></div>
-                <p class="muted sm">PNG는 카톡이나 문서에 넣을 때, SVG는 현수막이나 인쇄물처럼 크게 뽑을 때 써요. 인쇄 전에 휴대폰으로 한 번 찍어 보세요. 인쇄하면 오른쪽 QR 카드만 출력돼요.</p>
+                <p class="muted sm qr-help">PNG는 카톡·문서용, SVG는 현수막·인쇄물용이에요. 인쇄 전에 휴대폰으로 한 번 찍어 보세요. 인쇄하면 QR 카드만 출력돼요.</p>
               </div>
               <div class="card stack qr-card" id="qr-card" aria-live="polite" style="text-align:center"></div>
             </div>
@@ -138,13 +144,15 @@
               <form class="card stack" id="pwForm" novalidate>
                 <h2 class="row-f"><span class="hi" data-i="lock"></span>비밀번호 변경</h2>
                 <p class="muted sm">변경하면 처음 설정한 비밀번호는 쓸 수 없어요. 8자 이상으로 정하세요.</p>
-                <div class="field"><label for="pw1">새 비밀번호</label><input class="input" id="pw1" type="password" autocomplete="new-password" minlength="8" required></div>
-                <div class="field"><label for="pw2">새 비밀번호 확인</label><input class="input" id="pw2" type="password" autocomplete="new-password" minlength="8" required></div>
+                <div class="cols2">
+                  <div class="field"><label for="pw1">새 비밀번호</label><input class="input" id="pw1" type="password" autocomplete="new-password" minlength="8" required></div>
+                  <div class="field"><label for="pw2">새 비밀번호 확인</label><input class="input" id="pw2" type="password" autocomplete="new-password" minlength="8" required></div>
+                </div>
                 <div id="pwErr" role="alert" aria-live="polite"></div>
                 <button class="btn primary block" type="submit">비밀번호 변경</button>
               </form>
               <div class="stack">
-                <div class="card stack"><h2 class="row-f"><span class="hi" data-i="down"></span>내보내기</h2><p class="muted">전체 예약을 CSV 파일로 저장해요. 엑셀에서 바로 열려요.</p><button type="button" class="btn secondary s" id="csv" style="justify-self:start"></button></div>
+                <div class="card stack"><h2 class="row-f"><span class="hi" data-i="down"></span>내보내기</h2><div class="row-f sp-b wrapf"><p class="muted" style="flex:1;min-width:180px">전체 예약을 CSV 파일로 저장해요. 엑셀에서 바로 열려요.</p><button type="button" class="btn secondary s" id="csv"></button></div></div>
                 <div class="card stack"><h2 class="row-f"><span class="hi" data-i="msg"></span>예약자 문자</h2><div id="smsState">확인 중입니다.</div></div>
                 <div class="card stack"><h2 class="row-f"><span class="hi" data-i="bell"></span>새 예약 알림</h2><div id="notifyState">확인 중입니다.</div><button type="button" class="btn secondary s" id="notifyTest" style="justify-self:start" hidden></button></div>
               </div>

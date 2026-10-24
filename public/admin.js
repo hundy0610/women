@@ -595,7 +595,7 @@ async function loadSms() {
     const { enabled } = await call({ action: 'sms_status' });
     $('#smsState').innerHTML = enabled
       ? alertBox('ok', 'check', '문자 발송이 연결되어 있어요. 예약 직후 송금 안내, 입금 확인 시 송금 완료 문자가 예약자에게 가요.')
-      : alertBox('warn', 'alert', '문자 발송이 아직 연결되지 않았어요. Render 환경변수에 SOLAPI_API_KEY, SOLAPI_API_SECRET, SOLAPI_SENDER(등록한 발신번호)를 넣으면 켜져요. 방법은 docs/sms.md에 있어요.');
+      : alertBox('warn', 'alert', '문자 발송이 아직 연결되지 않았어요. Render 환경변수에 SOLAPI_API_KEY, SOLAPI_API_SECRET, SOLAPI_SENDER를 넣으면 켜져요(docs/sms.md).');
   } catch (e) { $('#smsState').innerHTML = alertBox('err', 'alert', esc(e.message)); }
 }
 async function loadNotify() {
@@ -603,7 +603,7 @@ async function loadNotify() {
     const { enabled } = await call({ action: 'notify_status' });
     $('#notifyState').innerHTML = enabled
       ? alertBox('ok', 'check', '알림이 연결되어 있어요. 새 예약, 취소, 취소 요청이 들어오면 알림이 가요.')
-      : alertBox('warn', 'alert', '알림이 아직 연결되지 않았어요. Render 환경변수에 NOTIFY_WEBHOOK_URL(슬랙, 디스코드) 또는 TELEGRAM_BOT_TOKEN과 TELEGRAM_CHAT_ID(텔레그램)를 넣으면 켜져요.');
+      : alertBox('warn', 'alert', '알림이 아직 연결되지 않았어요. NOTIFY_WEBHOOK_URL(슬랙·디스코드) 또는 TELEGRAM_BOT_TOKEN과 TELEGRAM_CHAT_ID를 넣으면 켜져요.');
     $('#notifyTest').hidden = !enabled;
   } catch (e) { $('#notifyState').innerHTML = alertBox('err', 'alert', esc(e.message)); }
 }
