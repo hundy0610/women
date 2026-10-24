@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { CONFIG } from '../public/shared/config.mjs';
 import { quote } from '../public/shared/pricing.mjs';
 
-const q = (spaceIds, startHour, endHour, people = 1) => quote(CONFIG, { spaceIds, startHour, endHour, people });
+const q = (spaceIds, startHour, endHour, people = 1) => quote({ ...CONFIG, openHour: 9, closeHour: 21 }, { spaceIds, startHour, endHour, people });
 const ALL = ['lobby', 'seminar', 'room1', 'room2', 'room3'];
 
 test('시간당 요금', () => {

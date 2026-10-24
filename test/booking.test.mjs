@@ -4,6 +4,7 @@ import http from 'node:http';
 import { createMemoryStore } from '../lib/store-memory.js';
 import { createUpstashStore } from '../lib/store-upstash.js';
 import { createReservation, publicAvailability, adminList, confirmReservation, cancelReservation, cancelMany, BookingError } from '../lib/booking.js';
+import { CONFIG } from '../public/shared/config.mjs';
 import { todayKst, addDays, kstEpoch, dowOf } from '../public/shared/time.mjs';
 
 const NOW = kstEpoch('2026-10-05', 12); // 월요일 12:00 KST
@@ -18,7 +19,8 @@ const base = (o = {}) => ({
 });
 let phoneSeq = 0;
 const fresh = (o = {}) => base({ phone: `010-0000-${String(1000 + phoneSeq++)}`, ...o });
-const ctx = (extra = {}) => ({ nowMs: NOW, ip: '1.1.1.1' + phoneSeq, ...extra });
+const TEST_CFG = { ...CONFIG, openHour: 9, closeHour: 21 }; // 운영 시간이 바뀌어도 규칙 테스트는 같은 시간대로
+const ctx = (extra = {}) => ({ nowMs: NOW, ip: '1.1.1.1' + phoneSeq, cfg: TEST_CFG, ...extra });
 const code = async (p) => { try { await p; return null; } catch (e) { assert.ok(e instanceof BookingError, e.stack); return e.code; } };
 
 test('요일 가정 확인', () => {
@@ -190,10 +192,10 @@ test('관리자 휴관일: 예약이 막히고, 해제하면 다시 열린다', 
   const { addBlock, removeBlock, configWith, getBlocks } = await import('../lib/blocks.js');
   const store = createMemoryStore();
   const { block } = await addBlock(store, { from: OPEN_DAY, to: OPEN_DAY, reason: '센터 행사' }, NOW);
-  assert.equal(await code(createReservation(store, fresh(), ctx({ cfg: await configWith(store) }))), 'BLOCKED');
+  assert.equal(await code(createReservation(store, fresh(), ctx({ cfg: { ...(await configWith(store)), openHour: 9, closeHour: 21 } }))), 'BLOCKED');
   await removeBlock(store, block.id, NOW);
   assert.equal((await getBlocks(store)).length, 0);
-  assert.equal(await code(createReservation(store, fresh(), ctx({ cfg: await configWith(store) }))), null);
+  assert.equal(await code(createReservation(store, fresh(), ctx({ cfg: { ...(await configWith(store)), openHour: 9, closeHour: 21 } }))), null);
 });
 
 test('예약자 조회와 취소: 번호가 맞아야 보이고, 입금 전은 바로 취소, 확정은 요청으로 접수', async () => {
