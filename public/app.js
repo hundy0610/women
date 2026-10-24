@@ -542,6 +542,7 @@ const NAMES = ['날짜', '공간', '시간', '인원', '예약자', '확인'];
 
 function chrome() {
   const st = state.step;
+  document.body.dataset.step = String(st);
   const withSteps = st <= STEPS;
   $('#back').hidden = st === 1 || st === 7;
   $('#myres').classList.toggle('on', st === 8);
