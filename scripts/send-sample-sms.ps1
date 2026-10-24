@@ -1,4 +1,4 @@
-# 실제 문자 발송 테스트. 키와 Secret은 이 창에서만 입력하고 저장하지 않습니다. 문자 2통(안내, 확정)이 발송되어 요금이 듭니다(통당 약 20원).
+﻿# 실제 문자 발송 테스트. 키와 Secret은 이 창에서만 입력하고 저장하지 않습니다. 문자 2통(안내, 확정)이 발송되어 요금이 듭니다(통당 약 20원).
 # 실행: powershell -ExecutionPolicy Bypass -File scripts\send-sample-sms.ps1
 function Read-Secret([string]$prompt) {
   $sec = Read-Host -Prompt $prompt -AsSecureString
