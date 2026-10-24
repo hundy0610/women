@@ -521,7 +521,15 @@ function render(keepScroll = false) {
   document.querySelectorAll('[data-track]').forEach((t) => { const i = coverIdx[t.dataset.track] || 0; if (i) t.scrollLeft = i * t.clientWidth; });
   if (keepScroll) {
     window.scrollTo(0, y);
-    if (active && /^f-/.test(active)) { const el = document.getElementById(active); if (el) { el.focus({ preventScroll: true }); const v = el.value; if (typeof v === 'string' && el.setSelectionRange && el.type !== 'number' && el.type !== 'tel') el.setSelectionRange(v.length, v.length); } }
+    if (active && /^f-/.test(active)) {
+      const el = document.getElementById(active);
+      if (el) {
+        el.focus({ preventScroll: true });
+        // 글자 입력칸만 커서를 끝으로 옮깁니다. 체크박스, 숫자, 전화 칸에서는 오류가 나므로 건너뜁니다.
+        const textLike = el.tagName === 'TEXTAREA' || ['text', 'search', 'url', 'email', 'password'].includes(el.type);
+        if (textLike) { try { el.setSelectionRange(el.value.length, el.value.length); } catch { /* 지원하지 않는 칸 */ } }
+      }
+    }
   } else { const h = $('#main h1'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } }
   chrome();
 }
