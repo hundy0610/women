@@ -1,18 +1,16 @@
 import { CONFIG as C } from '/shared/config.mjs';
 import { quote } from '/shared/pricing.mjs';
 import { blockLabel, dayFullyBlocked } from '/shared/rules.mjs';
-import { icon } from '/icons.js';
+import { ic } from '/icons.js';
 import { todayKst, parseYmd, addDays, kstEpoch, ymd, ymdNum, formatKoreanDate, formatKstDateTime, hh, DOW_LABELS } from '/shared/time.mjs';
 
 const $ = (s) => document.querySelector(s);
-const man = (n) => (n % 10000 === 0 ? `${n / 10000}만원` : `${Number(n).toLocaleString('ko-KR')}원`);
 const won = (n) => `${Number(n).toLocaleString('ko-KR')}원`;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const HOUR_MS = 3600 * 1000;
 const HOURS = Array.from({ length: C.closeHour - C.openHour }, (_, i) => C.openHour + i);
 const STEPS = 6; // 1 날짜, 2 공간, 3 시간, 4 인원, 5 예약자, 6 확인. 7은 입금 안내, 8은 내 예약 확인.
 const BASE_BLOCKED = [...C.blockedDates];
-const STATUS_TEXT = { pending: '입금 대기', confirmed: '예약 확정', expired: '입금 기한 만료', canceled: '취소됨' };
 
 const state = {
   offset: 0,
@@ -36,7 +34,6 @@ const state = {
   photos: {},
   mapKey: null,
   kakaoKey: null,
-  openPhotos: new Set(),
   lk: { id: '', phone: '', rec: null, err: '', msg: '', busy: false, cancelOpen: false, reason: '' },
 };
 const now = () => Date.now() + state.offset;
@@ -155,10 +152,17 @@ function stepProblem(step) {
     case 4: return state.people >= 1 ? '' : '오시는 인원을 알려 주세요.';
     case 5: return state.name.trim().length < 2 ? '이름을 알려 주세요.' : !phoneOk(state.phone) ? '연락받을 휴대전화 번호를 알려 주세요.' : '';
     case 6: return state.agree ? '' : '이용 안내 확인에 체크하세요.';
-    case 8: return state.lk.rec ? '' : state.lk.id.trim().length < 6 ? '예약번호를 입력하세요.' : !phoneOk(state.lk.phone) ? '휴대전화 번호를 입력하세요.' : '';
+    case 8: return state.lk.rec ? '' : state.lk.id.trim().length < 6 ? '예약번호를 입력해 주세요.' : !phoneOk(state.lk.phone) ? '휴대전화 번호를 입력해 주세요.' : '';
     default: return '';
   }
 }
+
+/* ---------- 작은 조각 ---------- */
+const badge = (kind, text, ico) => `<span class="badge b-${kind}">${ico ? ic(ico, 16) : ''}${text}</span>`;
+const alertBox = (kind, ico, text, btn = '') => `<div class="alert a-${kind}">${ic(ico, 24)}<span>${text}</span>${btn}</div>`;
+const sw = (style) => `<i class="sw" style="${style}"></i>`;
+const LEGEND = `<div class="legend"><span>${sw('background:#fff;border-color:var(--c-line-strong)')}예약 가능</span><span>${sw('background:var(--c-pend-bg);border-color:var(--c-pend-line)')}입금 대기</span><span>${sw('background:var(--c-booked)')}예약 완료</span><span>${sw('background:repeating-linear-gradient(135deg,#C6CCD9 0 3px,#F3F5F9 3px 6px)')}휴무</span></div>`;
+const OFF_STRIPE = 'background:repeating-linear-gradient(135deg,#C6CCD9 0 3px,#F3F5F9 3px 6px)';
 
 /* ---------- 단계 화면 ---------- */
 function viewDate() {
@@ -168,184 +172,177 @@ function viewDate() {
   const lastDate = parseYmd(addDays(today, C.horizonDays));
   const first = parseYmd(ymd(y, m, 1));
   const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
-  let cells = DOW_LABELS.map((d) => `<div class="dow">${d}</div>`).join('');
-  for (let i = 0; i < first.dow; i++) cells += '<div class="day out"></div>';
+  let cells = DOW_LABELS.map((d) => `<div class="dw">${d}</div>`).join('');
+  for (let i = 0; i < first.dow; i++) cells += '<span></span>';
   for (let d = 1; d <= daysInMonth; d++) {
     const date = ymd(y, m, d);
     const st = dayStatus(date);
-    const small = st === 'blocked' ? '휴무' : st === 'full' ? '마감' : '';
-    const cls = ['day', st === 'blocked' ? 'blocked' : '', date === today ? 'today' : '', date === state.date ? 'sel' : ''].join(' ').trim();
-    const dot = state.taken[date] && !small ? '<span class="dot"></span>' : '';
-    cells += `<button type="button" class="${cls}" data-date="${date}" ${st === 'out' ? 'disabled' : ''} aria-pressed="${date === state.date}" aria-label="${formatKoreanDate(date)}${small ? ' ' + small : ''}">${d}${small ? `<small>${small}</small>` : ''}${dot}</button>`;
+    const label = date === today ? '오늘' : st === 'blocked' ? '휴무' : st === 'full' ? '마감' : '';
+    const k = [st === 'out' ? 'past' : '', st === 'blocked' ? 'off' : '', st === 'full' ? 'full' : '', date === today ? 'today' : '', date === state.date ? 'sel' : ''].filter(Boolean).join(' ');
+    const dot = state.taken[date] && st === 'open' ? '<i class="dot"></i>' : '';
+    const aria = `${formatKoreanDate(date)}${st === 'blocked' ? ' 휴무' : st === 'full' ? ' 마감' : ''}`;
+    cells += `<button type="button" class="day ${k}" data-date="${date}" ${st === 'out' ? 'disabled' : ''} aria-pressed="${date === state.date}" aria-label="${aria}">${d}${label ? `<small>${label}</small>` : ''}${dot}</button>`;
   }
   return `<h1>언제 이용하실 건가요?</h1>
-    <p class="sub">이용 ${C.minLeadHours}시간 전까지 신청할 수 있어요.</p>
-    <div class="body">
-      <div class="card">
-        <div class="cal-head">
-          <button type="button" class="icon-btn" id="prevM" aria-label="이전 달" ${y === tp.y && m === tp.m ? 'disabled' : ''}>${icon('chevron-left', 20)}</button>
-          <strong class="num">${y}년 ${m}월</strong>
-          <button type="button" class="icon-btn" id="nextM" aria-label="다음 달" ${y === lastDate.y && m === lastDate.m ? 'disabled' : ''}>${icon('chevron-right', 20)}</button>
-        </div>
-        <div class="cal">${cells}</div>
+    <p class="lead">이용 ${C.minLeadHours}시간 전까지 신청할 수 있어요.</p>
+    <div class="card">
+      <div class="calhd">
+        <button type="button" class="circ" id="prevM" aria-label="이전 달" ${y === tp.y && m === tp.m ? 'disabled style="opacity:.45"' : ''}>${ic('left')}</button>
+        <h2 class="num">${y}년 ${m}월</h2>
+        <button type="button" class="circ" id="nextM" aria-label="다음 달" ${y === lastDate.y && m === lastDate.m ? 'disabled style="opacity:.45"' : ''}>${ic('right')}</button>
       </div>
-      <div class="legend"><span><i class="l-sel"></i>오늘</span><span><i class="l-pending"></i>예약 있음</span><span><i class="l-blocked"></i>휴무</span></div>
+      <div class="cal">${cells}</div>
+    </div>
+    <div class="legend" style="margin-top:14px"><span><i class="sw" style="border-color:var(--c-brand)"></i>오늘</span><span><i class="dot"></i>예약 있음</span><span>${sw(OFF_STRIPE)}휴무</span><span>${sw('background:var(--c-off-bg)')}마감</span></div>`;
+}
+
+const coverIdx = {}; // 공간별로 지금 보고 있는 사진 번호
+function spaceCard(s) {
+  const free = freeHours(state.date, s.id);
+  const dis = free < C.minHours;
+  const on = state.spaceIds.includes(s.id);
+  const real = state.photos[s.id] || [];
+  const strip = real.length
+    ? real.map((src, i) => `<img class="ph" src="${esc(src)}" alt="${esc(s.name)} 사진 ${i + 1}" ${i ? 'loading="lazy"' : ''} data-zoom="${s.id}" data-i="${i}" draggable="false">`).join('')
+    : `<div class="ph" role="img" aria-label="${esc(s.name)} 사진 준비 중">${ic('cam', 30)}</div>`;
+  const desc = `${s.note}${s.layout ? ` · ${s.layout}` : ''}`;
+  return `<div class="sp ${on ? 'on' : ''} ${dis ? 'dis' : ''}">
+    <div class="stripw"><div class="strip" data-track="${s.id}" role="group" aria-label="${esc(s.name)} 사진, 옆으로 밀어서 넘기기">${strip}</div>${real.length > 1 ? `<span class="cnt num" data-count="${s.id}">${(coverIdx[s.id] || 0) + 1}/${real.length}</span>` : ''}<span class="chk" aria-hidden="true">${on ? ic('check', 22) : ''}</span></div>
+    <div class="spb">
+      <div class="spt"><h3>${esc(s.name)}</h3>${dis ? badge('off', '예약 불가', 'ban') : badge('ok', `${free}시간 가능`, 'clock')}</div>
+      <p class="meta">${ic('users', 18)}최대 ${s.capacity}명 · ${s.pyeong}평</p>
+      <p class="num"><b>시간당 ${won(s.hourly)}</b> <span class="muted">· 1일 ${won(s.daily)}</span></p>
+      <p class="muted sm">${esc(desc)}</p>
+      <button type="button" class="pick" data-id="${s.id}" aria-pressed="${on}" ${dis ? 'disabled' : ''}>${on ? `${ic('check', 20)}선택됨` : dis ? '선택할 수 없어요' : '선택하기'}</button>
+    </div></div>`;
+}
+
+function viewSpace() {
+  const all = state.spaceIds.length === C.spaces.length;
+  const saved = C.spaces.reduce((a, s) => a + s.daily, 0) - C.packageDayPrice;
+  return `<h1>어떤 공간이 필요하세요?</h1>
+    <p class="lead">${formatKoreanDate(state.date)} · 여러 공간을 함께 고를 수 있어요.</p>
+    <div class="sps">${C.spaces.map(spaceCard).join('')}</div>
+    <div class="all ${all ? 'on' : ''}" style="margin-top:16px">
+      <div style="flex:1"><h3>전체 통대관</h3><p class="muted sm">${C.spaces.length}개 공간 전체 · 1일(${C.dayHours}시간) ${won(C.packageDayPrice)}${saved > 0 ? `<br>개별 합계보다 ${won(saved)} 저렴해요.` : ''}</p></div>
+      <button type="button" class="pick" data-id="__all" aria-pressed="${all}" style="margin:0;padding:0 18px;${all ? 'background:var(--c-brand);color:#fff' : ''}">${all ? `${ic('check', 20)}선택됨` : '전체 선택'}</button>
     </div>`;
 }
 
-const coverIdx = {}; // 공간별로 지금 보고 있는 커버 사진 번호
-function viewSpace() {
-  const cards = C.spaces.map((s) => {
-    const free = freeHours(state.date, s.id);
-    const real = state.photos[s.id] || [];
-    const holder = real.length === 0 && C.photoPlaceholders;
-    const pics = holder ? [null, null] : real;
-    const isOpen = pics.length > 0 && state.openPhotos.has(s.id);
-    const photoBlock = isOpen
-      ? `<div class="photos" role="group" aria-label="${s.name} 사진">${pics.map((src, i) => (src ? `<img src="${esc(src)}" alt="${s.name} 사진 ${i + 1}" loading="lazy" data-zoom="${s.id}" data-i="${i}">` : `<div class="ph" role="img" aria-label="${s.name} 사진 준비 중"><span>사진 준비 중</span></div>`)).join('')}${pics.length > 1 && !holder ? `<span class="pcount num">${pics.length}장</span>` : ''}</div>`
-      : '';
-    const first = real[0];
-    const cover = first
-      ? `<div class="cover"><div class="track" data-track="${s.id}" role="group" aria-label="${s.name} 사진, 옆으로 밀어서 넘기기">${real.map((src, i) => `<img src="${esc(src)}" alt="${s.name} 사진 ${i + 1}" ${i ? 'loading="lazy"' : ''} data-zoom="${s.id}" data-i="${i}" draggable="false">`).join('')}</div>${real.length > 1 ? `<span class="pcount num" data-count="${s.id}">${(coverIdx[s.id] || 0) + 1}/${real.length}</span>` : ''}</div>`
-      : C.photoPlaceholders ? `<div class="cover"><div class="ph" role="img" aria-label="${s.name} 사진 준비 중"><span>사진 준비 중</span></div></div>` : '';
-    return `<div class="opt-card">${cover}<div class="opt-main"><button type="button" class="opt" data-id="${s.id}" aria-pressed="${state.spaceIds.includes(s.id)}">
-      <span class="l1"><b>${s.name}</b><span class="meta num">${icon('users', 15)} ${s.capacity}명 <i class="dotsep">·</i> ${s.pyeong}평</span></span>
-      <span class="l2"><span class="price num">시간당 ${man(s.hourly)} · 1일 ${man(s.daily)}</span><span class="free num ${free >= C.minHours ? '' : 'none'}">${icon(free >= C.minHours ? 'clock' : 'x-circle', 14)} ${free >= C.minHours ? `${free}시간 가능` : '예약 불가'}</span></span>
-    </button>${pics.length ? `<button type="button" class="photo-toggle" data-photos="${s.id}" aria-expanded="${isOpen}">${isOpen ? '접기' : holder ? '사진' : `사진 ${pics.length}`}</button>` : ''}</div>${photoBlock}</div>`;
-  }).join('');
-  const all = state.spaceIds.length === C.spaces.length;
-  return `<h1>어떤 공간이 필요하세요?</h1>
-    <p class="sub">${formatKoreanDate(state.date)} · 여러 공간을 함께 고를 수 있어요.</p>
-    <div class="body"><div class="options">${cards}
-      <button type="button" class="opt all" data-id="__all" aria-pressed="${all}">
-        <span><b>전체 통대관</b><br><span class="meta">5개 공간 전부 · 1일(${C.dayHours}시간)</span></span>
-        <span class="price num">${won(C.packageDayPrice)}</span>
-      </button></div></div>`;
-}
-
-function statusTable(all = false) {
+// 공간별 시간 칸 상태를 작은 현황표로 보여 줍니다.
+function miniStatus(spaceIds) {
   const date = state.date;
-  const sel = new Set(all ? C.spaces.map((s) => s.id) : state.spaceIds);
   const picked = new Set(state.spaceIds);
-  let html = `<thead><tr><th scope="col"><span class="sr-only">공간</span></th>${HOURS.map((h) => `<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>`;
-  for (const sp of C.spaces.filter((s) => sel.has(s.id))) {
-    html += `<tr><th scope="row">${sp.name}</th>`;
+  let html = `<div class="stat-mini" style="grid-template-columns:56px repeat(${HOURS.length},1fr)">`;
+  for (const sp of C.spaces.filter((s) => spaceIds.includes(s.id))) {
+    html += `<span>${esc(sp.name)}</span>`;
     for (const h of HOURS) {
       const st = slotState(date, sp.id, h);
       const mine = picked.has(sp.id) && state.start != null && state.end != null && h >= state.start && h < state.end;
-      const text = { confirmed: '예약', pending: '대기', blocked: '휴무', past: '마감', free: '' }[st.s];
+      const k = mine && st.s === 'free' ? 's' : { confirmed: 'k', pending: 'p', blocked: 'o', past: 'o', free: '' }[st.s];
       const title = `${sp.name} ${h}시 ${{ confirmed: '예약 완료', pending: '입금 대기', blocked: '휴무', past: '예약 마감', free: '예약 가능' }[st.s]}`;
-      html += `<td class="${st.s}${mine && st.s === 'free' ? ' sel' : ''}" title="${title}">${mine && st.s === 'free' ? '선택' : text}<span class="sr-only"> ${title}</span></td>`;
+      html += `<span class="m ${k}" title="${title}"><span class="sr-only">${title}</span></span>`;
     }
-    html += '</tr>';
   }
-  return html + '</tbody>';
+  return `${html}</div>`;
 }
 
-function timeGrid() {
+function hourGrid() {
   const ids = state.spaceIds;
   const sel = (h) => state.start != null && state.end != null && h >= state.start && h < state.end;
   const startable = (h) => maxEndFor(h) - h >= C.minHours;
   const endable = (h) => state.start != null && state.end == null && h > state.start && h + 1 - state.start >= C.minHours && h + 1 <= maxEndFor(state.start);
-  let html = `<thead><tr><th scope="col"><span class="sr-only">공간</span></th>${HOURS.map((h) => `<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>`;
-  html += '<tr class="pickrow"><th scope="row">이용 시간</th>' + HOURS.map((h) => {
-    const on = startable(h) || endable(h);
-    const cls = state.start === h && state.end == null ? 'sel start' : sel(h) ? 'sel' : endable(h) ? 'endable' : on ? 'free' : 'off';
-    return `<td><button type="button" class="tcell ${cls}" data-h="${h}" ${on || sel(h) || state.start === h ? '' : 'disabled'} aria-label="${hh(h)} ${on ? '선택' : '선택 불가'}"></button></td>`;
-  }).join('') + '</tr>';
+  let html = `<div class="hgrid" style="grid-template-columns:84px repeat(${HOURS.length},minmax(0,1fr))"><span></span>${HOURS.map((h) => `<span class="hh">${h}시</span>`).join('')}`;
   for (const sp of C.spaces.filter((x) => ids.includes(x.id))) {
-    html += `<tr><th scope="row">${sp.name}</th>`;
+    html += `<span class="rl">${esc(sp.name)}</span>`;
     for (const h of HOURS) {
       const st = slotState(state.date, sp.id, h);
-      const text = { confirmed: '예약', pending: '대기', blocked: '휴무', past: '마감', free: '' }[st.s];
       const title = `${sp.name} ${h}시 ${{ confirmed: '예약 완료', pending: '입금 대기', blocked: '휴무', past: '예약 마감', free: '예약 가능' }[st.s]}`;
-      html += `<td class="${st.s}" title="${title}">${text}<span class="sr-only"> ${title}</span></td>`;
+      if (st.s !== 'free') {
+        const k = { confirmed: 'book', pending: 'pend', blocked: 'off', past: 'off' }[st.s];
+        const t = { confirmed: '예약', pending: '대기', blocked: '휴무', past: '마감' }[st.s];
+        html += `<div class="hc ${k}" title="${title}">${t}<span class="sr-only"> ${title}</span></div>`;
+      } else {
+        const on = startable(h) || endable(h);
+        const isSel = sel(h) || (state.start === h && state.end == null);
+        html += `<button type="button" class="hc ${isSel ? 'sel' : ''}" data-h="${h}" ${on || isSel ? '' : 'disabled style="background:#F1F3F8;cursor:not-allowed"'} aria-pressed="${isSel}" aria-label="${hh(h)} ${on ? '선택' : '선택 불가'}">${isSel ? ic('check', 16) : ''}</button>`;
+      }
     }
-    html += '</tr>';
   }
-  return html + '</tbody>';
+  return `${html}</div>`;
 }
-
-const LEGEND = '<div class="legend"><span><i></i>예약 가능</span><span><i class="l-pending"></i>입금 대기</span><span><i class="l-confirmed"></i>예약 완료</span><span><i class="l-blocked"></i>휴무</span></div>';
 
 function viewTime() {
   const ids = state.spaceIds;
-  let s = '';
+  const chip = (attr, h, on, dis) => `<button type="button" class="chip ${on ? 'on' : ''} ${dis ? 'dis' : ''}" ${attr}="${h}" aria-pressed="${on}" ${dis ? 'disabled' : ''}>${hh(h)}</button>`;
+  let starts = '';
   for (let h = C.openHour; h <= C.closeHour - C.minHours; h++) {
     let ok = true;
     for (let k = 0; ok && k < C.minHours; k++) ok = allFree(state.date, ids, h + k);
-    s += `<button type="button" class="chip" data-start="${h}" aria-pressed="${state.start === h}" ${ok ? '' : 'disabled'}>${hh(h)}</button>`;
+    starts += chip('data-start', h, state.start === h, !ok);
   }
-  let endBlock = '';
+  let endCard = `<p class="muted row-f">${ic('info', 20)}시작 시간을 고르면 종료 시간을 고를 수 있어요.</p>`;
   if (state.start != null) {
     let e = '';
     const max = maxEndFor(state.start);
-    for (let x = state.start + C.minHours; x <= max; x++) e += `<button type="button" class="chip" data-end="${x}" aria-pressed="${state.end === x}">${hh(x)}</button>`;
-    endBlock = `<div><p class="time-label">종료 시간</p><div class="chips">${e}</div></div>`;
+    for (let x = state.start + C.minHours; x <= max; x++) e += chip('data-end', x, state.end === x, false);
+    endCard = `<div class="card"><p class="lab">종료 시간</p><div class="chips">${e}</div></div>`;
   }
-  const result = state.start != null && state.end != null ? `<p class="time-result num">${hh(state.start)} ~ ${hh(state.end)} (${state.end - state.start}시간)</p>` : '';
-  const deskHint = state.start == null ? '시작하는 칸을 눌러 보세요.' : state.end == null ? '끝나는 칸을 눌러 주세요.' : '';
+  const result = state.start != null && state.end != null ? `<div class="result num" style="margin-top:16px">${ic('clock', 24)}${hh(state.start)} ~ ${hh(state.end)} (${state.end - state.start}시간)</div>` : '';
+  const err = state.error ? `<div style="margin-top:16px">${alertBox('err', 'alert', esc(state.error))}</div>` : '';
   return `<h1>몇 시부터 몇 시까지 쓰실까요?</h1>
-    <p class="sub">최소 ${C.minHours}시간부터 신청할 수 있어요.</p>
-    <div class="body">
-      <div class="mob-only"><p class="time-label">시작 시간</p><div class="chips">${s}</div></div>
-      <div class="mob-only">${endBlock}</div>
-      <details class="status mob-only"><summary>이날 예약 현황</summary>
-        <div class="table-scroll"><table class="grid">${statusTable()}</table></div>
-        ${LEGEND}
-      </details>
-      <div class="card desk-only">
-        <div class="table-scroll"><table class="grid tgrid">${timeGrid()}</table></div>
-        ${LEGEND}
-      </div>
-      ${result}${deskHint ? `<p class="hint desk-only">${deskHint}</p>` : ''}
-    </div>`;
+    <p class="lead">최소 ${C.minHours}시간부터 신청할 수 있어요.</p>
+    <div class="only-m stack">
+      <div class="card"><p class="lab">시작 시간</p><div class="chips">${starts}</div></div>
+      ${endCard}
+      <details class="card"><summary>이날 예약 현황${ic('chev', 22)}</summary><div style="margin-top:12px">${miniStatus(ids)}<div style="margin-top:12px">${LEGEND}</div></div></details>
+    </div>
+    <div class="only-d card"><p class="lab">시간표에서 시작 칸과 끝 칸을 차례로 눌러 주세요.</p>${hourGrid()}<div style="margin-top:14px">${LEGEND}</div></div>
+    ${result}${err}`;
 }
 
 const QUICK_PEOPLE = [5, 10, 20, 30, 50];
 const PURPOSES = ['독서 모임', '전시', '강연', '워크숍', '회의'];
 
-function overNote() {
+function overAlert() {
   const cap = capacity();
   const extra = Math.max(0, state.people - cap);
-  return extra ? `최대 ${cap}명 초과 ${extra}명 · +${won(extra * C.overagePerPerson)}` : `최대 ${cap}명`;
+  return extra ? alertBox('warn', 'info', `최대 인원을 ${extra}명 넘었어요. ${extra}명 × ${won(C.overagePerPerson)} = ${won(extra * C.overagePerPerson)}이 더해져요.`) : '';
 }
 
 function viewPeople() {
   return `<h1>몇 분이 오시나요?</h1>
-    <p class="sub" id="overnote">${overNote()}, 초과 시 1인당 ${won(C.overagePerPerson)}</p>
-    <div class="body">
-      <div class="stepper">
-        <button type="button" id="pMinus" aria-label="1명 줄이기">&minus;</button>
-        <input id="f-people" type="number" inputmode="numeric" min="1" max="500" value="${state.people}" aria-label="이용 인원">
-        <span class="unit">명</span>
-        <button type="button" id="pPlus" aria-label="1명 늘리기">+</button>
+    <p class="lead" id="overnote">최대 ${capacity()}명, 초과 시 1인당 ${won(C.overagePerPerson)}</p>
+    <div class="card stack">
+      <div class="counter">
+        <button type="button" class="circ" id="pMinus" aria-label="1명 줄이기">${ic('minus', 28)}</button>
+        <div class="num"><input id="f-people" class="cnum" type="number" inputmode="numeric" min="1" max="500" value="${state.people}" aria-label="이용 인원"><small>명</small></div>
+        <button type="button" class="circ" id="pPlus" aria-label="1명 늘리기">${ic('plus', 28)}</button>
       </div>
-      <div class="quick" role="group" aria-label="인원 빠른 선택">${QUICK_PEOPLE.map((n) => `<button type="button" class="qbtn" data-people="${n}" aria-pressed="${state.people === n}">${n}명</button>`).join('')}</div>
-      <div class="field"><label for="f-purpose">이용 목적 (선택)</label>
-        <div class="quick" role="group" aria-label="이용 목적">${PURPOSES.map((t) => `<button type="button" class="qbtn" data-purpose="${t}" aria-pressed="${state.purpose === t}">${t}</button>`).join('')}</div>
-        <input id="f-purpose" maxlength="100" placeholder="직접 입력" value="${esc(state.purpose)}"></div>
+      <div class="chips" style="justify-content:center" role="group" aria-label="인원 빠른 선택">${QUICK_PEOPLE.map((n) => `<button type="button" class="chip" data-people="${n}" aria-pressed="${state.people === n}">${n}명</button>`).join('')}</div>
+      <div id="overAlert">${overAlert()}</div>
+    </div>
+    <div class="card stack" style="margin-top:16px">
+      <p class="lab" style="margin:0">이용 목적 <span class="muted" style="font-weight:400">(선택)</span></p>
+      <div class="chips" role="group" aria-label="이용 목적">${PURPOSES.map((t) => `<button type="button" class="chip" data-purpose="${t}" aria-pressed="${state.purpose === t}">${t}</button>`).join('')}</div>
+      <input id="f-purpose" class="input" maxlength="100" placeholder="직접 입력" value="${esc(state.purpose)}" aria-label="이용 목적 직접 입력">
     </div>`;
 }
 
 function viewPerson() {
   return `<h1>예약하시는 분을 알려 주세요</h1>
-    <div class="body">
+    <p class="lead">입금하실 분 이름과 같게 적어 주세요. 연락처는 예약 안내와 확인에만 써요.</p>
+    <div class="card stack">
       <div class="field"><label for="f-name">이름</label>
-        <input id="f-name" autocomplete="name" maxlength="20" value="${esc(state.name)}"><span class="err" id="e-name"></span></div>
+        <input id="f-name" class="input" autocomplete="name" maxlength="20" placeholder="예: 김미영" value="${esc(state.name)}"><div id="e-name" aria-live="polite"></div></div>
       <div class="field"><label for="f-phone">휴대전화</label>
-        <input id="f-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000" maxlength="13" value="${esc(state.phone)}"><span class="err" id="e-phone"></span></div>
+        <input id="f-phone" class="input" type="tel" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000" maxlength="13" value="${esc(state.phone)}"><div id="e-phone" aria-live="polite"><p class="msg hint">숫자만 눌러도 돼요. 010-0000-0000 형식</p></div></div>
       <input class="hp" type="text" id="f-website" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <p class="note">입금하실 분 이름과 같게 적어 주세요. 연락처는 예약 안내와 확인에만 써요.</p>
     </div>`;
 }
 
 function viewReview() {
   const q = currentQuote();
-  const rows = `<div class="row"><span>일정</span><span>${formatKoreanDate(state.date)} ${hh(state.start)}~${hh(state.end)}</span></div>
-    <div class="row"><span>공간</span><span>${esc(spaceNames(state.spaceIds))}</span></div>
-    <div class="row"><span>인원</span><span>${state.people}명</span></div>
-    <div class="row"><span>예약자</span><span>${esc(state.name)} ${esc(state.phone)}</span></div>`;
   let calc = '';
   if (q) {
     for (const l of q.lines) {
@@ -353,81 +350,83 @@ function viewReview() {
       if (l.fullDays > 0) detail = `${l.fullDays}일${l.remHours ? ` + ${l.remHours}시간` : ''}`;
       else if (l.usesDayRate) detail = '1일 요금';
       else detail = `${l.hours}시간 × ${won(l.hourly)}`;
-      calc += `<div class="row"><span>${l.name} (${detail})</span><span>${won(l.cost)}</span></div>`;
+      calc += `<div class="pr"><span>${esc(l.name)} (${detail})</span><span>${won(l.cost)}</span></div>`;
     }
-    if (q.packageDiscount > 0) calc += `<div class="row minus"><span>전체 통대관 할인</span><span>-${won(q.packageDiscount)}</span></div>`;
-    if (q.extraPeople > 0) calc += `<div class="row"><span>인원 초과 ${q.extraPeople}명 (최대 ${q.capacity}명)</span><span>${won(q.overageFee)}</span></div>`;
+    if (q.packageDiscount > 0) calc += `<div class="pr neg"><span>전체 통대관 할인</span><span>-${won(q.packageDiscount)}</span></div>`;
+    if (q.extraPeople > 0) calc += `<div class="pr"><span>인원 초과 ${q.extraPeople}명 (최대 ${q.capacity}명)</span><span>${won(q.overageFee)}</span></div>`;
   }
   const rules = `${C.holdHours}시간 안에 입금하시면 예약이 확정돼요.${state.info.contact ? ` 문의 ${esc(state.info.contact)}` : ''}`;
+  const on = state.agree;
+  const people = `${state.people}명${state.purpose ? ` · ${esc(state.purpose)}` : ''}`;
   return `<h1>마지막으로 확인해 주세요</h1>
-    <div class="body cols">
-      <div class="card"><div class="sum-rows">${rows}</div></div>
-      <div class="card"><div class="sum-rows">${calc}</div>
-        <div class="total-row"><span class="label">입금할 금액</span><span class="price-lg num">${q ? won(q.total) : '0원'}</span></div></div>
-      <label class="check full"><input type="checkbox" id="f-agree" ${state.agree ? 'checked' : ''}><span>내용을 확인했어요. ${rules}</span></label>
+    <p class="lead">내용이 맞는지 살펴보고 신청해 주세요.</p>
+    <div class="stack">
+      <div class="card"><dl class="kv"><dt>일정</dt><dd>${formatKoreanDate(state.date)} ${hh(state.start)} ~ ${hh(state.end)}</dd><dt>공간</dt><dd>${esc(spaceNames(state.spaceIds))}</dd><dt>인원</dt><dd>${people}</dd><dt>예약자</dt><dd>${esc(state.name)} · ${esc(state.phone)}</dd></dl></div>
+      <div class="card"><div class="stack" style="gap:10px">${calc}</div><div class="hr"></div><div class="pr" style="align-items:baseline"><b>입금할 금액</b><span class="amount num" style="color:var(--c-brand-strong)">${q ? won(q.total) : '0원'}</span></div></div>
+      <label class="check ${on ? 'on' : ''}"><input type="checkbox" id="f-agree" class="sr-only" ${on ? 'checked' : ''}><span class="box ${on ? 'on' : ''}">${on ? ic('check', 20) : ''}</span><span>내용을 확인했어요. ${rules}</span></label>
+      ${state.error ? alertBox('err', 'alert', esc(state.error)) : ''}
     </div>`;
 }
 
+const acctCard = (b, holderNote = '') => b
+  ? `<div class="acct"><p class="b muted">입금 계좌</p><dl class="kv"><dt>은행</dt><dd>${esc(b.name)}</dd><dt>예금주</dt><dd>${esc(b.holder)}</dd></dl><p class="no num">${esc(b.number)}</p>${holderNote}<button type="button" class="btn primary block" data-copy="${esc(b.number)}">${ic('copy', 20)}계좌번호 복사하기</button></div>`
+  : '<div class="acct"><p class="b muted">입금 계좌</p><p class="sm">계좌 정보가 없습니다. 담당자에게 문의하세요.</p></div>';
+
 function viewDone() {
   const r = state.done;
-  const b = state.info.bank;
-  const bank = b
-    ? `<div class="bank"><h3>입금 계좌</h3><div class="acct num"><span class="bn">${esc(b.name)}</span> <span class="nw">${esc(b.number)}</span></div><p class="who">예금주 ${esc(b.holder)}</p><button type="button" class="copy" data-copy="${esc(b.number)}">${icon('copy', 16)}계좌번호 복사하기</button></div>`
-    : '<div class="bank"><h3>입금 계좌</h3><p class="hint">계좌 정보가 없습니다. 담당자에게 문의하세요.</p></div>';
-  return `<div class="done-ic">${icon('check', 30)}</div><h1>입금해 주세요</h1>
-    <p class="sub">입금이 확인되면 예약이 확정됩니다.</p>
-    <div class="body cols">
-      <div class="stack">
-        <div class="amount-row"><div class="amount num">${won(r.amount)}</div><button type="button" class="copy" data-copy="${r.amount}">${icon('copy', 16)}금액 복사</button></div>
-        ${bank}
-      </div>
-      <div class="stack">
-        <div class="card"><dl class="info">
-          <dt>예약번호</dt><dd>${esc(r.id)}</dd>
-          <dt>일정</dt><dd>${formatKoreanDate(r.date)} ${hh(r.start)}~${hh(r.end)}</dd>
-          <dt>공간</dt><dd>${esc(spaceNames(r.spaces))}</dd>
-          <dt>입금자명</dt><dd>${esc(r.name)}</dd>
-          <dt>입금 기한</dt><dd>${formatKstDateTime(r.holdUntil)}</dd>
-        </dl></div>
-        <ol class="todo"><li>입금자명은 "${esc(r.name)}"으로 입금합니다.</li><li>기한이 지나면 예약이 자동 취소됩니다.</li><li>예약번호는 조회와 취소에 필요합니다. 캡처해 두세요.</li></ol>
-      </div>
+  return `<div class="state" style="padding-top:8px"><div class="ico" style="background:var(--c-ok-bg);color:var(--c-ok-fg)">${ic('check', 40)}</div><h1>입금해 주세요</h1><p class="muted">입금이 확인되면 예약이 확정됩니다.</p></div>
+    <div class="stack">
+      <div class="card" style="text-align:center"><p class="muted">입금하실 금액</p><p class="amount num" style="color:var(--c-brand-strong);margin:4px 0 12px">${won(r.amount)}</p><button type="button" class="btn secondary s" data-copy="${r.amount}">${ic('copy', 18)}금액 복사</button></div>
+      ${acctCard(state.info.bank)}
+      <div class="card"><dl class="kv"><dt>예약번호</dt><dd class="num" style="font-size:22px;letter-spacing:.06em">${esc(r.id)}</dd><dt>일정</dt><dd>${formatKoreanDate(r.date)} ${hh(r.start)} ~ ${hh(r.end)}</dd><dt>공간</dt><dd>${esc(spaceNames(r.spaces))}</dd><dt>입금자명</dt><dd>${esc(r.name)}</dd><dt>입금 기한</dt><dd style="color:var(--c-pend-fg)">${formatKstDateTime(r.holdUntil)}까지</dd></dl></div>
+      <ol class="notes card"><li>입금자명을 예약하신 분 이름과 같게 보내 주세요.</li><li>입금 기한(${C.holdHours}시간)이 지나면 예약이 자동으로 취소돼요.</li><li>예약번호는 예약을 조회하거나 취소할 때 필요해요. 화면을 캡처해 두세요.</li></ol>
     </div>`;
+}
+
+function lookupBadge(r) {
+  if (r.status === 'pending') return badge('pend', '입금 대기', 'clock');
+  if (r.status === 'confirmed') return r.cancelRequested ? badge('bad', '취소 요청 중', 'alert') : badge('ok', '확정', 'check');
+  if (r.status === 'expired') return badge('off', '기한 만료', 'clock');
+  return badge('off', '취소', 'ban');
 }
 
 function viewLookup() {
   const k = state.lk;
   const r = k.rec;
+  const bad = Boolean(k.err);
   let result = '';
   if (r) {
+    const pend = r.status === 'pending';
     const bank = state.info.bank;
-    let note = '';
-    if (r.status === 'pending') note = `<p class="notice-line">${formatKstDateTime(r.holdUntil)}까지 입금해 주세요.</p>${bank ? `<div class="bank"><h3>입금 계좌</h3><div class="acct num"><span class="bn">${esc(bank.name)}</span> <span class="nw">${esc(bank.number)}</span></div><p class="who">예금주 ${esc(bank.holder)} · 입금자명 ${esc(r.name)}</p><button type="button" class="copy" data-copy="${esc(bank.number)}">${icon('copy', 16)}계좌번호 복사</button></div>` : ''}`;
-    else if (r.status === 'confirmed' && r.cancelRequested) note = '<p class="notice-line">취소 요청이 접수되었습니다. 담당자가 환불 방법을 안내합니다.</p>';
-    else if (r.status === 'expired') note = '<p class="notice-line">입금 기한이 지났습니다. 다시 예약해 주세요.</p>';
-    const canCancel = r.status === 'pending' || (r.status === 'confirmed' && !r.cancelRequested);
-    const cancelLabel = r.status === 'pending' ? '예약 취소' : '취소 요청';
-    const cancelBox = k.cancelOpen
-      ? `<div class="field"><label for="f-reason">취소 사유 (선택)</label><input id="f-reason" maxlength="100" value="${esc(k.reason)}"></div>
-         <p class="hint">${r.status === 'pending' ? '입금 전 예약은 바로 취소됩니다.' : '담당자가 확인한 뒤 취소하고 환불합니다.'}</p>
-         <div class="btnrow"><button type="button" class="btn danger" id="lkDoCancel" ${k.busy ? 'disabled' : ''}>${cancelLabel}하기</button><button type="button" class="btn ghost" id="lkCancelClose">돌아가기</button></div>`
-      : canCancel ? `<button type="button" class="btn ghost" id="lkCancelOpen">${cancelLabel}</button>` : '';
-    result = `<div class="card"><p class="status-pill ${r.status}">${STATUS_TEXT[r.status]}</p>
-      <dl class="info"><dt>예약번호</dt><dd>${esc(r.id)}</dd><dt>일정</dt><dd>${formatKoreanDate(r.date)} ${hh(r.start)}~${hh(r.end)}</dd><dt>공간</dt><dd>${esc(spaceNames(r.spaces))}</dd><dt>인원</dt><dd>${r.people}명</dd><dt>금액</dt><dd>${won(r.amount)}</dd></dl>
-      ${note}${k.msg ? `<p class="notice-line ok">${esc(k.msg)}</p>` : ''}${cancelBox}</div>`;
+    let extra = '';
+    if (pend) extra = acctCard(bank, `<p class="sm">입금자명 ${esc(r.name)}</p>`);
+    else if (r.status === 'expired') extra = alertBox('warn', 'info', '입금 기한이 지났어요. 다시 예약해 주세요.');
+    const canCancel = pend || (r.status === 'confirmed' && !r.cancelRequested);
+    let cancel = '';
+    if (canCancel) {
+      cancel = k.cancelOpen
+        ? `<div class="stack" style="border-top:1px solid var(--c-line);padding-top:16px"><p class="b">${pend ? '바로 취소됩니다.' : '담당자가 확인한 뒤 취소하고 환불합니다. (취소 요청으로 접수돼요)'}</p><div class="field"><label for="f-reason">취소 사유 <span class="muted" style="font-weight:400">(선택)</span></label><textarea id="f-reason" class="input" maxlength="100" placeholder="사유를 적어 주세요">${esc(k.reason)}</textarea></div><div class="cols2"><button type="button" class="btn danger" id="lkDoCancel" ${k.busy ? 'disabled' : ''}>${k.busy ? '<span class="spin"></span>처리하는 중…' : '취소하기'}</button><button type="button" class="btn secondary" id="lkCancelClose">돌아가기</button></div></div>`
+        : `<button type="button" class="btn secondary block" id="lkCancelOpen">예약 취소</button>`;
+    }
+    result = `${k.msg ? alertBox('ok', 'check', esc(k.msg)) : ''}<div class="card stack"><div class="row-f sp-b">${lookupBadge(r)}<span class="muted sm num">예약번호 ${esc(r.id)}</span></div>
+      <dl class="kv"><dt>일정</dt><dd>${formatKoreanDate(r.date)} ${hh(r.start)} ~ ${hh(r.end)}</dd><dt>공간</dt><dd>${esc(spaceNames(r.spaces))}</dd><dt>인원</dt><dd>${r.people}명</dd><dt>금액</dt><dd>${won(r.amount)}</dd>${pend ? `<dt>입금 기한</dt><dd style="color:var(--c-pend-fg)">${formatKstDateTime(r.holdUntil)}까지</dd>` : ''}</dl>
+      ${r.status === 'confirmed' && r.cancelRequested ? '<p class="muted sm">취소 요청이 접수되었어요. 담당자가 환불 방법을 안내해 드려요.</p>' : ''}${extra}${cancel}</div>
+      <button type="button" class="btn ${k.msg ? 'primary' : 'ghost'} block" id="lkDone">확인했어요</button>`;
   }
-  return `<h1>예약 확인</h1>
-    ${r ? '' : '<p class="sub">예약번호와 휴대전화 번호를 입력하세요.</p>'}
-    <div class="body">
-      ${r ? '<button type="button" class="link-btn" id="lkAgain">다른 예약 조회</button>' : `<div class="field"><label for="f-lkid">예약번호</label><input id="f-lkid" maxlength="8" autocapitalize="characters" autocomplete="off" placeholder="예: AB12CD34" value="${esc(k.id)}"></div>
-      <div class="field"><label for="f-lkphone">휴대전화</label><input id="f-lkphone" type="tel" inputmode="tel" placeholder="010-0000-0000" maxlength="13" value="${esc(k.phone)}"></div>`}
-      ${k.err ? `<p class="err">${esc(k.err)}</p>` : ''}
-      ${result}
+  const form = r ? '' : `<div class="card stack">
+      <div class="field"><label for="f-lkid">예약번호</label><input id="f-lkid" class="input ${bad ? 'err' : ''}" maxlength="8" autocapitalize="characters" autocomplete="off" placeholder="8자리 영문·숫자" value="${esc(k.id)}"></div>
+      <div class="field"><label for="f-lkphone">휴대전화</label><input id="f-lkphone" class="input ${bad ? 'err' : ''}" type="tel" inputmode="tel" placeholder="010-0000-0000" maxlength="13" value="${esc(k.phone)}"></div>
+      <button type="button" class="btn primary block" id="lkGo" ${stepProblem(8) || k.busy ? 'disabled' : ''}>${k.busy ? '<span class="spin"></span>찾는 중…' : `${ic('search', 20)}내 예약 찾기`}</button>
     </div>`;
+  return `<h1>내 예약 찾기</h1>
+    <p class="lead">예약번호와 휴대전화 번호를 입력해 주세요.</p>
+    <div class="stack">${form}${k.err ? alertBox('err', 'alert', esc(k.err)) : ''}${result}</div>`;
 }
 
 async function doLookup() {
   const k = state.lk;
-  k.busy = true; k.err = ''; k.msg = ''; chrome();
+  if (k.busy) return;
+  k.busy = true; k.err = ''; k.msg = ''; render(true);
   try {
     const j = await api('/api/lookup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: k.id.trim(), phone: k.phone }) });
     k.rec = j.reservation; k.cancelOpen = false;
@@ -441,7 +440,7 @@ async function doCancel() {
   k.busy = true; render(true);
   try {
     const j = await api('/api/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: k.rec.id, phone: k.phone, reason: k.reason }) });
-    k.msg = j.mode === 'canceled' ? '예약을 취소했습니다. 해당 시간이 다시 열렸습니다.' : '취소 요청을 접수했습니다. 담당자가 확인한 뒤 환불 방법을 안내합니다.';
+    k.msg = j.mode === 'canceled' ? '예약을 취소했어요. 해당 시간이 다시 열렸어요.' : '취소 요청을 접수했어요. 담당자가 확인한 뒤 환불해 드려요.';
     k.cancelOpen = false;
     const r = await api('/api/lookup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: k.rec.id, phone: k.phone }) });
     k.rec = r.reservation;
@@ -463,11 +462,12 @@ function openLightbox(spaceId, i) {
   if (!d) {
     d = document.createElement('dialog');
     d.id = 'lightbox';
+    d.className = 'sheet dark';
     d.setAttribute('aria-label', '사진 보기');
     let swipedAt = 0;
     d.addEventListener('click', (e) => {
       if (Date.now() - swipedAt < 400) return; // 넘기는 동작 끝에 생기는 클릭은 무시
-      if (e.target.closest('[data-lb=close]') || e.target === d || e.target.classList.contains('lb')) d.close();
+      if (e.target.closest('[data-lb=close]') || e.target === d) d.close();
       else if (e.target.closest('[data-lb=prev]')) lbGo(-1);
       else if (e.target.closest('[data-lb=next]')) lbGo(1);
     });
@@ -492,16 +492,15 @@ function openLightbox(spaceId, i) {
 }
 function paintLb() {
   const many = lb.list.length > 1;
-  $('#lightbox').innerHTML = `<div class="lb"><button type="button" class="lb-x" data-lb="close" aria-label="닫기">${icon('x', 24)}</button>
-    <img class="${lb.dir > 0 ? 'in-next' : lb.dir < 0 ? 'in-prev' : ''}" src="${esc(lb.list[lb.i])}" alt="${esc(lb.name)} 사진 ${lb.i + 1}" draggable="false">
-    ${many ? `<button type="button" class="lb-n prev" data-lb="prev" aria-label="이전 사진">${icon('chevron-left', 26)}</button><button type="button" class="lb-n next" data-lb="next" aria-label="다음 사진">${icon('chevron-right', 26)}</button>` : ''}
-    <p class="lb-c num">${esc(lb.name)} ${lb.i + 1} / ${lb.list.length}</p></div>`;
+  $('#lightbox').innerHTML = `<div class="lb"><div class="lb-top"><button type="button" class="lb-b" data-lb="close" aria-label="닫기">${ic('x', 26)}</button></div>
+    <div class="lb-mid">${many ? `<button type="button" class="lb-b" data-lb="prev" aria-label="이전 사진">${ic('left', 26)}</button>` : ''}<img class="${lb.dir > 0 ? 'in-next' : lb.dir < 0 ? 'in-prev' : ''}" src="${esc(lb.list[lb.i])}" alt="${esc(lb.name)} 사진 ${lb.i + 1}" draggable="false">${many ? `<button type="button" class="lb-b" data-lb="next" aria-label="다음 사진">${ic('right', 26)}</button>` : ''}</div>
+    <p class="lb-cap num">${esc(lb.name)} ${lb.i + 1} / ${lb.list.length}</p></div>`;
   lb.dir = 0;
   // 다음 사진을 미리 불러 둡니다.
   for (const k of [1, -1]) { const s = lb.list[(lb.i + k + lb.list.length) % lb.list.length]; if (s) new Image().src = s; }
 }
 
-/* 카드의 사진 줄을 밀면 "2/3"처럼 번호가 바뀝니다. scroll은 버블링하지 않아 캡처로 받습니다. */
+/* 사진 줄을 밀면 "2/3"처럼 번호가 바뀝니다. scroll은 버블링하지 않아 캡처로 받습니다. */
 document.addEventListener('scroll', (e) => {
   const t = e.target;
   if (!t || !t.matches || !t.matches('[data-track]')) return;
@@ -516,80 +515,77 @@ document.addEventListener('scroll', (e) => {
 function render(keepScroll = false) {
   normalizeTime();
   const views = { 1: viewDate, 2: viewSpace, 3: viewTime, 4: viewPeople, 5: viewPerson, 6: viewReview, 7: viewDone, 8: viewLookup };
-  const y = $('#main').scrollTop;
-  $('#main').innerHTML = `<section class="step s${state.step}" ${keepScroll ? 'style="animation:none"' : ''}>${views[state.step]()}</section>`;
-  const h1 = $('#main h1');
-  if (h1) h1.dataset.eyebrow = state.step <= 6 ? `STEP ${state.step} / 6` : state.step === 7 ? 'COMPLETE' : 'MY RESERVATION';
+  const y = window.scrollY;
+  const active = document.activeElement?.id;
+  $('#main').innerHTML = `<section class="view s${state.step}">${views[state.step]()}</section>`;
   document.querySelectorAll('[data-track]').forEach((t) => { const i = coverIdx[t.dataset.track] || 0; if (i) t.scrollLeft = i * t.clientWidth; });
-  if (keepScroll) $('#main').scrollTop = y;
-  else { const h = $('#main h1'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } }
+  if (keepScroll) {
+    window.scrollTo(0, y);
+    if (active && /^f-/.test(active)) { const el = document.getElementById(active); if (el) { el.focus({ preventScroll: true }); const v = el.value; if (typeof v === 'string' && el.setSelectionRange && el.type !== 'number' && el.type !== 'tel') el.setSelectionRange(v.length, v.length); } }
+  } else { const h = $('#main h1'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } }
   chrome();
 }
 
+const NAMES = ['날짜', '공간', '시간', '인원', '예약자', '확인'];
+
 function chrome() {
   const st = state.step;
+  const withSteps = st <= STEPS;
   $('#back').hidden = st === 1 || st === 7;
-  $('#myres').hidden = st === 8;
-  $('#progBar').style.width = `${Math.min(st, STEPS) / STEPS * 100}%`;
-  $('#prog').setAttribute('aria-valuenow', String(Math.min(st, STEPS)));
-  $('#prog').hidden = st >= 7;
-
-  const NAMES = ['날짜', '공간', '시간', '인원', '예약자', '확인'];
-  $('#stepnav').innerHTML = NAMES.map((n, i) => `<li class="${st === 7 || i + 1 < st ? 'done' : i + 1 === st ? 'cur' : ''}"><b>${st === 7 || i + 1 < st ? icon('check', 14) : i + 1}</b>${n}</li>`).join('');
+  $('#myres').classList.toggle('on', st === 8);
+  $('#prog').hidden = !withSteps;
+  $('#stepnav').hidden = !withSteps;
+  if (withSteps) {
+    $('#progBar').style.width = `${st / STEPS * 100}%`;
+    $('#progText').textContent = `${st}/${STEPS} · ${NAMES[st - 1]}`;
+    $('#prog').setAttribute('aria-valuenow', String(st));
+    $('#stepnav').innerHTML = NAMES.map((n, i) => `${i ? '<span class="sep"></span>' : ''}<span class="step ${i + 1 < st ? 'done' : i + 1 === st ? 'cur' : ''}" ${i + 1 === st ? 'aria-current="step"' : ''}><span class="n">${i + 1 < st ? ic('check', 16) : i + 1}</span>${n}</span>`).join('');
+  }
   const hot = $('#hotline');
-  if (state.info.contact) { hot.hidden = false; hot.innerHTML = `${icon('phone', 16)}<span>대관 문의 ${esc(state.info.contact)}</span>`; hot.href = `tel:${state.info.contact.replace(/[^0-9+]/g, '')}`; }
+  if (state.info.contact) { hot.hidden = false; hot.innerHTML = `${ic('phone', 20)}대관 문의 ${esc(state.info.contact)}`; hot.href = `tel:${state.info.contact.replace(/[^0-9+]/g, '')}`; }
+
+  // 하단 영역: 단계 1~6과 입금 안내에서만 보입니다.
   const q = currentQuote();
+  const dock = $('#dock');
+  dock.hidden = st === 8;
+  const sum = [state.date ? formatKoreanDate(state.date) : null, state.spaceIds.length ? spaceNames(state.spaceIds) : null, q ? `예상 <em>${won(q.total)}</em>` : null].filter(Boolean);
   const peek = $('#peek');
-  if (st >= 3 && st <= 5) {
-    const bits = [formatKoreanDate(state.date), spaceNames(state.spaceIds)].join(' · ');
-    peek.innerHTML = `<span>${esc(bits)}</span>${q ? `<b>예상 ${won(q.total)}</b>` : ''}`;
-    peek.hidden = false;
-  } else peek.hidden = true;
+  peek.innerHTML = sum.map((s, i) => (s.startsWith('예상') ? s : esc(s))).join(' · ');
+  peek.hidden = st >= 7 || !sum.length;
 
   const btn = $('#next');
   const problem = state.submitting ? '' : stepProblem(st);
   const NEXT_LABEL = { 1: '공간 고르기', 2: '시간 정하기', 3: '인원 정하기', 4: '예약자 정보 입력', 5: '내용 확인하기' };
-  btn.textContent = st === 6 ? (state.submitting ? '신청하는 중…' : q ? `${won(q.total)} 예약 신청하기` : '예약 신청하기') : st === 7 ? '확인했어요' : st === 8 ? (state.lk.rec ? '확인했어요' : state.lk.busy ? '찾는 중…' : '내 예약 찾기') : NEXT_LABEL[st] || '다음';
-  btn.disabled = st === 7 || (st === 8 && state.lk.rec) ? false : Boolean(problem) || state.submitting || state.lk.busy;
-  $('#ctaHint').textContent = state.error || (st === 7 || (st === 8 && state.lk.rec) ? '' : problem);
-  $('#ctaHint').style.color = state.error ? 'var(--danger)' : '';
+  btn.innerHTML = st === 6 ? (state.submitting ? '<span class="spin"></span>신청하는 중…' : q ? `${won(q.total)} 예약 신청하기` : '예약 신청하기') : st === 7 ? '확인했어요' : NEXT_LABEL[st] || '다음';
+  btn.disabled = st === 7 ? false : Boolean(problem) || state.submitting;
+  btn.classList.toggle('dis', btn.disabled);
+  $('#ctaHint').innerHTML = problem && st !== 7 ? `${ic('info', 18)}${esc(problem)}` : '';
 
   renderSide();
   renderLast();
 }
 
 function renderSide() {
-  if (state.step >= 7) { $("#side").innerHTML = ""; return; }
+  if (state.step >= 7) { $('#side').innerHTML = ''; return; }
   const q = currentQuote();
-  const dash = '<span class="placeholder">선택 전</span>';
-  const t = state.start != null && state.end != null ? `${hh(state.start)}~${hh(state.end)} (${state.end - state.start}시간)` : dash;
-  let calc = '';
+  const dash = '<span class="muted">선택 전</span>';
+  const t = state.start != null && state.end != null ? `${hh(state.start)} ~ ${hh(state.end)} (${state.end - state.start}시간)` : dash;
+  let calc = '<p class="muted sm">시간을 정하면 요금이 계산돼요.</p>';
   if (q) {
-    for (const l of q.lines) calc += `<div class="row"><span>${l.name}</span><span>${won(l.cost)}</span></div>`;
-    if (q.packageDiscount > 0) calc += `<div class="row minus"><span>전체 통대관 할인</span><span>-${won(q.packageDiscount)}</span></div>`;
-    if (q.extraPeople > 0) calc += `<div class="row"><span>인원 초과 ${q.extraPeople}명</span><span>${won(q.overageFee)}</span></div>`;
+    calc = q.lines.map((l) => `<div class="pr"><span>${esc(l.name)}</span><span>${won(l.cost)}</span></div>`).join('');
+    if (q.packageDiscount > 0) calc += `<div class="pr neg"><span>전체 통대관 할인</span><span>-${won(q.packageDiscount)}</span></div>`;
+    if (q.extraPeople > 0) calc += `<div class="pr"><span>인원 초과 ${q.extraPeople}명 × ${won(C.overagePerPerson)}</span><span>${won(q.overageFee)}</span></div>`;
   }
   const b = state.info.bank;
-  const day = state.date
-    ? `<div class="card"><h2>${formatKoreanDate(state.date)} 공간별 현황</h2><div class="table-scroll" style="margin-top:10px"><table class="grid">${statusTable(true)}</table></div>
-       <div class="legend" style="margin-top:10px"><span><i></i>예약 가능</span><span><i class="l-pending"></i>입금 대기</span><span><i class="l-confirmed"></i>예약 완료</span><span><i class="l-blocked"></i>휴무</span></div></div>`
-    : '<div class="card"><h2>공간별 현황</h2><p class="placeholder" style="margin-top:8px">날짜를 선택하면 5개 공간의 시간별 예약 현황이 여기에 보입니다.</p></div>';
-  $('#side').innerHTML = `
-    <div class="card sum-side${state.step >= 6 ? ' dup' : ''}"><h2>내 예약</h2>
-      <div class="sum-rows" style="margin-top:12px">
-        <div class="row"><span>${icon('calendar', 16)}날짜</span><span>${state.date ? formatKoreanDate(state.date) : dash}</span></div>
-        <div class="row"><span>${icon('home', 16)}공간</span><span>${state.spaceIds.length ? esc(spaceNames(state.spaceIds)) : dash}</span></div>
-        <div class="row"><span>${icon('clock', 16)}시간</span><span>${t}</span></div>
-        <div class="row"><span>${icon('users', 16)}인원</span><span>${state.step >= 4 ? `${state.people}명` : dash}</span></div>
-        ${calc}
-      </div>
-      <div class="total-row"><span class="label">예상 요금</span><span class="price-lg num">${q ? won(q.total) : '0원'}</span></div>
-    </div>
-    ${state.step === 3 ? '' : day}
-    <div class="card pay-card"><h2>${icon('wallet', 18)}입금 안내</h2>
-      <p style="margin-top:8px">예약 후 ${C.holdHours}시간 안에 입금하세요.</p>
-      ${b ? `<p class="num" style="font-weight:700;margin-top:6px"><span class="bn">${esc(b.name)}</span> <span class="nw">${esc(b.number)}</span></p><p class="hint">예금주 ${esc(b.holder)}</p>` : '<p class="hint">계좌 정보는 예약을 마치면 안내됩니다.</p>'}
-    </div>`;
+  const status = state.date && state.step !== 3
+    ? `<div class="card"><h2 style="margin-bottom:4px">공간별 현황</h2><p class="muted sm" style="margin-bottom:12px">${formatKoreanDate(state.date)} · ${HOURS[0]}~${HOURS[HOURS.length - 1]}시</p>${miniStatus(C.spaces.map((s) => s.id))}<div style="margin-top:12px">${LEGEND}</div></div>`
+    : '';
+  $('#side').innerHTML = `<div class="card"><h2 style="margin-bottom:14px">내 예약</h2>
+      <dl class="kv"><dt>날짜</dt><dd>${state.date ? formatKoreanDate(state.date) : dash}</dd><dt>공간</dt><dd>${state.spaceIds.length ? esc(spaceNames(state.spaceIds)) : dash}</dd><dt>시간</dt><dd>${t}</dd><dt>인원</dt><dd>${state.step >= 4 ? `${state.people}명` : dash}</dd></dl>
+      <div class="hr"></div><div class="stack" style="gap:8px">${calc}</div><div class="hr"></div>
+      <div class="pr" style="align-items:baseline"><b>예상 요금</b><span class="amount num">${q ? won(q.total) : '—'}</span></div></div>
+    ${status}
+    <div class="card soft"><h3 class="row-f">${ic('clock', 22)}${C.holdHours}시간 안에 입금해 주세요</h3><p class="sm" style="margin-top:6px">${b ? `${esc(b.name)} ${esc(b.number)}<br>예금주 ${esc(b.holder)}` : '계좌 정보는 예약을 마치면 안내돼요.'}</p></div>`;
 }
 
 function go(step, push = true) {
@@ -597,7 +593,7 @@ function go(step, push = true) {
   state.error = '';
   if (push) history.pushState({ step }, '');
   render();
-  $('#main').scrollTo(0, 0);
+  window.scrollTo(0, 0);
 }
 
 function renderLast() {
@@ -613,12 +609,13 @@ $('#main').addEventListener('click', (e) => {
   const t = e.target;
   const day = t.closest('.day[data-date]');
   if (day && !day.disabled) {
-    if (day.classList.contains('blocked')) return;
+    if (day.classList.contains('off') || day.classList.contains('full')) return;
     if (state.date !== day.dataset.date) state.start = state.end = null;
     state.date = day.dataset.date;
     return render(true);
   }
   if (t.closest('#prevM') || t.closest('#nextM')) {
+    if (t.closest('button').disabled) return;
     let { y, m } = state.month;
     m += t.closest('#nextM') ? 1 : -1;
     if (m < 1) { m = 12; y--; }
@@ -626,16 +623,13 @@ $('#main').addEventListener('click', (e) => {
     state.month = { y, m };
     return render(true);
   }
-  const opt = t.closest('.opt');
-  if (opt) {
-    const id = opt.dataset.id;
+  const z = t.closest('[data-zoom]');
+  if (z) return openLightbox(z.dataset.zoom, Number(z.dataset.i));
+  const pick = t.closest('.pick[data-id]');
+  if (pick && !pick.disabled) {
+    const id = pick.dataset.id;
     if (id === '__all') state.spaceIds = state.spaceIds.length === C.spaces.length ? [] : C.spaces.map((s) => s.id);
-    else {
-      const on = !state.spaceIds.includes(id);
-      state.spaceIds = on ? [...state.spaceIds, id] : state.spaceIds.filter((x) => x !== id);
-      // 카드를 누르면 사진이 펼쳐지고, 선택을 풀면 접힙니다.
-      if (on && ((state.photos[id] || []).length || C.photoPlaceholders)) state.openPhotos.add(id); else state.openPhotos.delete(id);
-    }
+    else state.spaceIds = state.spaceIds.includes(id) ? state.spaceIds.filter((x) => x !== id) : [...state.spaceIds, id];
     return render(true);
   }
   const hc = t.closest('[data-h]');
@@ -644,6 +638,7 @@ $('#main').addEventListener('click', (e) => {
     const maxS = state.start != null ? maxEndFor(state.start) : 0;
     if (state.start != null && state.end == null && h > state.start && h + 1 - state.start >= C.minHours && h + 1 <= maxS) state.end = h + 1;
     else { state.start = h; state.end = null; }
+    state.error = '';
     return render(true);
   }
   const qp = t.closest('[data-people]');
@@ -651,16 +646,13 @@ $('#main').addEventListener('click', (e) => {
   const qu = t.closest('[data-purpose]');
   if (qu) { state.purpose = state.purpose === qu.dataset.purpose ? '' : qu.dataset.purpose; return render(true); }
   const s = t.closest('[data-start]');
-  if (s && !s.disabled) { state.start = Number(s.dataset.start); state.end = null; return render(true); }
+  if (s && !s.disabled) { state.start = Number(s.dataset.start); state.end = null; state.error = ''; return render(true); }
   const en = t.closest('[data-end]');
   if (en) { state.end = Number(en.dataset.end); return render(true); }
   if (t.closest('#pMinus')) return setPeople(state.people - 1);
   if (t.closest('#pPlus')) return setPeople(state.people + 1);
-  const pt = t.closest('[data-photos]');
-  if (pt) { const id = pt.dataset.photos; if (state.openPhotos.has(id)) state.openPhotos.delete(id); else state.openPhotos.add(id); return render(true); }
-  const z = t.closest('[data-zoom]');
-  if (z) return openLightbox(z.dataset.zoom, Number(z.dataset.i));
-  if (t.closest('#lkAgain')) { state.lk.rec = null; state.lk.msg = ''; state.lk.cancelOpen = false; return render(); }
+  if (t.closest('#lkGo')) { if (!stepProblem(8)) doLookup(); return; }
+  if (t.closest('#lkDone')) return reset();
   if (t.closest('#lkCancelOpen')) { state.lk.cancelOpen = true; return render(true); }
   if (t.closest('#lkCancelClose')) { state.lk.cancelOpen = false; return render(true); }
   if (t.closest('#lkDoCancel')) return doCancel();
@@ -676,8 +668,10 @@ function setPeople(n) {
   chrome();
 }
 function syncPeople() {
+  const a = $('#overAlert');
+  if (a) a.innerHTML = overAlert();
   const n = $('#overnote');
-  if (n) n.textContent = `${overNote()}, 초과 시 1인당 ${won(C.overagePerPerson)}`;
+  if (n) n.textContent = `최대 ${capacity()}명, 초과 시 1인당 ${won(C.overagePerPerson)}`;
   for (const b of document.querySelectorAll('[data-people]')) b.setAttribute('aria-pressed', String(Number(b.dataset.people) === state.people));
 }
 
@@ -685,23 +679,43 @@ $('#main').addEventListener('input', (e) => {
   const id = e.target.id;
   if (id === 'f-people') { state.people = Math.max(0, Math.min(500, Number(e.target.value) || 0)); syncPeople(); chrome(); }
   else if (id === 'f-purpose') state.purpose = e.target.value;
-  else if (id === 'f-name') { state.name = e.target.value; chrome(); }
-  else if (id === 'f-phone') { e.target.value = state.phone = formatPhone(e.target.value); chrome(); }
+  else if (id === 'f-name') {
+    state.name = e.target.value;
+    if (state.name.trim().length >= 2) { $('#e-name').innerHTML = ''; e.target.classList.remove('err'); }
+    chrome();
+  } else if (id === 'f-phone') {
+    e.target.value = state.phone = formatPhone(e.target.value);
+    if (phoneOk(state.phone)) { $('#e-phone').innerHTML = '<p class="msg hint">숫자만 눌러도 돼요. 010-0000-0000 형식</p>'; e.target.classList.remove('err'); }
+    chrome();
+  }
   else if (id === 'f-website') state.website = e.target.value;
-  else if (id === 'f-lkid') { state.lk.id = e.target.value.toUpperCase(); e.target.value = state.lk.id; state.lk.rec = null; chrome(); }
-  else if (id === 'f-lkphone') { e.target.value = state.lk.phone = formatPhone(e.target.value); state.lk.rec = null; chrome(); }
+  else if (id === 'f-lkid') { state.lk.id = e.target.value.toUpperCase(); e.target.value = state.lk.id; state.lk.rec = null; state.lk.err = ''; lookupButton(); }
+  else if (id === 'f-lkphone') { e.target.value = state.lk.phone = formatPhone(e.target.value); state.lk.rec = null; state.lk.err = ''; lookupButton(); }
   else if (id === 'f-reason') state.lk.reason = e.target.value;
 });
+// 조회 버튼은 입력할 때마다 켜고 끕니다(화면을 다시 그리지 않아 입력이 끊기지 않습니다).
+function lookupButton() {
+  const b = $('#lkGo');
+  if (b) b.disabled = Boolean(stepProblem(8)) || state.lk.busy;
+}
 $('#main').addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && state.step === 8 && !state.lk.rec && !stepProblem(8)) { e.preventDefault(); doLookup(); }
   else if (e.key === 'Enter' && (state.step === 4 || state.step === 5) && e.target.tagName === 'INPUT' && !stepProblem(state.step)) { e.preventDefault(); go(state.step + 1); }
 });
 $('#main').addEventListener('change', (e) => {
-  if (e.target.id === 'f-agree') { state.agree = e.target.checked; chrome(); }
+  if (e.target.id === 'f-agree') { state.agree = e.target.checked; render(true); }
 });
 $('#main').addEventListener('focusout', (e) => {
-  if (e.target.id === 'f-name') $('#e-name').textContent = state.name && state.name.trim().length < 2 ? '이름은 2자 이상 입력하세요.' : '';
-  if (e.target.id === 'f-phone') $('#e-phone').textContent = state.phone && !phoneOk(state.phone) ? '휴대전화 번호 형식이 맞지 않습니다.' : '';
+  if (e.target.id === 'f-name') {
+    const bad = state.name && state.name.trim().length < 2;
+    $('#e-name').innerHTML = bad ? `<p class="msg err">${ic('alert', 18)}이름을 2자 이상 적어 주세요.</p>` : '';
+    e.target.classList.toggle('err', Boolean(bad));
+  }
+  if (e.target.id === 'f-phone') {
+    const bad = state.phone && !phoneOk(state.phone);
+    $('#e-phone').innerHTML = bad ? `<p class="msg err">${ic('alert', 18)}번호를 010-0000-0000 형식으로 적어 주세요.</p>` : '<p class="msg hint">숫자만 눌러도 돼요. 010-0000-0000 형식</p>';
+    e.target.classList.toggle('err', Boolean(bad));
+  }
 });
 
 async function copyText(btn) {
@@ -709,15 +723,15 @@ async function copyText(btn) {
     const t = document.createElement('textarea'); t.value = btn.dataset.copy; document.body.append(t); t.select(); document.execCommand('copy'); t.remove();
   }
   const old = btn.innerHTML;
-  btn.innerHTML = `${icon('check', 16)}복사됐어요`;
-  btn.classList.add('done');
-  setTimeout(() => { btn.innerHTML = old; btn.classList.remove('done'); }, 1800);
+  const size = btn.classList.contains('s') ? 18 : 20;
+  btn.innerHTML = `${ic('check', size)}복사됐어요`;
+  btn.classList.add('copied');
+  setTimeout(() => { btn.innerHTML = old; btn.classList.remove('copied'); }, 1800);
 }
 
 $('#next').addEventListener('click', () => {
   const st = state.step;
   if (st === 7) return reset();
-  if (st === 8) return state.lk.rec ? reset() : doLookup();
   if (stepProblem(st)) return;
   if (st === 6) return submit();
   go(st + 1);
@@ -728,15 +742,15 @@ window.addEventListener('popstate', (e) => {
   state.step = step === 8 ? 8 : state.done && step === 7 ? 7 : Math.min(step, 6);
   state.error = '';
   render();
-  $('#main').scrollTo(0, 0);
+  window.scrollTo(0, 0);
 });
 $('#retryBtn').addEventListener('click', loadAvailability);
-$('#back').innerHTML = icon('chevron-left', 26);
-$('#whereBtn').innerHTML = `${icon('map-pin', 16)}<span>오시는 길</span>`;
-$('#myres').innerHTML = `${icon('calendar-check', 16)}<span>내 예약</span>`;
+$('#back').innerHTML = ic('left', 26);
+$('#whereBtn').innerHTML = `${ic('pin', 20)}오시는 길`;
+$('#myres').innerHTML = `${ic('search', 20)}내 예약`;
 $('#myres').addEventListener('click', () => go(8));
 $('#whereBtn').addEventListener('click', openWhere);
-$('#whereDlg').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+$('#whereDlg').addEventListener('click', (e) => { if (e.target.classList.contains('scrim')) e.currentTarget.close(); });
 $('#lastBtn').addEventListener('click', () => {
   try { state.done = JSON.parse(localStorage.getItem('women:last')); go(7); } catch { /* 무시 */ }
 });
@@ -767,13 +781,12 @@ async function submit() {
       state.start = state.end = null;
       state.step = 3;
       history.pushState({ step: 3 }, '');
+      state.error = `${err.message} 다른 시간을 골라 주세요.`;
       render();
-      state.error = `${err.message} 시간을 다시 선택하세요.`;
-      chrome();
       return;
     }
     state.error = err.message;
-    chrome();
+    render(true);
   }
 }
 
@@ -800,7 +813,7 @@ function mapChoices() {
 function bizHtml() {
   const b = C.business || {};
   const parts = [b.name && `상호 ${esc(b.name)}`, b.rep && `대표 ${esc(b.rep)}`, b.regNo && `사업자등록번호 ${esc(b.regNo)}`, b.phone && `대표전화 ${esc(b.phone)}`].filter(Boolean);
-  return parts.length ? `<p class="hint biz">${parts.join(' · ')}</p>` : '';
+  return parts.length ? `<p class="muted sm">${parts.join(' · ')}</p>` : '';
 }
 
 function buildWhere() {
@@ -809,21 +822,17 @@ function buildWhere() {
   const panes = choices.map((m) => m === 'google'
     ? `<iframe class="map-pane" data-map="google" title="센터 위치 지도(구글)" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=${mapQuery()}&hl=ko&z=17&output=embed" ${m === first ? '' : 'hidden'}></iframe>`
     : `<div class="map-pane" data-map="${m}" role="img" aria-label="${MAP_LABEL[m]} 지도" ${m === first ? '' : 'hidden'}></div>`).join('');
-  $('#where').innerHTML = `<div class="card where-card">
-    <div class="dlg-head"><h2>오시는 길</h2><button type="button" class="dlg-x" data-close aria-label="닫기">&times;</button></div>
-    <p class="addr">${esc(C.address)}</p>
-    <p class="hint">${esc(C.access)}</p>
-    ${choices.length > 1 ? `<div class="map-tabs" role="tablist" aria-label="지도 선택">${choices.map((m) => `<button type="button" role="tab" data-maptab="${m}" aria-selected="${m === first}">${MAP_LABEL[m]} 지도</button>`).join('')}</div>` : ''}
-    ${panes}
-    <div class="where-actions">
-      <a class="btn small" href="${naverUrl()}" target="_blank" rel="noopener">네이버 지도에서 열기</a>
-      <a class="btn small ghost" href="https://map.kakao.com/?q=${mapQuery()}" target="_blank" rel="noopener">카카오맵에서 열기</a>
-      <button type="button" class="copy" data-copy="${esc(C.address)}">${icon('copy', 16)}주소 복사</button>
-    </div>
-    <p class="hint">길찾기와 대중교통은 네이버 지도나 카카오맵에서 확인하세요.</p>
-    ${state.info.contact ? `<p class="hint">대관 문의 ${esc(state.info.contact)}</p>` : ''}
-    ${bizHtml()}
-  </div>`;
+  const tel = state.info.contact ? `<a class="btn primary block" href="tel:${state.info.contact.replace(/[^0-9+]/g, '')}">${ic('phone', 20)}대관 문의 ${esc(state.info.contact)}</a>` : '';
+  $('#where').innerHTML = `<div class="dlg-h"><h2>오시는 길</h2><button type="button" class="xbtn" data-close aria-label="닫기">${ic('x', 24)}</button></div>
+    ${choices.length > 1 ? `<div class="chips" role="tablist" aria-label="지도 선택">${choices.map((m) => `<button type="button" class="chip" role="tab" data-maptab="${m}" aria-selected="${m === first}">${MAP_LABEL[m]} 지도</button>`).join('')}</div>` : ''}
+    <div class="map">${panes}</div>
+    <a class="btn secondary block" href="${naverUrl()}" target="_blank" rel="noopener">${ic('pin', 20)}지도 앱 열기 (네이버)</a>
+    <a class="btn secondary block" href="https://map.kakao.com/?q=${mapQuery()}" target="_blank" rel="noopener">${ic('pin', 20)}카카오맵에서 열기</a>
+    <dl class="kv" style="text-align:left"><dt>주소</dt><dd style="text-align:left">${esc(C.address)}</dd><dt>가까운 역</dt><dd style="text-align:left">${esc(C.access)}</dd></dl>
+    <button type="button" class="btn secondary s" style="justify-self:start" data-copy="${esc(C.address)}">${ic('copy', 18)}주소 복사</button>
+    <p class="sm">길찾기와 대중교통은 네이버 지도나 카카오맵에서 확인하세요.</p>
+    ${tel}
+    ${bizHtml()}`;
   mapCur = first;
 }
 let mapCur = 'google';
@@ -853,7 +862,7 @@ function loadScript(src) {
 }
 function mapFail(m) {
   const el = $(`#where [data-map="${m}"]`);
-  if (el) el.replaceWith(Object.assign(document.createElement('p'), { className: 'hint', textContent: `${MAP_LABEL[m]} 지도를 불러오지 못했습니다. 아래 버튼으로 지도 앱을 여세요.` }));
+  if (el) el.replaceWith(Object.assign(document.createElement('p'), { className: 'muted sm', textContent: `${MAP_LABEL[m]} 지도를 불러오지 못했습니다. 아래 버튼으로 지도 앱을 여세요.` }));
 }
 
 async function initNaverMap() {

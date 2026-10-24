@@ -8,8 +8,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const root = path.dirname(fileURLToPath(import.meta.url));
 const port = Number(process.env.PORT || 3000);
 
-const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json' };
-const CSP = "default-src 'self'; script-src 'self' https://oapi.map.naver.com https://*.naver.com https://dapi.kakao.com https://*.daumcdn.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src https://cdn.jsdelivr.net https://fonts.gstatic.com; img-src 'self' data: https://*.pstatic.net https://*.naver.com https://*.naver.net https://*.daumcdn.net https://*.kakao.com; connect-src 'self' https://*.naver.com https://*.pstatic.net https://dapi.kakao.com https://*.kakao.com; frame-src https://www.google.com https://maps.google.com; frame-ancestors 'none'; base-uri 'none'; form-action 'self'";
+const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json', '.woff2': 'font/woff2', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };
+const CSP = "default-src 'self'; script-src 'self' https://oapi.map.naver.com https://*.naver.com https://dapi.kakao.com https://*.daumcdn.net; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://*.pstatic.net https://*.naver.com https://*.naver.net https://*.daumcdn.net https://*.kakao.com; connect-src 'self' https://*.naver.com https://*.pstatic.net https://dapi.kakao.com https://*.kakao.com; frame-src https://www.google.com https://maps.google.com; frame-ancestors 'none'; base-uri 'none'; form-action 'self'";
 
 async function readBody(req) {
   const chunks = [];
@@ -43,7 +43,7 @@ http.createServer(async (req, res) => {
     const data = await fs.readFile(full);
     res.setHeader('Content-Type', MIME[path.extname(full)] || 'application/octet-stream');
     res.setHeader('Content-Security-Policy', CSP);
-    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Cache-Control', url.pathname.startsWith('/fonts/') ? 'public, max-age=31536000, immutable' : 'no-cache');
     res.setHeader('X-Robots-Tag', 'noindex, nofollow');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.end(data);
