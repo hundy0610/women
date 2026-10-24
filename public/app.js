@@ -211,8 +211,8 @@ function spaceCard(s) {
     <div class="stripw"><div class="strip" data-track="${s.id}" role="group" aria-label="${esc(s.name)} 사진, 옆으로 밀어서 넘기기">${strip}</div>${real.length > 1 ? `<span class="cnt num" data-count="${s.id}">${(coverIdx[s.id] || 0) + 1}/${real.length}</span>` : ''}<span class="chk" aria-hidden="true">${on ? ic('check', 18) : ''}</span></div>
     <button type="button" class="spb" data-id="${s.id}" aria-pressed="${on}" ${dis ? 'disabled' : ''} title="${esc(desc)}">
       <span class="spt"><h3>${esc(s.name)}</h3>${dis ? badge('off', '예약 불가', 'ban') : badge('ok', `${free}시간 가능`, 'clock')}</span>
-      <span class="meta">${ic('users', 16)}최대 ${s.capacity}명 · ${s.pyeong}평${on ? ` · <b class="sel-txt">${ic('check', 14)}선택됨</b>` : ''}</span>
-      <span class="num sp-price"><b>시간당 ${won(s.hourly)}</b> <span class="muted">· 1일 ${won(s.daily)}</span></span>
+      <span class="meta">${ic('users', 16)}최대 ${s.capacity}명 · ${s.pyeong}평</span>
+      <span class="num sp-price"><b>시간당 ${won(s.hourly)}</b> <span class="muted"><i class="dotsep">· </i>1일 ${won(s.daily)}</span></span>
     </button></div>`;
 }
 

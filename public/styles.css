@@ -471,3 +471,36 @@ ol.notes li::before{width:26px;height:26px;font-size:14px}
 /* 큰 화면에서는 가로로도 넓게 쓰되 항상 가운데에 둡니다 */
 :root{--maxw:min(1440px,94vw)}
 @media (min-width:1000px){.wrap{grid-template-columns:minmax(0,1fr) clamp(400px,26vw,460px)}}
+
+/* 공간 카드: 위는 사진, 아래는 글 */
+.sps{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sp{display:flex;flex-direction:column}
+.sp .stripw{min-height:0;height:auto;flex:none}
+.sp .strip{height:auto}
+.sp .ph{aspect-ratio:16/9;height:auto;min-height:0}
+.sp .strip img.ph{height:auto}
+.sp .stripw .chk{top:8px;left:8px;width:32px;height:32px}
+.spb{flex:1;align-content:start;justify-items:start;padding:10px 12px 12px;gap:3px}
+.spb .spt{flex-direction:column;align-items:flex-start;gap:4px}
+.spb h3{font-size:20px}
+.spb .meta{font-size:15px;flex-wrap:wrap}
+.sp-price{font-size:15px;line-height:1.4}
+.sp-price .muted{display:block}
+@media (max-width:359px){.sps{grid-template-columns:1fr}}
+@media (min-width:700px){.sps{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.spb{padding:12px 14px 14px}.spb h3{font-size:21px}}
+@media (min-width:1000px){.sps{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.dotsep{font-style:normal}
+@media (max-width:699px){
+  .spb .meta .i{display:none}
+  .spb .meta{white-space:nowrap}
+  .sp-price .dotsep{display:none}
+  .spb{padding:8px 10px 10px}
+  .spb .badge{font-size:14px;padding:1px 8px}
+}
+@media (min-width:700px){.sp-price .muted{display:inline}}
+@media (min-width:700px){
+  .sp .ph{aspect-ratio:16/7}
+  .spb .spt{flex-direction:row;align-items:center;flex-wrap:wrap;gap:6px 8px}
+  .spb .meta .i{display:inline}
+}
+.sp-price .muted{white-space:nowrap}
