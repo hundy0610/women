@@ -241,3 +241,18 @@ test('관리자 여러 건 취소: 빈 선택과 너무 많은 선택은 거절�
   assert.equal(await code(cancelMany(store, [], NOW)), 'EMPTY');
   assert.equal(await code(cancelMany(store, Array.from({ length: 201 }, (_, i) => `id${i}`), NOW)), 'TOO_MANY');
 });
+
+test('관리자 직접 등록: 협의 금액으로 등록할 수 있고, 잘못된 금액은 거절', async () => {
+  const store = createMemoryStore();
+  const a = { nowMs: NOW, ip: '9.9.9.9', admin: true, cfg: TEST_CFG };
+  const { rec } = await createReservation(store, fresh({ amount: 50000, confirmed: true }), a);
+  assert.equal(rec.amount, 50000);
+  assert.equal(rec.status, 'confirmed');
+  assert.equal(await code(createReservation(store, fresh({ date: OPEN_DAY_2, amount: -1 }), a)), 'AMOUNT');
+  assert.equal(await code(createReservation(store, fresh({ date: OPEN_DAY_2, amount: 1.5 }), a)), 'AMOUNT');
+  const { rec: r2 } = await createReservation(store, fresh({ date: OPEN_DAY_2, amount: '' }), a);
+  assert.equal(r2.amount, 120000); // 세미나실 4시간 자동 계산
+  // 손님 예약은 금액을 바꿀 수 없다
+  const { rec: r3 } = await createReservation(store, fresh({ date: day(5), amount: 1 }), ctx());
+  assert.equal(r3.amount, 120000);
+});

@@ -104,9 +104,10 @@
                 <div class="field"><label for="n-purpose">이용 목적</label><input class="input" id="n-purpose" maxlength="100"></div>
               </div>
               <div class="cols2 nrow">
+                <div class="field"><label for="n-amount">금액(원)</label><input class="input num" id="n-amount" type="number" min="0" step="1000" inputmode="numeric"><p class="muted sm" id="n-price" style="margin:4px 0 0"></p></div>
                 <label class="check on" id="n-confirmed-l"><input type="checkbox" id="n-confirmed" class="sr-only" checked><span class="box on"></span><span>입금 확인 완료(확정으로 등록)</span></label>
-                <div class="result"><span class="ri"></span><span>금액</span><span style="margin-left:auto" class="num" id="n-price"></span></div>
               </div>
+              <p class="muted sm" style="margin:-4px 0 0">확정으로 등록하면 입력한 번호로 송금 완료 문자가 바로 가요. 확정 전이면 나중에 확정할 때 가요.</p>
               <div id="n-err" role="alert" aria-live="polite"></div>
               <button class="btn primary block" type="submit" id="n-submit">등록하기</button>
             </form>

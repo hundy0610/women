@@ -433,14 +433,16 @@ function renderSpaceChips() {
 renderSpaceChips();
 $('#n-start').innerHTML = HOURS.slice(0, -1).map((h) => `<option value="${h}">${hh(h)}</option>`).join('');
 $('#n-end').innerHTML = HOURS.slice(1).map((h) => `<option value="${h}">${hh(h)}</option>`).join('');
-$('#n-start').value = '10';
-$('#n-end').value = '14';
+$('#n-start').value = '11';
+$('#n-end').value = '15';
 $('#n-date').value = todayKst(Date.now());
 
+let amountTouched = false;
 const picked = () => [...chipsSp];
 function newPrice() {
   const q = quote(C, { spaceIds: picked(), startHour: Number($('#n-start').value), endHour: Number($('#n-end').value), people: Number($('#n-people').value) || 0 });
-  $('#n-price').textContent = q.ok ? won(q.total) : q.message;
+  $('#n-price').textContent = q.ok ? `자동 계산 ${won(q.total)} · 협의 금액이면 직접 고치세요` : q.message;
+  if (!amountTouched) $('#n-amount').value = q.ok ? q.total : '';
   return q;
 }
 $('#n-spaces').addEventListener('click', (e) => {
@@ -456,6 +458,7 @@ $('#n-confirmed').addEventListener('change', (e) => {
   bx.classList.toggle('on', e.target.checked);
   bx.innerHTML = e.target.checked ? ic('check', 20) : '';
 });
+$('#n-amount').addEventListener('input', () => { amountTouched = $('#n-amount').value !== ''; });
 $('#newForm').addEventListener('input', newPrice);
 newPrice();
 
@@ -466,20 +469,20 @@ $('#newForm').addEventListener('submit', async (e) => {
   const btn = $('#n-submit');
   btn.disabled = true; btn.innerHTML = '<span class="spin"></span>등록하는 중…';
   try {
-    await call({
+    const made = await call({
       action: 'create',
       reservation: {
         date: $('#n-date').value, start: Number($('#n-start').value), end: Number($('#n-end').value), spaces: picked(),
         name: $('#n-name').value, phone: $('#n-phone').value, people: Number($('#n-people').value),
-        purpose: $('#n-purpose').value, confirmed: $('#n-confirmed').checked,
+        purpose: $('#n-purpose').value, confirmed: $('#n-confirmed').checked, amount: $('#n-amount').value,
       },
     });
-    toast('직접 등록했어요.');
-    $('#newForm').reset();
+    toast(made.smsSent ? '직접 등록했어요. 확정 문자를 보냈어요.' : '직접 등록했어요.');
+    $('#newForm').reset(); amountTouched = false;
     chipsSp.clear(); renderSpaceChips();
     $('#n-confirmed-l').classList.add('on'); $('#n-confirmed-l .box').classList.add('on'); $('#n-confirmed-l .box').innerHTML = ic('check', 20);
     $('#n-date').value = todayKst(Date.now());
-    $('#n-start').value = '10'; $('#n-end').value = '14';
+    $('#n-start').value = '11'; $('#n-end').value = '15';
     newPrice();
     await load();
   } catch (err) {
