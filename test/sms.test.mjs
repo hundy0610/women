@@ -39,7 +39,11 @@ test('송금 안내는 날짜, 시간, 공간, 금액, 은행·계좌·예금주
   clear(); setAll();
   const t = payGuideText(rec);
   assert.equal(t, '[드림문화센터] 10/22 10~13시 세미나실 90,000원\n은행 111-22-333 센터\n10/20 12시까지 입금');
-  assert.equal(buildMessage('01012345678', t).type, 'LMS');
+  assert.equal(buildMessage('01012345678', t).type, 'SMS'); // 짧은 계좌 정보면 단문
+  Object.assign(process.env, { BANK_NAME: '우리은행', BANK_NUMBER: '1002-849-141392', BANK_HOLDER: '이선화' });
+  const real = payGuideText(rec);
+  assert.ok(real.includes('우리은행 1002-849-141392 이선화'));
+  assert.equal(buildMessage('01012345678', real).type, 'LMS'); // 실제 계좌는 90바이트를 넘어 장문으로 나간다
 });
 
 test('송금 완료는 한 줄 단문이다', () => {
