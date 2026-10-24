@@ -591,32 +591,14 @@ function fitVars() {
 }
 window.addEventListener('resize', () => fitVars());
 
+// PC에서는 입금 안내 화면(7단계)에서만 입금 기한과 계좌 요약을 본문 아래에 보여 줍니다. 그 밖의 단계에는 요약 패널이 없습니다.
 function renderSide() {
-  // 입금 안내 화면(7단계)에서만 입금 기한과 계좌 요약을 보여 줍니다.
   if (state.step === 7 && state.done) {
     const b7 = state.info.bank;
     $('#side').innerHTML = `<div class="card soft slim"><p class="row-f b">${ic('clock', 20)}${C.holdHours}시간 안에 입금해 주세요</p><p class="sm">${b7 ? `${esc(b7.name)} ${esc(b7.number)} · 예금주 ${esc(b7.holder)}` : '입금 계좌는 담당자에게 문의해 주세요.'}</p><p class="sm" style="color:var(--c-pend-fg);font-weight:700">입금 기한 ${formatKstDateTime(state.done.holdUntil)}까지</p></div>`;
     return;
   }
-  if (state.step >= 7) { $('#side').innerHTML = ''; return; }
-  const q = currentQuote();
-  const dash = '<span class="muted">선택 전</span>';
-  const t = state.start != null && state.end != null ? `${hh(state.start)} ~ ${hh(state.end)} (${state.end - state.start}시간)` : dash;
-  let calc = '<p class="muted sm">시간을 정하면 요금이 계산돼요.</p>';
-  if (q) {
-    calc = q.lines.map((l) => `<div class="pr"><span>${esc(l.name)}</span><span>${won(l.cost)}</span></div>`).join('');
-    if (q.packageDiscount > 0) calc += `<div class="pr neg"><span>전체 통대관 할인</span><span>-${won(q.packageDiscount)}</span></div>`;
-    if (q.extraPeople > 0) calc += `<div class="pr"><span>인원 초과 ${q.extraPeople}명 × ${won(C.overagePerPerson)}</span><span>${won(q.overageFee)}</span></div>`;
-  }
-  const b = state.info.bank;
-  const status = state.date && state.step === 2
-    ? `<div class="card status-card"><h2 style="margin-bottom:4px">공간별 현황</h2><p class="muted sm" style="margin-bottom:12px">${formatKoreanDate(state.date)} · ${HOURS[0]}~${HOURS[HOURS.length - 1]}시</p>${miniStatus(C.spaces.map((s) => s.id))}<div style="margin-top:12px">${LEGEND}</div></div>`
-    : '';
-  $('#side').innerHTML = `<div class="card"><h2 style="margin-bottom:14px">내 예약</h2>
-      <dl class="kv"><dt>날짜</dt><dd>${state.date ? formatKoreanDate(state.date) : dash}</dd><dt>공간</dt><dd>${state.spaceIds.length ? esc(spaceNames(state.spaceIds)) : dash}</dd><dt>시간</dt><dd>${t}</dd><dt>인원</dt><dd>${state.step >= 4 ? `${state.people}명` : dash}</dd></dl>
-      <div class="hr"></div><div class="stack" style="gap:8px">${calc}</div><div class="hr"></div>
-      <div class="pr" style="align-items:baseline"><b>예상 요금</b><span class="amount num">${q ? won(q.total) : '—'}</span></div></div>
-    ${status}`;
+  $('#side').innerHTML = '';
 }
 
 function go(step, push = true) {

@@ -504,3 +504,36 @@ ol.notes li::before{width:26px;height:26px;font-size:14px}
   .spb .meta .i{display:inline}
 }
 .sp-price .muted{white-space:nowrap}
+
+/* ===== PC: 요약 패널을 없애고 본문을 넓게. 하단 버튼은 가운데에 떠 있는 막대 ===== */
+@media (min-width:1000px){
+  .wrap{display:grid;grid-template-columns:minmax(0,1fr);max-width:min(1180px,94vw);padding:16px 24px calc(var(--dock-h,110px) + 28px);align-content:stretch;align-items:stretch}
+  .work{max-width:none;width:100%;margin:0}
+  .dock{position:fixed;left:50%;right:auto;bottom:16px;transform:translateX(-50%);width:min(760px,calc(100vw - 32px));margin:0;padding:12px 16px;border-radius:24px;border:1px solid var(--c-line);box-shadow:var(--sh-2);background:#fff}
+  .dock-in{max-width:none}
+  #side{display:block;margin-top:16px}
+  #side:empty{display:none;margin:0}
+  .view{justify-content:flex-start}
+  .view.s3,.view.s4,.view.s5,.view.s6,.view.s8{justify-content:center}
+  /* 날짜: 달력이 남는 폭과 높이를 채움 */
+  .view.s1>.card{flex:1;max-width:1040px;width:100%;margin-inline:auto;max-height:none}
+  .view.s1 .cal{flex:1;grid-auto-rows:minmax(46px,1fr)}
+  .view.s1 .legend{justify-content:center}
+  .view.s1>.card .day{font-size:22px}
+  .view.s1 .calhd h2{font-size:26px}
+  /* 시간, 인원, 예약자, 확인은 가운데 정렬된 읽기 좋은 폭 */
+  .view.s3>*,.view.s4>*,.view.s5>*,.view.s6>*{width:100%;max-width:860px;margin-inline:auto}
+  .view.s8>*{width:100%;max-width:640px;margin-inline:auto}
+  .view.s7>*{width:100%;max-width:980px;margin-inline:auto}
+  .view.s2 .sps,.view.s2 .all{max-width:1100px}
+}
+@media (min-width:1000px){
+  .sps{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+  .view.s1 .cal{grid-auto-rows:minmax(42px,1fr)}
+  .view.s1>.card{padding:10px 16px}
+  .view.s1 .calhd{margin-bottom:2px}
+}
+@media (min-width:1000px) and (max-height:780px){
+  .view.s1 .lead{display:none}
+  .view.s1 h1{margin-bottom:8px}
+}
