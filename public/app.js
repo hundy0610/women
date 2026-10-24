@@ -304,7 +304,7 @@ function viewTime() {
 }
 
 const QUICK_PEOPLE = [5, 10, 20, 30, 50];
-const PURPOSES = ['독서 모임', '전시', '강연', '워크숍', '회의'];
+const PURPOSES = ['동아리', '회의', '전시', '강연', '워크숍'];
 
 function overAlert() {
   const cap = capacity();
