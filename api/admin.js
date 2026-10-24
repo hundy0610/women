@@ -34,8 +34,8 @@ export default handle('POST', async (ctx) => {
     case 'create': {
       const { rec } = await createReservation(store, { ...body.reservation }, { nowMs, ip: ctx.ip, admin: true, cfg: await configWith(store) });
       // 확정으로 등록했다면 바로 송금 완료 문자를 보냅니다. 확정 전 등록은 나중에 확정할 때 보냅니다.
-      if (rec.status === 'confirmed') await sendPaidNotice(rec);
-      return { reservation: rec, smsSent: rec.status === 'confirmed' && smsEnabled() };
+      const sms = rec.status === 'confirmed' ? await sendPaidNotice(rec) : null;
+      return { reservation: rec, smsSent: Boolean(sms?.ok) };
     }
     case 'dismiss':
       await dismissCancelRequest(store, id, nowMs);
