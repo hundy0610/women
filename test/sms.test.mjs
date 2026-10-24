@@ -35,30 +35,34 @@ test('짧은 글은 SMS, 긴 글은 LMS(제목 포함), 번호는 숫자만', ()
   assert.equal(l.type, 'LMS'); assert.equal(l.subject, '드림 문화센터');
 });
 
-test('송금 안내는 날짜, 시간, 공간, 금액, 은행·계좌·예금주, 기한만 담는다(90바이트를 넘으면 장문)', () => {
+test('송금 안내는 항목별 줄로 정리되고 장문으로 나간다', () => {
   clear(); setAll();
-  const t = payGuideText(rec);
-  assert.equal(t, '[드림문화센터] 10/22 10~13시 세미나실 90,000원\n은행 111-22-333 센터\n10/20 12시까지 입금');
-  assert.equal(buildMessage('01012345678', t).type, 'SMS'); // 짧은 계좌 정보면 단문
   Object.assign(process.env, { BANK_NAME: '우리은행', BANK_NUMBER: '1002-849-141392', BANK_HOLDER: '이선화' });
-  const real = payGuideText(rec);
-  assert.ok(real.includes('우리은행 1002-849-141392 이선화'));
-  assert.equal(buildMessage('01012345678', real).type, 'LMS'); // 실제 계좌는 90바이트를 넘어 장문으로 나간다
+  const t = payGuideText(rec);
+  assert.equal(t, [
+    '[드림문화센터]',
+    '예약일정 : 10월 22일 10~13시',
+    '대관장소 : 세미나실',
+    '금액 : 90,000원',
+    '계좌정보 : 우리은행 1002-849-141392 (예금주 이선화)',
+    '입금기한 : 10월 20일 12시까지',
+  ].join('\n'));
+  const m = buildMessage('01012345678', t);
+  assert.equal(m.type, 'LMS');
+  assert.ok(m.subject);
 });
 
-test('송금 완료는 한 줄 단문이다', () => {
+test('예약 확정 문자는 일정과 장소를 정리해 알린다', () => {
   clear(); setAll();
-  const t = paidText(rec);
-  assert.equal(t, '[드림문화센터] 10/22 10~13시 세미나실 예약 확정');
-  assert.equal(buildMessage('01012345678', t).type, 'SMS');
+  assert.equal(paidText(rec), '[드림문화센터] 예약이 확정되었습니다.\n예약일정 : 10월 22일 10~13시\n대관장소 : 세미나실');
 });
 
-test('공간이 여러 개면 "첫 공간 외N"으로 줄이고, 은행 이름과 예금주를 모두 넣는다', () => {
+test('공간이 여러 개면 쉼표로 모두 적고, 분이 있으면 분까지 적는다', () => {
   clear(); setAll(); process.env.BANK_NAME = '국민은행';
   const t = payGuideText({ ...rec, spaces: ['seminar', 'room1', 'room2'], holdUntil: Date.UTC(2026, 9, 20, 3, 30) });
-  assert.ok(t.includes('세미나실 외2'));
-  assert.ok(t.includes('국민은행 111-22-333 센터'));
-  assert.ok(t.includes('10/20 12시30분까지 입금'));
+  assert.ok(t.includes('대관장소 : 세미나실, 방1, 방2'));
+  assert.ok(t.includes('계좌정보 : 국민은행 111-22-333 (예금주 센터)'));
+  assert.ok(t.includes('입금기한 : 10월 20일 12시 30분까지'));
 });
 
 test('계좌 설정이 없으면 계좌 줄을 빼고 보낸다', () => {
