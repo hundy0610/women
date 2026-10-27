@@ -326,7 +326,7 @@ const NEXT_LABEL = { 1: '일정 고르기', 2: '신청자 정보 입력', 3: '�
 function chrome() {
   const st = state.step;
   const withSteps = st <= STEPS;
-  $('#back').hidden = st === 1 || st === 5;
+  $('#back').hidden = st === 5;
   $('#myres').classList.toggle('on', st === 6);
   $('#prog').hidden = !withSteps;
   $('#stepnav').hidden = !withSteps;
@@ -474,7 +474,7 @@ $('#next').addEventListener('click', () => {
   if (st === 1) ensureMonth();
   go(st + 1);
 });
-$('#back').addEventListener('click', () => history.back());
+$('#back').addEventListener('click', () => { if (state.step === 1) location.href = '/'; else history.back(); });
 window.addEventListener('popstate', (e) => {
   const step = e.state?.step || 1;
   state.step = step === 6 ? 6 : state.done && step === 5 ? 5 : Math.min(step, 4);
@@ -485,7 +485,6 @@ window.addEventListener('popstate', (e) => {
 });
 $('#retryBtn').addEventListener('click', loadInfo);
 $('#back').innerHTML = ic('left', 26);
-$('#toRent').innerHTML = `${ic('home', 20)}공간 대관`;
 $('#myres').innerHTML = `${ic('search', 20)}내 신청`;
 $('#myres').addEventListener('click', () => go(6));
 $('#lastBtn').addEventListener('click', () => {

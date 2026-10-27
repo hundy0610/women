@@ -17,7 +17,7 @@ const state = {
   offset: 0,
   info: { bank: null, contact: null, storeReady: true },
   taken: {},
-  step: 1,
+  step: new URLSearchParams(location.search).get('go') === 'rent' ? 1 : 0, // 0은 처음 화면(공간 대관 / 소모임 신청 고르기)
   date: null,
   month: null,
   spaceIds: [],
@@ -166,6 +166,16 @@ const LEGEND = `<div class="legend"><span>${sw('background:#fff;border-color:var
 const OFF_STRIPE = 'background:repeating-linear-gradient(135deg,#C6CCD9 0 3px,#F3F5F9 3px 6px)';
 
 /* ---------- 단계 화면 ---------- */
+// 0단계: 처음 화면. 공간 대관과 소모임(동아리) 신청 중에서 고릅니다.
+function viewHome() {
+  return `<h1>무엇을 도와드릴까요?</h1>
+    <p class="lead">마두 문화센터에서 하실 수 있어요.</p>
+    <div class="homechoice">
+      <button type="button" class="hcard" id="goRent"><span class="hico">${ic('cal', 34)}</span><span class="ht">공간 대관</span><span class="hd2">로비, 세미나실, 방을 시간 단위로 예약해요.</span><span class="hgo">예약하기 ${ic('right', 20)}</span></button>
+      <button type="button" class="hcard" id="goCrew"><span class="hico">${ic('users', 34)}</span><span class="ht">소모임(동아리) 신청</span><span class="hd2">뜨개, 비누공예, 타로 등 한 달 10,000원으로 참여해요.</span><span class="hgo">신청하기 ${ic('right', 20)}</span></button>
+    </div>`;
+}
+
 function viewDate() {
   const { y, m } = state.month;
   const today = todayKst(now());
@@ -518,7 +528,7 @@ document.addEventListener('scroll', (e) => {
 /* ---------- 렌더 ---------- */
 function render(keepScroll = false) {
   normalizeTime();
-  const views = { 1: viewDate, 2: viewSpace, 3: viewTime, 4: viewPeople, 5: viewPerson, 6: viewReview, 7: viewDone, 8: viewLookup };
+  const views = { 0: viewHome, 1: viewDate, 2: viewSpace, 3: viewTime, 4: viewPeople, 5: viewPerson, 6: viewReview, 7: viewDone, 8: viewLookup };
   const y = window.scrollY;
   const active = document.activeElement?.id;
   $('#main').innerHTML = `<section class="view s${state.step}">${views[state.step]()}</section>`;
@@ -543,8 +553,8 @@ const NAMES = ['날짜', '공간', '시간', '인원', '예약자', '확인'];
 function chrome() {
   const st = state.step;
   document.body.dataset.step = String(st);
-  const withSteps = st <= STEPS;
-  $('#back').hidden = st === 1 || st === 7;
+  const withSteps = st >= 1 && st <= STEPS;
+  $('#back').hidden = st === 0 || st === 7;
   $('#myres').classList.toggle('on', st === 8);
   $('#prog').hidden = !withSteps;
   $('#stepnav').hidden = !withSteps;
@@ -560,7 +570,7 @@ function chrome() {
   // 하단 영역: 단계 1~7에서 보입니다. 버튼이 꺼진 이유는 요약 줄 자리에 한 줄로 알려 줍니다.
   const q = currentQuote();
   const dock = $('#dock');
-  dock.hidden = st === 8;
+  dock.hidden = st === 0 || st === 8;
   const timeTxt = state.start != null && state.end != null ? `${state.start}~${state.end}시` : null;
   const sum = [state.date ? formatKoreanDate(state.date) : null, state.spaceIds.length ? spaceNames(state.spaceIds) : null, timeTxt, q ? `예상 <em>${won(q.total)}</em>` : null].filter(Boolean);
   const peek = $('#peek');
@@ -621,6 +631,8 @@ function renderLast() {
 /* ---------- 이벤트 ---------- */
 $('#main').addEventListener('click', (e) => {
   const t = e.target;
+  if (t.closest('#goRent')) return go(1);
+  if (t.closest('#goCrew')) { location.href = '/crew'; return; }
   const day = t.closest('.day[data-date]');
   if (day && !day.disabled) {
     if (day.classList.contains('off') || day.classList.contains('full')) return;
@@ -754,7 +766,7 @@ $('#next').addEventListener('click', () => {
 $('#back').addEventListener('click', () => history.back());
 window.addEventListener('popstate', (e) => {
   if (overlayPop()) return;
-  const step = e.state?.step || 1;
+  const step = e.state?.step ?? 0;
   state.step = step === 8 ? 8 : state.done && step === 7 ? 7 : Math.min(step, 6);
   state.error = '';
   render();
@@ -809,7 +821,7 @@ async function submit() {
 
 function reset() {
   Object.assign(state, { spaceIds: [], start: null, end: null, people: 10, purpose: '', agree: false, done: null, error: '', lk: { id: '', phone: '', rec: null, err: '', msg: '', busy: false, cancelOpen: false, reason: '' } });
-  go(1);
+  go(0);
 }
 
 /* ---------- 오시는 길, 네이버 지도 ---------- */
@@ -925,7 +937,7 @@ $('#where').addEventListener('click', (e) => {
   const p = parseYmd(todayKst(now()));
   state.month = { y: p.y, m: p.m };
   try { const me = JSON.parse(localStorage.getItem('women:me') || 'null'); if (me) { state.name = me.name || ''; state.phone = me.phone || ''; state.lk.phone = me.phone || ''; } } catch { /* 무시 */ }
-  history.replaceState({ step: 1 }, '');
+  history.replaceState({ step: state.step }, '');
   buildWhere();
   render();
   await loadAvailability();
