@@ -4,6 +4,7 @@ import { createMemoryStore } from '../lib/store-memory.js';
 import { applyCrew, confirmCrew, renewCrew, cancelCrew, listCrew, crewUsage, crewStatus } from '../lib/crew.js';
 import { BookingError } from '../lib/booking.js';
 import { kstEpoch, addDays } from '../public/shared/time.mjs';
+import { CREW } from '../public/shared/crew-config.mjs';
 import { periodEnd, sessionsBetween, addMonths } from '../public/shared/crew-rules.mjs';
 
 const NOW = kstEpoch('2026-10-27', 12); // 화요일 12:00 KST
@@ -30,10 +31,10 @@ test('신청: 입금 대기로 만들고 자리를 잡는다', async () => {
   assert.equal(used['knit-4-1100|2026-10-29'], 1);
 });
 
-test('정원 3명: 네 번째 신청은 거절, 취소하면 자리가 열린다', async () => {
+test('정원이 차면 다음 신청은 거절, 취소하면 자리가 열린다', async () => {
   const store = createMemoryStore();
   const ids = [];
-  for (let i = 0; i < 3; i++) ids.push((await applyCrew(store, app(), ctx())).rec.id);
+  for (let i = 0; i < CREW.capacity; i++) ids.push((await applyCrew(store, app(), ctx())).rec.id);
   assert.equal(await code(applyCrew(store, app(), ctx())), 'FULL');
   await cancelCrew(store, ids[0], NOW);
   assert.equal(await code(applyCrew(store, app(), ctx())), null);
@@ -41,8 +42,8 @@ test('정원 3명: 네 번째 신청은 거절, 취소하면 자리가 열린다
 
 test('동시에 신청해도 정원을 넘지 않는다', async () => {
   const store = createMemoryStore();
-  const res = await Promise.all(Array.from({ length: 8 }, () => code(applyCrew(store, app(), ctx()))));
-  assert.equal(res.filter((c) => c === null).length, 3);
+  const res = await Promise.all(Array.from({ length: CREW.capacity + 5 }, () => code(applyCrew(store, app(), ctx()))));
+  assert.equal(res.filter((c) => c === null).length, CREW.capacity);
   assert.equal(res.filter((c) => c === 'FULL').length, 5);
 });
 
@@ -54,7 +55,7 @@ test('입금 기한이 지나면 자리가 비고, 같은 번호 중복 신청�
   const later = NOW + 25 * 3600 * 1000;
   const used = await crewUsage(store, later);
   assert.equal(used['knit-4-1100|2026-10-29'], undefined);
-  for (let i = 0; i < 3; i++) await applyCrew(store, app(), ctx({ nowMs: later }));
+  for (let i = 0; i < CREW.capacity; i++) await applyCrew(store, app(), ctx({ nowMs: later }));
 });
 
 test('검증: 요일, 시작일 범위, 성별, 나이, 동의', async () => {

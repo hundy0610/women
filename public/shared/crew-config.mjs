@@ -10,7 +10,7 @@ export const CREW = {
   leadDays: 1,           // 시작일은 오늘로부터 최소 N일 뒤
   horizonDays: 60,       // 시작일은 오늘로부터 최대 N일 뒤까지
   expiringDays: 7,       // 이용 기간이 끝나기 N일 전부터 "곧 만료"로 표시
-  capacity: 3,           // 요일·시간 칸 하나당 동시에 받을 수 있는 신청 수
+  capacity: 10,          // 요일·시간 칸 하나당 동시에 받을 수 있는 신청 수
 
   // 신청 전에 보여 주고 체크로 동의받는 안내문
   policy: [
