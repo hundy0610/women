@@ -156,9 +156,9 @@ function viewSchedule() {
     cells += `<button type="button" class="day ${k}" data-day="${date}" ${!ok || full ? 'disabled' : ''} aria-pressed="${date === state.start}" aria-label="${formatKoreanDate(date)}${ok ? (full ? ' 정원 마감' : ` 정원 ${sl.capacity - left}/${sl.capacity}`) : ''}">${d}${label ? `<small>${label}</small>` : ''}</button>`;
   }
   const slotChips = p.slots.length > 1
-    ? `<div class="chips" role="group" aria-label="요일과 시간">${p.slots.map((s) => { const id = slotId(p.id, s); return `<button type="button" class="chip ${state.slot === id ? 'on' : ''}" data-slot="${id}" aria-pressed="${state.slot === id}">${WEEKDAY[s.weekday]}요일 ${s.time} · 정원 ${nextLeft(findSlot(id)).used}/${nextLeft(findSlot(id)).cap}</button>`; }).join('')}</div>`
+    ? `<div class="chips c2chips" role="group" aria-label="요일과 시간">${p.slots.map((s) => { const id = slotId(p.id, s); return `<button type="button" class="chip ${state.slot === id ? 'on' : ''}" data-slot="${id}" aria-pressed="${state.slot === id}">${WEEKDAY[s.weekday]}요일 ${s.time} · 정원 ${nextLeft(findSlot(id)).used}/${nextLeft(findSlot(id)).cap}</button>`; }).join('')}</div>`
     : '';
-  let sum = `<p class="muted row-f">${ic('info', 20)}달력에서 첫 수업 날짜를 눌러 주세요. 그날부터 한 달간 이용해요.</p>`;
+  let sum = `<p class="muted row-f c2hint">${ic('info', 20)}달력에서 첫 수업 날짜를 눌러 주세요. 그날부터 한 달간 이용해요.</p>`;
   if (state.start) {
     const pr = period(state.start);
     sum = `<div class="card soft slim"><p class="b">${esc(LONG(state.start))}부터 ${esc(LONG(pr.end))}까지 · 수업 ${pr.count}번</p><p class="sm">${slotLabel(sl)} · 정원 : ${sl.capacity - seatsLeft(sl, state.start)}/${sl.capacity}</p></div>`;
@@ -167,7 +167,7 @@ function viewSchedule() {
     <p class="lead">${slotLabel(sl)} 수업이에요. 시작하실 날짜를 골라 주세요.</p>
     <div class="stack">
       ${slotChips}
-      <div class="card">
+      <div class="card c2cal">
         <div class="calhd">
           <button type="button" class="circ" id="prevM" aria-label="이전 달" ${y === tp.y && m === tp.m ? 'disabled style="opacity:.45"' : ''}>${ic('left')}</button>
           <h2 class="num">${y}년 ${m}월</h2>
@@ -175,8 +175,7 @@ function viewSchedule() {
         </div>
         <div class="cal">${cells}</div>
       </div>
-      ${state.error ? alertBox('err', 'alert', esc(state.error)) : ''}
-      ${sum}
+      <div class="c2sum stack">${state.error ? alertBox('err', 'alert', esc(state.error)) : ''}${sum}</div>
     </div>`;
 }
 
@@ -187,7 +186,7 @@ function viewPerson() {
   const g = (v, t) => `<button type="button" class="chip ${state.gender === v ? 'on' : ''}" data-gender="${v}" aria-pressed="${state.gender === v}">${t}</button>`;
   return `<h1>신청하시는 분을 알려 주세요</h1>
     <p class="lead">입금하실 분 이름과 같게 적어 주세요. 연락처는 안내와 확인에만 써요. 한 시간대에 최대 ${cap}명까지 받아요.</p>
-    <div class="card stack">
+    <div class="card stack c3form">
       <div class="field"><label for="f-name">이름 <span class="req">필수</span></label>
         <input id="f-name" class="input" autocomplete="name" maxlength="20" placeholder="예: 김미영" value="${esc(state.name)}"></div>
       <div class="field"><label for="f-phone">연락처 <span class="req">필수</span></label>
@@ -209,10 +208,10 @@ function viewReview() {
   const on = state.agree;
   return `<h1>마지막으로 확인해 주세요</h1>
     <p class="lead">내용을 확인하고 안내에 동의해 주세요.</p>
-    <div class="stack">
-      <div class="card"><dl class="kv"><dt>소모임</dt><dd>${esc(p.name)}</dd><dt>장소</dt><dd>${esc(CREW.center.name)}</dd><dt>수강일</dt><dd>${slotLabel(sl)}</dd><dt>신청 기간</dt><dd>${esc(LONG(state.start))} ~ ${esc(LONG(pr.end))} (${pr.count}회)</dd><dt>신청자</dt><dd>${esc(state.name)} · ${esc(state.phone)}</dd><dt>비용</dt><dd><b>${won(CREW.fee)}</b> (한 달)</dd></dl></div>
-      <div class="card policy-card"><p class="b row-f">${ic('info', 20)}꼭 읽어 주세요</p>${policyList()}</div>
-      <label class="check ${on ? 'on' : ''}"><input type="checkbox" id="f-agree" class="sr-only" ${on ? 'checked' : ''}><span class="box ${on ? 'on' : ''}">${on ? ic('check', 20) : ''}</span><span>위 안내를 모두 읽었고 동의해요. 신청 당일 노쇼하면 환불되지 않는다는 것도 확인했어요.</span></label>
+    <div class="stack c4grid">
+      <div class="card c4kv"><dl class="kv"><dt>소모임</dt><dd>${esc(p.name)}</dd><dt>장소</dt><dd>${esc(CREW.center.name)}</dd><dt>수강일</dt><dd>${slotLabel(sl)}</dd><dt>신청 기간</dt><dd>${esc(LONG(state.start))} ~ ${esc(LONG(pr.end))} (${pr.count}회)</dd><dt>신청자</dt><dd>${esc(state.name)} · ${esc(state.phone)}</dd><dt>비용</dt><dd><b>${won(CREW.fee)}</b> (한 달)</dd></dl></div>
+      <div class="card policy-card c4policy"><p class="b row-f">${ic('info', 20)}꼭 읽어 주세요</p>${policyList()}</div>
+ <label class="check c4agree ${on ? 'on' : ''}"><input type="checkbox" id="f-agree" class="sr-only" ${on ? 'checked' : ''}><span class="box ${on ? 'on' : ''}">${on ? ic('check', 20) : ''}</span><span>위 안내를 모두 읽었고 동의해요. 신청 당일 노쇼하면 환불되지 않는다는 것도 확인했어요.</span></label>
       ${state.error ? alertBox('err', 'alert', esc(state.error)) : ''}
     </div>`;
 }

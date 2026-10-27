@@ -150,3 +150,13 @@ h1{font-size:28px}
 /* 관리자: 본문을 남는 영역의 가운데에 */
 .main{margin-inline:auto;max-width:1240px;width:100%}
 @media (min-width:1000px){.ad>div{display:flex;flex-direction:column;min-width:0}.main{flex:1}}
+
+/* 직접 등록: 금액 칸을 넣은 뒤에도 PC 한 화면에 들어가도록 */
+@media (min-width:1000px) and (max-height:820px){
+  #tab-new>.alert{padding:6px 12px}
+  #newForm>p.muted{display:none}
+  #newForm{gap:8px}
+  #newForm .field label{margin-bottom:2px}
+  #newForm .input{min-height:44px}
+  #newForm .btn{min-height:48px}
+}

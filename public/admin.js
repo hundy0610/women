@@ -135,7 +135,6 @@ function decorateStatic() {
   $('.search .si').innerHTML = ic('search', 24);
   for (const a of document.querySelectorAll('.alert > .ai')) a.outerHTML = ic('info', 24);
   $('#n-submit').dataset.label = '등록하기';
-  $('.result .ri').outerHTML = ic('clock', 24);
   $('#qr-png').innerHTML = `${ic('down', 18)}PNG`;
   $('#qr-svg').innerHTML = `${ic('down', 18)}SVG`;
   $('#qr-print').innerHTML = `${ic('print', 18)}인쇄`;

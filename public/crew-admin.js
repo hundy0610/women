@@ -219,6 +219,8 @@ $('#newForm').addEventListener('submit', async (e) => {
   btn.disabled = false; btn.textContent = '등록하기';
 });
 
+if (window.matchMedia('(min-width:1100px)').matches) $('#newBox').open = true; // PC에서는 직접 등록을 펼쳐 둡니다
+
 /* ---------- 시작: 대관 관리에서 로그인한 비밀번호가 있으면 이어서 씁니다 ---------- */
 (async () => {
   try { pw = sessionStorage.getItem('women:adm') || ''; } catch { /* 무시 */ }
