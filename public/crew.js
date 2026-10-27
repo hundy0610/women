@@ -1,6 +1,6 @@
 // 소모임(동아리) 신청 화면. 흐름: 1 소모임 고르기 -> 2 요일·시간과 시작일 -> 3 신청자 정보 -> 4 확인과 동의 -> 5 입금 안내, 6 내 신청 조회.
 import { CREW, WEEKDAY, findProgram, findSlot, slotId } from '/shared/crew-config.mjs';
-import { periodEnd, sessionsBetween } from '/shared/crew-rules.mjs';
+import { periodEnd, sessionsBetween, firstOnOrAfter } from '/shared/crew-rules.mjs';
 import { ic } from '/icons.js';
 import { todayKst, parseYmd, addDays, ymd, formatKoreanDate, formatKstDateTime, DOW_LABELS } from '/shared/time.mjs';
 
@@ -71,6 +71,12 @@ function seatsLeft(slot, start) {
   const peak = Math.max(0, ...dates.map((d) => state.info.used[`${slot.id}|${d}`] || 0));
   return Math.max(0, slot.capacity - peak);
 }
+// 다음 수업일 기준으로 이 요일·시간 칸에 남은 자리(신청해서 입금 대기 중인 사람도 자리를 차지합니다)
+function nextLeft(slot) {
+  const date = firstOnOrAfter(addDays(todayKst(Date.now()), CREW.leadDays), slot.weekday);
+  const used = state.info.used[`${slot.id}|${date}`] || 0;
+  return { date, used, left: Math.max(0, slot.capacity - used), cap: slot.capacity };
+}
 const period = (start) => ({ end: periodEnd(start, CREW.periodMonths), count: sessionsBetween(start, periodEnd(start, CREW.periodMonths), slotObj().weekday).length });
 
 function stepProblem(step) {
@@ -103,15 +109,15 @@ function programCard(p) {
   const strip = real.length
     ? real.map((src, i) => `<img class="ph" src="${esc(src)}" alt="${esc(p.name)} 사진 ${i + 1}" ${i ? 'loading="lazy"' : ''} draggable="false">`).join('')
     : `<div class="ph" role="img" aria-label="${esc(p.name)} 사진 준비 중">${ic('cam', 30)}</div>`;
-  const byDay = {};
-  for (const s of p.slots) (byDay[s.weekday] ||= []).push(s.time);
-  const times = Object.entries(byDay).map(([d, ts]) => `${WEEKDAY[d]} ${ts.join(', ')}`).join(' · ');
-  const cap = p.capacity ?? CREW.capacity;
+  const lines = p.slots.map((sl) => {
+    const n = nextLeft(findSlot(slotId(p.id, sl)));
+    return `<span class="slotline">${ic('clock', 16)}<span>${WEEKDAY[sl.weekday]} ${esc(sl.time)}</span><b class="${n.left ? '' : 'full'}">${n.left ? `남은 자리 ${n.left}/${n.cap}` : '마감'}</b></span>`;
+  }).join('');
   return `<div class="sp ${on ? 'on' : ''}">
     <div class="stripw"><div class="strip" data-track="${p.id}" role="group" aria-label="${esc(p.name)} 사진, 옆으로 밀어서 넘기기">${strip}</div>${real.length > 1 ? `<span class="cnt num" data-count="${p.id}">${(coverIdx[p.id] || 0) + 1}/${real.length}</span>` : ''}<span class="chk" aria-hidden="true">${on ? ic('check', 18) : ''}</span></div>
     <button type="button" class="spb" data-program="${p.id}" aria-pressed="${on}">
-      <span class="spt"><h3>${esc(p.name)}</h3>${badge('ok', `정원 ${p.capacity ?? CREW.capacity}명`)}</span>
-      <span class="meta">${ic('clock', 16)}${esc(times)}</span>
+      <span class="spt"><h3>${esc(p.name)}</h3></span>
+      <span class="slots">${lines}</span>
       <span class="num sp-price"><b>한 달 ${won(CREW.fee)}</b></span>
     </button></div>`;
 }
@@ -150,12 +156,12 @@ function viewSchedule() {
     cells += `<button type="button" class="day ${k}" data-day="${date}" ${!ok || full ? 'disabled' : ''} aria-pressed="${date === state.start}" aria-label="${formatKoreanDate(date)}${ok ? (full ? ' 마감' : ` ${left}자리 남음`) : ''}">${d}${label ? `<small>${label}</small>` : ''}</button>`;
   }
   const slotChips = p.slots.length > 1
-    ? `<div class="chips" role="group" aria-label="요일과 시간">${p.slots.map((s) => { const id = slotId(p.id, s); return `<button type="button" class="chip ${state.slot === id ? 'on' : ''}" data-slot="${id}" aria-pressed="${state.slot === id}">${WEEKDAY[s.weekday]}요일 ${s.time}</button>`; }).join('')}</div>`
+    ? `<div class="chips" role="group" aria-label="요일과 시간">${p.slots.map((s) => { const id = slotId(p.id, s); return `<button type="button" class="chip ${state.slot === id ? 'on' : ''}" data-slot="${id}" aria-pressed="${state.slot === id}">${WEEKDAY[s.weekday]}요일 ${s.time} · ${nextLeft(findSlot(id)).left}자리</button>`; }).join('')}</div>`
     : '';
   let sum = `<p class="muted row-f">${ic('info', 20)}달력에서 첫 수업 날짜를 눌러 주세요. 그날부터 한 달간 이용해요.</p>`;
   if (state.start) {
     const pr = period(state.start);
-    sum = `<div class="card soft slim"><p class="b">${esc(LONG(state.start))}부터 ${esc(LONG(pr.end))}까지 · 수업 ${pr.count}번</p><p class="sm">${slotLabel(sl)} · 남은 자리 ${seatsLeft(sl, state.start)}명</p></div>`;
+    sum = `<div class="card soft slim"><p class="b">${esc(LONG(state.start))}부터 ${esc(LONG(pr.end))}까지 · 수업 ${pr.count}번</p><p class="sm">${slotLabel(sl)} · 남은 자리 ${seatsLeft(sl, state.start)}명 (정원 ${sl.capacity}명)</p></div>`;
   }
   return `<h1>${esc(p.name)}, 언제부터 하실래요?</h1>
     <p class="lead">${slotLabel(sl)} 수업이에요. 시작하실 날짜를 골라 주세요.</p>

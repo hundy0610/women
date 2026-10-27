@@ -40,3 +40,10 @@
   .view.c5>*{width:100%;max-width:980px;margin-inline:auto}
   .view.c6>*{width:100%;max-width:640px;margin-inline:auto}
 }
+
+/* 시간대별 남은 자리 */
+.slots{display:grid;gap:4px;width:100%}
+.slotline{display:flex;align-items:center;gap:6px;font-size:15px;color:var(--c-ink-2);flex-wrap:wrap}
+.slotline .i{flex:none}
+.slotline b{color:var(--c-ok-fg);font-weight:700}
+.slotline b.full{color:var(--c-bad-fg)}
