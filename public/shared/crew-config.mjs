@@ -19,12 +19,7 @@ export const CREW = {
     '한 달이 지나면 연장 입금 안내를 드려요. 입금하시면 이어서 한 달 더 이용할 수 있어요.',
   ],
 
-  // 부녀회 안의 부서(지역). 신청서의 "소속 지역"에서 고릅니다.
-  depts: [
-    { id: 'jabi', name: '자비' },
-    { id: 'jihye', name: '지혜' },
-    { id: 'uae', name: '우애' },
-  ],
+  // 부녀회 안의 부서(지역) 이름은 홈페이지와 문자에 보이지 않습니다. programs의 dept는 담당자 참고용입니다.
 
   // 프로그램(소모임). slots의 time은 "HH:MM". capacity를 적으면 그 프로그램만 정원이 달라집니다.
   programs: [
@@ -60,4 +55,3 @@ export function allSlots(cfg = CREW) {
 
 export const findProgram = (id, cfg = CREW) => cfg.programs.find((p) => p.id === id) || null;
 export const findSlot = (id, cfg = CREW) => allSlots(cfg).find((s) => s.id === id) || null;
-export const deptName = (id, cfg = CREW) => cfg.depts.find((d) => d.id === id)?.name || '';

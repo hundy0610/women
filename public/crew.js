@@ -1,5 +1,5 @@
 // 소모임(동아리) 신청 화면. 흐름: 1 소모임 고르기 -> 2 요일·시간과 시작일 -> 3 신청자 정보 -> 4 확인과 동의 -> 5 입금 안내, 6 내 신청 조회.
-import { CREW, WEEKDAY, findProgram, findSlot, slotId, deptName } from '/shared/crew-config.mjs';
+import { CREW, WEEKDAY, findProgram, findSlot, slotId } from '/shared/crew-config.mjs';
 import { periodEnd, sessionsBetween } from '/shared/crew-rules.mjs';
 import { ic } from '/icons.js';
 import { todayKst, parseYmd, addDays, ymd, formatKoreanDate, formatKstDateTime, DOW_LABELS } from '/shared/time.mjs';
@@ -17,12 +17,11 @@ const state = {
   info: { used: {}, photos: {}, bank: null, contact: null },
   storeReady: true,
   step: 1,
-  filter: 'all',
   programId: null,
   slot: null,
   start: null,
   month: null,
-  name: '', phone: '', gender: '', age: '', dept: '',
+  name: '', phone: '', gender: '', age: '', dong: '',
   agree: false, website: '', submitting: false, error: '', done: null,
   lk: emptyLk(),
 };
@@ -84,7 +83,7 @@ function stepProblem(step) {
       if (!phoneOk(state.phone)) return '연락받을 휴대전화 번호를 알려 주세요.';
       if (!state.gender) return '성별을 골라 주세요.';
       if (state.age !== '' && !(Number(state.age) >= 10 && Number(state.age) <= 120)) return '나이는 숫자로 적어 주세요. 비워 두셔도 돼요.';
-      return state.dept ? '' : '소속 지역을 골라 주세요.';
+      return state.dong.trim().length >= 2 ? '' : '사시는 지역(동)을 알려 주세요.';
     case 4: return state.agree ? '' : '안내 내용에 동의해 주세요.';
     case 6: return state.lk.rec ? '' : state.lk.id.trim().length < 6 ? '신청번호를 입력해 주세요.' : !phoneOk(state.lk.phone) ? '휴대전화 번호를 입력해 주세요.' : '';
     default: return '';
@@ -111,18 +110,16 @@ function programCard(p) {
   return `<div class="sp ${on ? 'on' : ''}">
     <div class="stripw"><div class="strip" data-track="${p.id}" role="group" aria-label="${esc(p.name)} 사진, 옆으로 밀어서 넘기기">${strip}</div>${real.length > 1 ? `<span class="cnt num" data-count="${p.id}">${(coverIdx[p.id] || 0) + 1}/${real.length}</span>` : ''}<span class="chk" aria-hidden="true">${on ? ic('check', 18) : ''}</span></div>
     <button type="button" class="spb" data-program="${p.id}" aria-pressed="${on}">
-      <span class="spt"><h3>${esc(p.name)}</h3>${badge('ok', `${esc(deptName(p.dept))} 지역`)}</span>
+      <span class="spt"><h3>${esc(p.name)}</h3>${badge('ok', `정원 ${p.capacity ?? CREW.capacity}명`)}</span>
       <span class="meta">${ic('clock', 16)}${esc(times)}</span>
-      <span class="num sp-price"><b>한 달 ${won(CREW.fee)}</b> <span class="muted"><i class="dotsep">· </i>칸당 ${cap}명</span></span>
+      <span class="num sp-price"><b>한 달 ${won(CREW.fee)}</b></span>
     </button></div>`;
 }
 
 function viewProgram() {
-  const list = CREW.programs.filter((p) => state.filter === 'all' || p.dept === state.filter);
-  const chips = [{ id: 'all', name: '전체' }, ...CREW.depts].map((d) => `<button type="button" class="chip ${state.filter === d.id ? 'on' : ''}" data-filter="${d.id}" aria-pressed="${state.filter === d.id}">${esc(d.name)}${d.id === 'all' ? '' : ' 지역'}</button>`).join('');
+  const list = CREW.programs;
   return `<h1>어떤 소모임에 참여하실래요?</h1>
     <p class="lead">${esc(CREW.center.name)}에서 진행해요. 한 달 ${won(CREW.fee)}이고 신청한 날부터 한 달 이용해요.</p>
-    <div class="chips fchips" role="group" aria-label="지역 필터">${chips}</div>
     <div class="sps">${list.map(programCard).join('')}</div>`;
 }
 
@@ -182,7 +179,6 @@ function viewPerson() {
   const p = program();
   const cap = p.capacity ?? CREW.capacity;
   const g = (v, t) => `<button type="button" class="chip ${state.gender === v ? 'on' : ''}" data-gender="${v}" aria-pressed="${state.gender === v}">${t}</button>`;
-  const depts = [...CREW.depts, { id: 'none', name: '해당 없음' }].map((d) => `<button type="button" class="chip ${state.dept === d.id ? 'on' : ''}" data-dept="${d.id}" aria-pressed="${state.dept === d.id}">${esc(d.name)}</button>`).join('');
   return `<h1>신청하시는 분을 알려 주세요</h1>
     <p class="lead">입금하실 분 이름과 같게 적어 주세요. 연락처는 안내와 확인에만 써요. 한 시간대에 최대 ${cap}명까지 받아요.</p>
     <div class="card stack">
@@ -193,8 +189,8 @@ function viewPerson() {
       <div class="field"><p class="lab">성별 <span class="req">필수</span></p><div class="chips" role="group" aria-label="성별">${g('f', '여성')}${g('m', '남성')}</div></div>
       <div class="field"><label for="f-age">나이 <span class="opt">선택</span></label>
         <input id="f-age" class="input" type="number" inputmode="numeric" min="10" max="120" placeholder="예: 55" value="${esc(state.age)}"></div>
-      <div class="field"><p class="lab">소속 지역 <span class="req">필수</span></p><div class="chips" role="group" aria-label="소속 지역">${depts}</div>
-        <p class="muted sm" style="margin-top:6px">부녀회 안에서 속한 지역(부서)이에요.</p></div>
+      <div class="field"><label for="f-dong">지역(동) <span class="req">필수</span></label>
+        <input id="f-dong" class="input" maxlength="20" placeholder="예: 마두동" value="${esc(state.dong)}"></div>
       <input class="hp" type="text" id="f-website" tabindex="-1" autocomplete="off" aria-hidden="true">
     </div>`;
 }
@@ -208,7 +204,7 @@ function viewReview() {
   return `<h1>마지막으로 확인해 주세요</h1>
     <p class="lead">내용을 확인하고 안내에 동의해 주세요.</p>
     <div class="stack">
-      <div class="card"><dl class="kv"><dt>소모임</dt><dd>${esc(p.name)} (${esc(deptName(p.dept))} 지역)</dd><dt>장소</dt><dd>${esc(CREW.center.name)}</dd><dt>수강일</dt><dd>${slotLabel(sl)}</dd><dt>신청 기간</dt><dd>${esc(LONG(state.start))} ~ ${esc(LONG(pr.end))} (${pr.count}회)</dd><dt>신청자</dt><dd>${esc(state.name)} · ${esc(state.phone)}</dd><dt>비용</dt><dd><b>${won(CREW.fee)}</b> (한 달)</dd></dl></div>
+      <div class="card"><dl class="kv"><dt>소모임</dt><dd>${esc(p.name)}</dd><dt>장소</dt><dd>${esc(CREW.center.name)}</dd><dt>수강일</dt><dd>${slotLabel(sl)}</dd><dt>신청 기간</dt><dd>${esc(LONG(state.start))} ~ ${esc(LONG(pr.end))} (${pr.count}회)</dd><dt>신청자</dt><dd>${esc(state.name)} · ${esc(state.phone)}</dd><dt>비용</dt><dd><b>${won(CREW.fee)}</b> (한 달)</dd></dl></div>
       <div class="card policy-card"><p class="b row-f">${ic('info', 20)}꼭 읽어 주세요</p>${policyList()}</div>
       <label class="check ${on ? 'on' : ''}"><input type="checkbox" id="f-agree" class="sr-only" ${on ? 'checked' : ''}><span class="box ${on ? 'on' : ''}">${on ? ic('check', 20) : ''}</span><span>위 안내를 모두 읽었고 동의해요. 신청 당일 노쇼하면 환불되지 않는다는 것도 확인했어요.</span></label>
       ${state.error ? alertBox('err', 'alert', esc(state.error)) : ''}
@@ -222,7 +218,7 @@ const acctCard = (b) => b
 
 function appRows(r) {
   const p = findProgram(r.programId);
-  return `<dt>소모임</dt><dd>${esc(p?.name || r.programId)} (${esc(deptName(r.dept))} 지역)</dd><dt>수강일</dt><dd>매주 ${WEEKDAY[r.weekday]}요일 ${esc(r.time)}</dd><dt>신청 기간</dt><dd>${esc(LONG(r.periodStart))} ~ ${esc(LONG(r.periodEnd))}</dd>`;
+  return `<dt>소모임</dt><dd>${esc(p?.name || r.programId)}</dd><dt>수강일</dt><dd>매주 ${WEEKDAY[r.weekday]}요일 ${esc(r.time)}</dd><dt>신청 기간</dt><dd>${esc(LONG(r.periodStart))} ~ ${esc(LONG(r.periodEnd))}</dd>`;
 }
 
 function viewDone() {
@@ -412,8 +408,6 @@ $('#main').addEventListener('click', (e) => {
   const t = e.target;
   const pr = t.closest('[data-program]');
   if (pr) { setProgram(pr.dataset.program); return render(true); }
-  const f = t.closest('[data-filter]');
-  if (f) { state.filter = f.dataset.filter; return render(true); }
   const sl = t.closest('[data-slot]');
   if (sl) { state.slot = sl.dataset.slot; state.start = null; return render(true); }
   const day = t.closest('[data-day]');
@@ -422,8 +416,6 @@ $('#main').addEventListener('click', (e) => {
   if (t.closest('#nextM')) { const { y, m } = state.month; state.month = m === 12 ? { y: y + 1, m: 1 } : { y, m: m + 1 }; return render(true); }
   const g = t.closest('[data-gender]');
   if (g) { state.gender = g.dataset.gender; return render(true); }
-  const d = t.closest('[data-dept]');
-  if (d) { state.dept = d.dataset.dept; return render(true); }
   if (t.closest('#lkGo')) { if (!stepProblem(6)) doLookup(); return; }
   if (t.closest('#lkDone')) return reset();
   if (t.closest('#lkCancelOpen')) { state.lk.cancelOpen = true; return render(true); }
@@ -442,6 +434,7 @@ $('#main').addEventListener('input', (e) => {
   if (id === 'f-name') { state.name = e.target.value; chrome(); }
   else if (id === 'f-phone') { e.target.value = state.phone = formatPhone(e.target.value); chrome(); }
   else if (id === 'f-age') { state.age = e.target.value; chrome(); }
+  else if (id === 'f-dong') { state.dong = e.target.value; chrome(); }
   else if (id === 'f-website') state.website = e.target.value;
   else if (id === 'f-lkid') { state.lk.id = e.target.value.toUpperCase(); e.target.value = state.lk.id; state.lk.rec = null; state.lk.err = ''; lookupButton(); }
   else if (id === 'f-lkphone') { e.target.value = state.lk.phone = formatPhone(e.target.value); state.lk.rec = null; state.lk.err = ''; lookupButton(); }
@@ -505,7 +498,7 @@ async function submit() {
   state.submitting = true; state.error = ''; chrome();
   const application = {
     slot: state.slot, start: state.start, name: state.name.trim(), phone: state.phone, gender: state.gender,
-    age: state.age, dept: state.dept, agree: state.agree, website: state.website,
+    age: state.age, dong: state.dong.trim(), agree: state.agree, website: state.website,
   };
   try {
     const j = await api('apply', { application });

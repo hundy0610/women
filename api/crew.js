@@ -6,7 +6,7 @@ import { BookingError } from '../lib/booking.js';
 import { applyCrew, crewUsage, findForApplicant, applicantView, applicantCancel } from '../lib/crew.js';
 import { notifyAdmin, adminLink } from '../lib/notify.js';
 import { sendCrewGuide } from '../lib/sms.js';
-import { CREW, findProgram, deptName, WEEKDAY } from '../public/shared/crew-config.mjs';
+import { CREW, findProgram, WEEKDAY } from '../public/shared/crew-config.mjs';
 import { formatKoreanDate } from '../public/shared/time.mjs';
 
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public', 'photos', 'crew');

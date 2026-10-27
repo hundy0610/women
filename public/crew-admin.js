@@ -1,6 +1,6 @@
 import { ic } from '/icons.js';
 import { watchOverlay, openOverlay, closeOverlay } from '/overlay.js';
-import { CREW, WEEKDAY, allSlots, findProgram, deptName } from '/shared/crew-config.mjs';
+import { CREW, WEEKDAY, allSlots, findProgram } from '/shared/crew-config.mjs';
 import { firstOnOrAfter } from '/shared/crew-rules.mjs';
 import { todayKst, addDays, formatKstDateTime } from '/shared/time.mjs';
 
@@ -109,7 +109,7 @@ function renderRows() {
         <span class="rtop"><b>${esc(r.name)}</b> ${statusBadge(r)}</span>
         <span class="muted sm">${esc(slotLabel(r))} · ${LONG(r.periodStart)} ~ ${LONG(r.periodEnd)}</span>
       </button>
-      ${open ? `<div class="rdet stack"><dl class="kv"><dt>신청번호</dt><dd class="num">${esc(r.id)}</dd><dt>연락처</dt><dd>${esc(r.phone)}</dd><dt>성별·나이</dt><dd>${r.gender === 'm' ? '남성' : '여성'}${r.age ? ` · ${r.age}세` : ''}</dd><dt>소속 지역</dt><dd>${esc(r.dept === 'none' ? '해당 없음' : deptName(r.dept))}</dd><dt>이번 금액</dt><dd>${won(r.amount)} · 누적 ${r.paidMonths || 0}개월 납부</dd>${r.status === 'pending' ? `<dt>입금 기한</dt><dd>${formatKstDateTime(r.holdUntil)}까지</dd>` : ''}${r.cancelRequest ? `<dt>취소 요청</dt><dd>${esc(r.cancelRequest.reason || '사유 없음')}</dd>` : ''}</dl>
+      ${open ? `<div class="rdet stack"><dl class="kv"><dt>신청번호</dt><dd class="num">${esc(r.id)}</dd><dt>연락처</dt><dd>${esc(r.phone)}</dd><dt>성별·나이</dt><dd>${r.gender === 'm' ? '남성' : '여성'}${r.age ? ` · ${r.age}세` : ''}</dd><dt>지역(동)</dt><dd>${esc(r.dong || '')}</dd><dt>이번 금액</dt><dd>${won(r.amount)} · 누적 ${r.paidMonths || 0}개월 납부</dd>${r.status === 'pending' ? `<dt>입금 기한</dt><dd>${formatKstDateTime(r.holdUntil)}까지</dd>` : ''}${r.cancelRequest ? `<dt>취소 요청</dt><dd>${esc(r.cancelRequest.reason || '사유 없음')}</dd>` : ''}</dl>
         <div class="row-f wrapf">${actions.join('')}</div>
         <div class="hist sm muted stack" style="gap:4px">${ev}</div></div>` : ''}
     </article>`;
@@ -179,8 +179,7 @@ document.addEventListener('click', async (e) => {
 });
 
 /* ---------- 직접 등록 ---------- */
-$('#n-prog').innerHTML = CREW.programs.map((p) => `<option value="${p.id}">${esc(p.name)} (${esc(deptName(p.dept))})</option>`).join('');
-$('#n-dept').innerHTML = [...CREW.depts, { id: 'none', name: '해당 없음' }].map((d) => `<option value="${d.id}">${esc(d.name)}</option>`).join('');
+$('#n-prog').innerHTML = CREW.programs.map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join('');
 function fillSlots() {
   const p = findProgram($('#n-prog').value);
   $('#n-slot').innerHTML = allSlots().filter((s) => s.programId === p.id).map((s) => `<option value="${s.id}" data-wd="${s.weekday}">${WEEKDAY[s.weekday]}요일 ${s.time}</option>`).join('');
@@ -210,11 +209,11 @@ $('#newForm').addEventListener('submit', async (e) => {
       action: 'create',
       application: {
         slot: $('#n-slot').value, start: $('#n-start').value, name: $('#n-name').value, phone: $('#n-phone').value,
-        gender: $('#n-gender').value, age: $('#n-age').value, dept: $('#n-dept').value, amount: $('#n-amount').value, confirmed: $('#n-confirmed').checked,
+        gender: $('#n-gender').value, age: $('#n-age').value, dong: $('#n-dong').value, amount: $('#n-amount').value, confirmed: $('#n-confirmed').checked,
       },
     });
     toast(j.smsSent ? '등록했어요. 안내 문자를 보냈어요.' : '등록했어요.');
-    $('#n-name').value = ''; $('#n-phone').value = ''; $('#n-age').value = ''; $('#n-amount').value = '';
+    $('#n-name').value = ''; $('#n-phone').value = ''; $('#n-dong').value = ''; $('#n-age').value = ''; $('#n-amount').value = '';
     await load();
   } catch (err) { $('#n-err').innerHTML = errMsg(err.message); }
   btn.disabled = false; btn.textContent = '등록하기';

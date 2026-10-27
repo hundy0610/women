@@ -10,7 +10,7 @@ const NOW = kstEpoch('2026-10-27', 12); // 화요일 12:00 KST
 const THU = '2026-10-29';               // 목요일
 const code = async (p) => { try { await p; return null; } catch (e) { assert.ok(e instanceof BookingError, e.stack); return e.code; } };
 let n = 0;
-const app = (o = {}) => ({ slot: 'knit-4-1100', start: THU, name: '김미영', phone: `010-1000-${String(2000 + n++)}`, gender: 'f', age: 55, dept: 'jabi', agree: true, ...o });
+const app = (o = {}) => ({ slot: 'knit-4-1100', start: THU, name: '김미영', phone: `010-1000-${String(2000 + n++)}`, gender: 'f', age: 55, dong: '마두동', agree: true, ...o });
 const ctx = (o = {}) => ({ nowMs: NOW, ip: `1.1.1.${n}`, ...o });
 
 test('기간 계산: 한 달은 시작일 기준, 말일 보정', () => {
@@ -69,7 +69,7 @@ test('검증: 요일, 시작일 범위, 성별, 나이, 동의', async () => {
   assert.equal(await code(applyCrew(store, app({ age: '' }), ctx())), null);
   assert.equal(await code(applyCrew(store, app({ agree: false }), ctx())), 'AGREE');
   assert.equal(await code(applyCrew(store, app({ phone: '123' }), ctx())), 'PHONE');
-  assert.equal(await code(applyCrew(store, app({ dept: 'zzz' }), ctx())), 'DEPT');
+  assert.equal(await code(applyCrew(store, app({ dong: '' }), ctx())), 'DONG');
 });
 
 test('확정 후 한 달이 지나면 연장 필요, 연장하면 다음 기간', async () => {
