@@ -8,7 +8,7 @@ function Read-Secret([string]$prompt) {
 $env:SOLAPI_API_KEY = Read-Secret 'API Key 붙여넣기'
 $env:SOLAPI_API_SECRET = Read-Secret 'API Secret 붙여넣기'
 $env:SOLAPI_SENDER = Read-Host '발신번호 (Solapi에 인증된 번호, 예: 01012345678)'
-$env:BANK_NAME = '우리은행'; $env:BANK_HOLDER = '이선화'
+$env:BANK_NAME = '우리은행'; $env:BANK_HOLDER = '홍길동'
 $env:BANK_NUMBER = Read-Host '안내 문자에 넣을 계좌번호 (테스트용, 비워도 됨)'
 $to = Read-Host '받을 휴대폰 번호 (본인 번호)'
 node (Join-Path $PSScriptRoot 'send-sample-sms.mjs') $to

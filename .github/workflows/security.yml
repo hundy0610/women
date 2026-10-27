@@ -1,0 +1,41 @@
+# 오픈소스 보안 점검(자동). 코드를 올릴 때마다, 그리고 매주 한 번 돕니다.
+#  - gitleaks: 비밀번호·API 키가 코드에 들어갔는지 찾습니다
+#  - CodeQL: 코드의 취약한 패턴(주입, XSS 등)을 정적 분석합니다 (공개 저장소에서 무료)
+#  - OWASP ZAP baseline: 실제 사이트에 보안 헤더 누락 같은 문제가 없는지 수동 점검합니다(공격 요청은 보내지 않는 점검)
+name: security
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 18 * * 1'   # 매주 화요일 03:00 KST
+  workflow_dispatch: {}
+permissions:
+  contents: read
+  security-events: write
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  codeql:
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with: { languages: javascript-typescript, queries: security-extended }
+      - uses: github/codeql-action/analyze@v3
+  zap-baseline:
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: ZAP baseline scan (passive)
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: ${{ secrets.SITE_URL }}
+          fail_action: false

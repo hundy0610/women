@@ -37,14 +37,14 @@ test('짧은 글은 SMS, 긴 글은 LMS(제목 포함), 번호는 숫자만', ()
 
 test('송금 안내는 항목별 줄로 정리되고 장문으로 나간다', () => {
   clear(); setAll();
-  Object.assign(process.env, { BANK_NAME: '우리은행', BANK_NUMBER: '1002-849-141392', BANK_HOLDER: '이선화' });
+  Object.assign(process.env, { BANK_NAME: '우리은행', BANK_NUMBER: '1000-000-000000', BANK_HOLDER: '홍길동' });
   const t = payGuideText(rec);
   assert.equal(t, [
     '[드림문화센터]',
     '예약일정 : 10월 22일 10~13시',
     '대관장소 : 세미나실',
     '금액 : 90,000원',
-    '계좌정보 : 우리은행 1002-849-141392 (예금주 이선화)',
+    '계좌정보 : 우리은행 1000-000-000000 (예금주 홍길동)',
     '입금기한 : 10월 20일 12시까지',
   ].join('\n'));
   const m = buildMessage('01012345678', t);
