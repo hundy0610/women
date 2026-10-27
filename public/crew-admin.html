@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#FBF7F0">
+  <title>소모임 신청 관리</title>
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="stylesheet" href="/tokens.css">
+  <link rel="stylesheet" href="/fonts/pretendard/pretendard.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/admin.css">
+  <link rel="stylesheet" href="/crew.css">
+</head>
+<body class="adm crewadm">
+  <section class="login" id="loginView">
+    <form class="card" id="login">
+      <a class="logo" href="/crew-admin" aria-label="드림 문화센터 소모임 관리"><span class="t"><b>드림</b> <span>문화센터</span><i></i></span><small>소모임 관리</small></a>
+      <div><h1 style="font-size:28px">소모임 신청 관리</h1><p class="lead" style="margin-bottom:0">관리자 비밀번호를 입력하세요. 대관 관리와 같은 비밀번호예요.</p></div>
+      <div class="field"><label for="pw">비밀번호</label><input class="input" id="pw" type="password" autocomplete="current-password" required><div id="loginErr" role="alert" aria-live="polite"></div></div>
+      <button class="btn primary block" type="submit" id="loginBtn">들어가기</button>
+    </form>
+  </section>
+
+  <div id="appView" hidden>
+    <div class="mhd" style="display:block">
+      <div class="hd-in">
+        <a class="logo" href="/crew-admin" aria-label="소모임 관리"><span class="t"><b>드림</b> <span>문화센터</span><i></i></span><small>소모임 관리</small></a>
+        <nav class="nav"><a href="/admin" id="toRentAdmin">대관 관리</a><button type="button" id="logout"></button></nav>
+      </div>
+    </div>
+    <main class="main">
+      <div class="row-f sp-b wrapf"><div><p class="dateline" id="aDate"></p><h1>소모임 신청</h1></div><button type="button" class="btn secondary s" id="reload"></button></div>
+      <div class="stats" id="stats"></div>
+      <div class="card stack"><h2 class="row-f">시간대별 자리</h2><div class="chips" id="seats"></div></div>
+      <div class="chips" id="filters" role="group" aria-label="상태 필터"></div>
+      <div class="field search"><input class="input" id="q" type="search" placeholder="이름, 전화번호, 신청번호 검색" aria-label="검색"><span class="si" aria-hidden="true"></span></div>
+      <div class="stack" id="rows"></div>
+
+      <details class="card" id="newBox">
+        <summary class="b" style="cursor:pointer;min-height:44px;display:flex;align-items:center">직접 등록 (전화·방문 접수)</summary>
+        <form class="stack" id="newForm" novalidate style="margin-top:12px">
+          <div class="cols2">
+            <div class="field"><label for="n-prog">소모임</label><select class="input" id="n-prog"></select></div>
+            <div class="field"><label for="n-slot">요일·시간</label><select class="input" id="n-slot"></select></div>
+          </div>
+          <div class="cols2">
+            <div class="field"><label for="n-start">시작일</label><input class="input" id="n-start" type="date" required></div>
+            <div class="field"><label for="n-amount">금액(원)</label><input class="input num" id="n-amount" type="number" min="0" step="1000" inputmode="numeric"></div>
+          </div>
+          <div class="cols2">
+            <div class="field"><label for="n-name">이름</label><input class="input" id="n-name" maxlength="20" required></div>
+            <div class="field"><label for="n-phone">휴대전화</label><input class="input" id="n-phone" type="tel" inputmode="tel" placeholder="010-0000-0000" required></div>
+          </div>
+          <div class="cols3">
+            <div class="field"><label for="n-gender">성별</label><select class="input" id="n-gender"><option value="f">여성</option><option value="m">남성</option></select></div>
+            <div class="field"><label for="n-age">나이(선택)</label><input class="input" id="n-age" type="number" min="10" max="120" inputmode="numeric"></div>
+            <div class="field"><label for="n-dept">소속 지역</label><select class="input" id="n-dept"></select></div>
+          </div>
+          <label class="check on" id="n-confirmed-l"><input type="checkbox" id="n-confirmed" class="sr-only" checked><span class="box on"></span><span>입금 확인 완료(확정으로 등록, 확정 문자 발송)</span></label>
+          <div id="n-err" role="alert" aria-live="polite"></div>
+          <button class="btn primary block" type="submit" id="n-submit">등록하기</button>
+        </form>
+      </details>
+    </main>
+    <dialog id="adlg" class="sheet" aria-labelledby="adlgT"><div class="scrim"><div class="dlg" id="adlgBox"></div></div></dialog>
+    <div class="toast t-ok" id="toast" role="status" hidden></div>
+  </div>
+  <script type="module" src="/crew-admin.js"></script>
+</body>
+</html>

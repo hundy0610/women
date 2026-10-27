@@ -1,0 +1,43 @@
+/* 소모임 신청(/crew) 보조 규칙. 틀과 컴포넌트는 styles.css(시안)를 그대로 씁니다. */
+.field .req{font-size:13px;font-weight:700;color:var(--c-brand-strong);background:var(--c-brand-soft);border-radius:var(--r-pill);padding:1px 8px;margin-left:6px;vertical-align:1px}
+.field .opt{font-size:13px;font-weight:600;color:var(--c-ink-2);background:var(--c-off-bg);border-radius:var(--r-pill);padding:1px 8px;margin-left:6px;vertical-align:1px}
+
+/* 소모임 고르기 */
+.fchips{margin-bottom:14px}
+.view.c1>:first-child,.view.c2>:first-child{margin-top:0}
+.view.c1>:last-child,.view.c2>:last-child{margin-bottom:0}
+.view.c1 .sps{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:700px){.view.c1 .sps{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.view.c1 .sp{display:block}
+.view.c1 .sp .stripw{min-height:0;height:auto}
+.view.c1 .sp .ph{aspect-ratio:3/2;height:auto;min-height:0}
+@media (min-width:700px){.view.c1 .sp .ph{aspect-ratio:4/3}}
+.view.c1 .spb{padding:10px 14px 14px}
+.view.c1 .spb .meta{align-items:flex-start;gap:6px;white-space:normal;text-align:left}
+.view.c1 .spb .meta .i{flex:none;margin-top:3px}
+@media (min-width:1000px){
+  .view.c1 .sp .ph{aspect-ratio:16/10}
+  body.crew .wrap{max-width:min(1240px,94vw)}
+  .view.c1>*{width:100%;max-width:none;margin-inline:auto}
+}
+
+/* 일정 달력: 고른 기간의 수업 날을 옅게 표시 */
+.view.c2 .day.inr{background:var(--c-brand-soft);border-color:var(--c-brand-soft);color:var(--c-brand-strong)}
+.view.c2 .day:not(.past):not(.full):not(.sel){border-color:var(--c-brand);color:var(--c-brand-strong)}
+.view.c2 .day.past{opacity:.55}
+.view.c2 .day small{font-size:12px}
+.view.c2 .card.soft.slim{margin-top:0}
+@media (min-width:1000px){
+  .view.c2>*{width:100%;max-width:760px;margin-inline:auto}
+}
+
+/* 안내문 */
+.policy{margin:8px 0 0;padding-left:20px;display:grid;gap:8px}
+.policy li{line-height:1.5}
+.policy-card{border:2px solid var(--c-pend-line);background:var(--c-pend-bg)}
+@media (min-width:1000px){
+  .view.c3>*,.view.c4>*{width:100%;max-width:860px;margin-inline:auto}
+  .view.c5>*{width:100%;max-width:980px;margin-inline:auto}
+  .view.c6>*{width:100%;max-width:640px;margin-inline:auto}
+}
+.nav .navlink{font-weight:600}
