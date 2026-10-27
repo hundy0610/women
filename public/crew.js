@@ -111,7 +111,7 @@ function programCard(p) {
     : `<div class="ph" role="img" aria-label="${esc(p.name)} 사진 준비 중">${ic('cam', 30)}</div>`;
   const lines = p.slots.map((sl) => {
     const n = nextLeft(findSlot(slotId(p.id, sl)));
-    return `<span class="slotline">${ic('clock', 16)}<span>${WEEKDAY[sl.weekday]} ${esc(sl.time)}</span><b class="${n.left ? '' : 'full'}">${n.left ? `남은 자리 ${n.left}/${n.cap}` : '마감'}</b></span>`;
+    return `<span class="slotline">${ic('clock', 16)}<span>${WEEKDAY[sl.weekday]} ${esc(sl.time)}</span><b class="${n.left ? '' : 'full'}">${n.left ? `정원 : ${n.used}/${n.cap}` : `정원 : ${n.used}/${n.cap} 마감`}</b></span>`;
   }).join('');
   return `<div class="sp ${on ? 'on' : ''}">
     <div class="stripw"><div class="strip" data-track="${p.id}" role="group" aria-label="${esc(p.name)} 사진, 옆으로 밀어서 넘기기">${strip}</div>${real.length > 1 ? `<span class="cnt num" data-count="${p.id}">${(coverIdx[p.id] || 0) + 1}/${real.length}</span>` : ''}<span class="chk" aria-hidden="true">${on ? ic('check', 18) : ''}</span></div>
@@ -152,16 +152,16 @@ function viewSchedule() {
     const left = ok ? seatsLeft(sl, date) : 0;
     const full = ok && left <= 0;
     const k = [!ok ? 'past' : '', full ? 'full' : '', date === today ? 'today' : '', date === state.start ? 'sel' : '', inRange.has(date) && date !== state.start ? 'inr' : ''].filter(Boolean).join(' ');
-    const label = ok ? (full ? '마감' : `${left}자리`) : date === today ? '오늘' : '';
-    cells += `<button type="button" class="day ${k}" data-day="${date}" ${!ok || full ? 'disabled' : ''} aria-pressed="${date === state.start}" aria-label="${formatKoreanDate(date)}${ok ? (full ? ' 마감' : ` ${left}자리 남음`) : ''}">${d}${label ? `<small>${label}</small>` : ''}</button>`;
+    const label = ok ? (full ? '마감' : `${sl.capacity - left}/${sl.capacity}`) : date === today ? '오늘' : '';
+    cells += `<button type="button" class="day ${k}" data-day="${date}" ${!ok || full ? 'disabled' : ''} aria-pressed="${date === state.start}" aria-label="${formatKoreanDate(date)}${ok ? (full ? ' 정원 마감' : ` 정원 ${sl.capacity - left}/${sl.capacity}`) : ''}">${d}${label ? `<small>${label}</small>` : ''}</button>`;
   }
   const slotChips = p.slots.length > 1
-    ? `<div class="chips" role="group" aria-label="요일과 시간">${p.slots.map((s) => { const id = slotId(p.id, s); return `<button type="button" class="chip ${state.slot === id ? 'on' : ''}" data-slot="${id}" aria-pressed="${state.slot === id}">${WEEKDAY[s.weekday]}요일 ${s.time} · ${nextLeft(findSlot(id)).left}자리</button>`; }).join('')}</div>`
+    ? `<div class="chips" role="group" aria-label="요일과 시간">${p.slots.map((s) => { const id = slotId(p.id, s); return `<button type="button" class="chip ${state.slot === id ? 'on' : ''}" data-slot="${id}" aria-pressed="${state.slot === id}">${WEEKDAY[s.weekday]}요일 ${s.time} · 정원 ${nextLeft(findSlot(id)).used}/${nextLeft(findSlot(id)).cap}</button>`; }).join('')}</div>`
     : '';
   let sum = `<p class="muted row-f">${ic('info', 20)}달력에서 첫 수업 날짜를 눌러 주세요. 그날부터 한 달간 이용해요.</p>`;
   if (state.start) {
     const pr = period(state.start);
-    sum = `<div class="card soft slim"><p class="b">${esc(LONG(state.start))}부터 ${esc(LONG(pr.end))}까지 · 수업 ${pr.count}번</p><p class="sm">${slotLabel(sl)} · 남은 자리 ${seatsLeft(sl, state.start)}명 (정원 ${sl.capacity}명)</p></div>`;
+    sum = `<div class="card soft slim"><p class="b">${esc(LONG(state.start))}부터 ${esc(LONG(pr.end))}까지 · 수업 ${pr.count}번</p><p class="sm">${slotLabel(sl)} · 정원 : ${sl.capacity - seatsLeft(sl, state.start)}/${sl.capacity}</p></div>`;
   }
   return `<h1>${esc(p.name)}, 언제부터 하실래요?</h1>
     <p class="lead">${slotLabel(sl)} 수업이에요. 시작하실 날짜를 골라 주세요.</p>

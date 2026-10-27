@@ -79,7 +79,7 @@ function seatChips() {
     const n = items.filter((r) => r.slot === s.id && ['pending', 'active', 'expiring'].includes(r.status) && r.periodEnd >= today).length;
     const p = findProgram(s.programId);
     const full = n >= s.capacity;
-    return `<span class="badge b-${full ? 'bad' : n ? 'pend' : 'off'}">${esc(p.name)} ${WEEKDAY[s.weekday]} ${s.time} · ${n}/${s.capacity}</span>`;
+    return `<span class="badge b-${full ? 'bad' : n ? 'pend' : 'off'}">${esc(p.name)} ${WEEKDAY[s.weekday]} ${s.time} · 정원 ${n}/${s.capacity}</span>`;
   }).join('');
 }
 
