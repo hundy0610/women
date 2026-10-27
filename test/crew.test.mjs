@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createMemoryStore } from '../lib/store-memory.js';
-import { applyCrew, confirmCrew, renewCrew, cancelCrew, listCrew, crewUsage, crewStatus } from '../lib/crew.js';
+import { dueReminders, markReminded, applyCrew, confirmCrew, renewCrew, cancelCrew, listCrew, crewUsage, crewStatus } from '../lib/crew.js';
 import { BookingError } from '../lib/booking.js';
 import { kstEpoch, addDays } from '../public/shared/time.mjs';
 import { CREW } from '../public/shared/crew-config.mjs';
@@ -95,4 +95,30 @@ test('관리자 직접 등록: 확정과 금액 지정', async () => {
   assert.equal(rec.status, 'confirmed');
   assert.equal(rec.amount, 5000);
   assert.equal(await code(applyCrew(store, app({ amount: -1 }), ctx({ admin: true }))), 'AMOUNT');
+});
+
+test('연장 안내 대상: 곧 만료 1회, 기간 끝난 뒤 1회, 연장하면 다시 센다', async () => {
+  const store = createMemoryStore();
+  const { rec } = await applyCrew(store, app(), ctx());
+  await confirmCrew(store, rec.id, NOW);
+  assert.equal((await dueReminders(store, NOW)).length, 0);                       // 이용 중
+  const near = kstEpoch('2026-11-23', 12);                                         // 만료 5일 전
+  let due = await dueReminders(store, near);
+  assert.deepEqual(due.map((d) => d.stage), ['expiring']);
+  await markReminded(store, rec.id, near, 'expiring', true);
+  assert.equal((await dueReminders(store, near)).length, 0);                       // 반복 없음
+  const ended = kstEpoch('2026-11-30', 12);
+  due = await dueReminders(store, ended);
+  assert.deepEqual(due.map((d) => d.stage), ['ended']);
+  await markReminded(store, rec.id, ended, 'ended', true);
+  assert.equal((await dueReminders(store, ended)).length, 0);
+  assert.equal((await dueReminders(store, kstEpoch('2027-02-15', 12))).length, 0); // 45일 넘으면 그만
+  await renewCrew(store, rec.id, ended);
+  assert.equal((await dueReminders(store, kstEpoch('2027-01-01', 12))).length, 1); // 연장 기간이 곧 끝남
+});
+
+test('입금 대기·취소 신청에는 연장 안내를 보내지 않는다', async () => {
+  const store = createMemoryStore();
+  await applyCrew(store, app(), ctx());
+  assert.equal((await dueReminders(store, NOW)).length, 0);
 });

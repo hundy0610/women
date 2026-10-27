@@ -7,3 +7,10 @@
 - 문자: 신청 직후 입금 안내, 확정/연장 확정 시 확정 문자(Solapi, 대관과 같은 설정).
 - 사진: `public/photos/crew/프로그램ID-번호.png` (예: `knit-1.png`). 자세한 이름은 그 폴더의 README.txt.
 - 계좌: 대관과 같은 `BANK_*` 환경변수를 씁니다.
+
+## 연장 안내 자동 발송
+
+- 매일 오전 9시(한국 시간)에 GitHub Actions(`.github/workflows/crew-reminders.yml`)가 `/api/crew-cron`을 불러 연장 안내 문자를 보냅니다.
+- 대상: 이용 기간이 끝나기 7일 전부터(1회), 기간이 끝난 뒤(1회, 끝난 지 45일까지). 같은 안내는 반복해서 보내지 않습니다. 연장 확정을 하면 다시 처음부터 셉니다.
+- 설정(처음 한 번): Render 환경변수 `CRON_SECRET`에 임의의 긴 문자열을 넣고, GitHub 저장소 Settings > Secrets and variables > Actions 에 `CRON_SECRET`(같은 값)과 `SITE_URL`(예: https://women-booking.onrender.com)을 넣습니다.
+- 지금 바로 한 번 돌려 보려면 GitHub 저장소 Actions 탭에서 `crew-reminders`를 선택하고 Run workflow를 누릅니다.

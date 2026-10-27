@@ -1,0 +1,22 @@
+# 소모임 이용 기간 연장 안내 문자를 매일 아침 9시(한국 시간)에 자동으로 보냅니다.
+# GitHub 저장소 Settings > Secrets and variables > Actions 에 아래 두 값을 넣어야 동작합니다.
+#   SITE_URL    예: https://women-booking.onrender.com  (끝에 / 없이)
+#   CRON_SECRET Render 환경변수 CRON_SECRET 과 같은 값
+name: crew-reminders
+on:
+  schedule:
+    - cron: '0 0 * * *'   # 00:00 UTC = 09:00 KST
+  workflow_dispatch: {}
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send renewal reminders
+        env:
+          SITE_URL: ${{ secrets.SITE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          test -n "$SITE_URL" && test -n "$CRON_SECRET" || { echo "SITE_URL / CRON_SECRET secrets are not set"; exit 1; }
+          # 무료 서버가 잠들어 있으면 깨우는 데 시간이 걸리므로 넉넉히 기다리고 재시도합니다.
+          curl --fail-with-body --retry 4 --retry-delay 20 --retry-all-errors --max-time 120 \
+            -X POST "$SITE_URL/api/crew-cron" -H "x-cron-secret: $CRON_SECRET" -H "Content-Type: application/json" -d '{}'

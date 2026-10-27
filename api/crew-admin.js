@@ -26,7 +26,7 @@ export default handle('POST', async (ctx) => {
       const rec = (await listCrew(store, nowMs)).find((r) => r.id === id);
       if (!rec) throw new BookingError('NOT_FOUND', '신청 내역을 찾을 수 없습니다.', 404);
       const sms = await sendCrewRenew(rec);
-      if (sms.ok) await markReminded(store, id, nowMs);
+      if (sms.ok) await markReminded(store, id, nowMs, rec.status === 'ended' ? 'ended' : 'expiring');
       return { smsSent: Boolean(sms.ok) };
     }
     case 'cancel':
