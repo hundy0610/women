@@ -85,3 +85,21 @@ test('발송은 Solapi로 가고, 실패해도 던지지 않는다', async () =>
     assert.equal((await sendPayGuide(rec)).ok, false);
   } finally { globalThis.fetch = orig; console.error = origErr; }
 });
+
+test('테스트로 넣은 신청(이름에 테스트/test, 차단 번호)에는 문자를 보내지 않는다', async () => {
+  clear(); setAll();
+  const orig = globalThis.fetch; let n = 0;
+  globalThis.fetch = async () => { n++; return new Response('{}', { status: 200 }); };
+  try {
+    for (const name of ['SMS테스트', '테스트신청2', 'Test User', 'my TEST']) {
+      const r = await sendPayGuide({ ...rec, name });
+      assert.equal(r.ok, false); assert.equal(r.test, true);
+    }
+    process.env.SMS_BLOCK_PHONES = '010-9999-0000, 01012345678';
+    assert.equal((await sendPaidNotice({ ...rec, name: '홍길동' })).test, true);
+    assert.equal(n, 0);
+    delete process.env.SMS_BLOCK_PHONES;
+    assert.equal((await sendPayGuide(rec)).ok, true); // 실제 이름은 정상 발송
+    assert.equal(n, 1);
+  } finally { globalThis.fetch = orig; delete process.env.SMS_BLOCK_PHONES; }
+});

@@ -238,7 +238,7 @@ function viewDone() {
       ${acctCard(state.info.bank)}</div>
       <div class="card"><dl class="kv"><dt>신청번호</dt><dd class="num" style="font-size:20px;letter-spacing:.06em">${esc(r.id)}</dd>${appRows(r)}<dt>입금자명</dt><dd>${esc(r.name)}</dd><dt>입금 기한</dt><dd style="color:var(--c-pend-fg)">${formatKstDateTime(r.holdUntil)}까지</dd></dl>
       <div class="hr"></div>
-      <ol class="notes"><li>입금자명을 신청하신 분 이름과 같게 보내 주세요.</li><li>기한(${CREW.holdHours}시간)이 지나면 신청이 자동으로 취소돼요.</li><li>신청 당일 노쇼하면 환불되지 않아요.</li><li>신청번호는 조회·취소에 필요해요. 화면을 캡처해 두세요.</li></ol></div>
+      <ol class="notes"><li>입금 계좌 안내를 문자로 보내 드렸어요. 문자가 오지 않으면 이 화면의 계좌로 입금해 주세요.</li><li>입금자명을 신청하신 분 이름과 같게 보내 주세요.</li><li>기한(${CREW.holdHours}시간)이 지나면 신청이 자동으로 취소돼요.</li><li>신청 당일 노쇼하면 환불되지 않아요.</li><li>신청번호는 조회·취소에 필요해요. 화면을 캡처해 두세요.</li></ol></div>
     </div>`;
 }
 

@@ -367,7 +367,7 @@ function viewReview() {
     if (q.packageDiscount > 0) calc += `<div class="pr neg"><span>전체 통대관 할인</span><span>-${won(q.packageDiscount)}</span></div>`;
     if (q.extraPeople > 0) calc += `<div class="pr"><span>인원 초과 ${q.extraPeople}명 (최대 ${q.capacity}명)</span><span>${won(q.overageFee)}</span></div>`;
   }
-  const rules = `${C.holdHours}시간 안에 입금하시면 예약이 확정돼요.${state.info.contact ? ` 문의 ${esc(state.info.contact)}` : ''}`;
+  const rules = `신청하면 입금 계좌를 문자로 보내 드려요. ${C.holdHours}시간 안에 입금하시면 예약이 확정돼요.${state.info.contact ? ` 문의 ${esc(state.info.contact)}` : ''}`;
   const on = state.agree;
   const people = `${state.people}명${state.purpose ? ` · ${esc(state.purpose)}` : ''}`;
   return `<h1>마지막으로 확인해 주세요</h1>
@@ -392,7 +392,7 @@ function viewDone() {
       ${acctCard(state.info.bank)}</div>
       <div class="card"><dl class="kv"><dt>예약번호</dt><dd class="num" style="font-size:20px;letter-spacing:.06em">${esc(r.id)}</dd><dt>일정</dt><dd>${formatKoreanDate(r.date)} ${hh(r.start)} ~ ${hh(r.end)}</dd><dt>공간</dt><dd>${esc(spaceNames(r.spaces))}</dd><dt>입금자명</dt><dd>${esc(r.name)}</dd><dt>입금 기한</dt><dd style="color:var(--c-pend-fg)">${formatKstDateTime(r.holdUntil)}까지</dd></dl>
       <div class="hr"></div>
-      <ol class="notes"><li>입금자명을 예약하신 분 이름과 같게 보내 주세요.</li><li>기한(${C.holdHours}시간)이 지나면 예약이 자동으로 취소돼요.</li><li>예약번호는 조회·취소에 필요해요. 화면을 캡처해 두세요.</li></ol></div>
+      <ol class="notes"><li>입금 계좌 안내를 문자로 보내 드렸어요. 문자가 오지 않으면 이 화면의 계좌로 입금해 주세요.</li><li>입금자명을 예약하신 분 이름과 같게 보내 주세요.</li><li>기한(${C.holdHours}시간)이 지나면 예약이 자동으로 취소돼요.</li><li>예약번호는 조회·취소에 필요해요. 화면을 캡처해 두세요.</li></ol></div>
     </div>`;
 }
 
