@@ -391,3 +391,13 @@ body:has(.sps.many) .wrap{padding-bottom:calc(var(--dock-h,110px) + 28px)}
 .tt:hover:not(:disabled){border-color:var(--c-brand)}
 .tt.full{opacity:.6;cursor:not-allowed}
 .tt.full i{background:var(--c-bad-bg);color:var(--c-bad-fg)}
+
+/* 사진 위 단추: 작고 반투명하게 해서 사진(특히 인물)을 가리지 않게 */
+.sp .chk{top:8px;left:8px;width:22px;height:22px;background:rgba(255,255,255,.55);border:1.5px solid rgba(255,255,255,.85);box-shadow:none}
+.sp .chk svg{width:14px;height:14px}
+.sp.on .chk{background:var(--c-brand);border-color:#fff}
+.pn{width:26px;height:26px;background:rgba(255,255,255,.55);box-shadow:none;opacity:.8}
+.pn svg{width:14px;height:14px}
+.pn-prev{left:5px}.pn-next{right:5px}
+.pn:hover{background:rgba(255,255,255,.9)}
+.sp .cnt{right:6px;bottom:6px;padding:0 7px;font-size:11px;line-height:18px;background:rgba(27,34,54,.5)}
