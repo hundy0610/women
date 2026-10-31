@@ -53,3 +53,11 @@ test('한빛에는 없는 슬롯(마두 전용)과 일정이 유동적인 바이
   assert.equal(await code(hanbit.applyCrew(store, app({ slot: 'soap-2-1100', start: '2026-11-03' }), ctx())), 'SLOT');
   assert.equal(await code(hanbit.applyCrew(store, app({ slot: 'violin-6-1300', start: '2026-10-31' }), ctx())), 'SLOT');
 });
+
+test('한빛 확정 문자에는 장소(주소)가 나오고, 마두 문자에는 나오지 않는다', async () => {
+  const { crewConfirmedText } = await import('../lib/sms.js');
+  const rec = { programId: HANBIT.programs[0].id, slot: slotIdOf(HANBIT.programs[0]), name: '홍길동', periodStart: '2026-11-03', periodEnd: '2026-12-02', amount: 10000 };
+  assert.match(crewConfirmedText(rec, HANBIT), /장소 : 경기 고양시 덕양구 화신로 273 명지프라자 8층/);
+  assert.doesNotMatch(crewConfirmedText({ ...rec, programId: CREW.programs[0].id, slot: slotIdOf(CREW.programs[0]) }, CREW), /장소 :/);
+});
+const slotIdOf = (p) => `${p.id}-${p.slots[0].weekday}-${p.slots[0].time.replace(':', '')}`;

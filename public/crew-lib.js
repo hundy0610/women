@@ -132,13 +132,20 @@ export function createCrewAdmin({ getPw, toast, ask, cfg = CREW, api = '/api/cre
   }
 
   /* ---------- 현황, 이력, 내보내기 ---------- */
+  // 소모임별로 한 줄씩 묶어서 보여 줍니다. 칸마다 "요일 시간 · 신청/정원". 신청이 있으면 노란색, 가득 차면 붉은색.
   function seatsHtml() {
     const today = todayKst(Date.now());
-    return allSlots(cfg).map((s) => {
-      const n = items.filter((r) => r.slot === s.id && ['pending', 'active', 'expiring'].includes(r.status) && r.periodEnd >= today).length;
-      const p = findProgramC(s.programId);
-      return `<span class="badge b-${n >= s.capacity ? 'bad' : n ? 'pend' : 'off'}">${esc(p.name)} ${WEEKDAY[s.weekday]} ${s.time} · 정원 ${n}/${s.capacity}</span>`;
-    }).join('');
+    const rows = cfg.programs.filter((p) => p.slots?.length).map((p) => {
+      const slots = [...p.slots].sort((x, y) => (((x.weekday + 6) % 7) - ((y.weekday + 6) % 7)) || x.time.localeCompare(y.time));
+      const cap = p.capacity ?? cfg.capacity;
+      const chips = slots.map((sl) => {
+        const id = `${p.id}-${sl.weekday}-${sl.time.replace(':', '')}`;
+        const n = items.filter((r) => r.slot === id && ['pending', 'active', 'expiring'].includes(r.status) && r.periodEnd >= today).length;
+        return `<span class="sc ${n >= cap ? 'full' : n ? 'some' : ''}"><b>${WEEKDAY[sl.weekday]}</b> ${sl.time}<i>${n}/${cap}</i></span>`;
+      }).join('');
+      return `<div class="seatrow"><span class="seatname">${esc(p.name)}</span><span class="seatslots">${chips}</span></div>`;
+    });
+    return rows.join('');
   }
   function eventsFlat() {
     const out = [];

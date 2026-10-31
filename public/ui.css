@@ -372,3 +372,22 @@ body:has(.sps.many) .wrap{padding-bottom:calc(var(--dock-h,110px) + 28px)}
   .view.c2 .c2chips.many .chip{min-height:48px;padding:0 14px;font-size:16px;justify-content:center}
 }
 @media (max-width:999px){.c2chips.many .chip{font-size:16px;padding:0 14px;min-height:46px}}
+
+/* 소모임 장소 안내 */
+.placeline{display:flex;align-items:flex-start;gap:8px;margin:-12px 0 22px;font-size:17px;font-weight:600;color:var(--c-brand-strong)}
+.placeline .i{flex:none;margin-top:3px}
+.whereaddr{display:grid;gap:4px;margin:10px 0 14px;font-size:19px;line-height:1.5}
+.whereaddr span{font-weight:600;color:var(--c-ink-2)}
+
+/* 시간표·정원 보기 */
+.ttbtn{white-space:nowrap;display:inline-flex;align-items:center;gap:6px;align-self:flex-start;min-height:38px;padding:0 14px;margin-top:6px;border-radius:999px;background:var(--c-brand-soft);color:var(--c-brand-strong);font-size:15px;font-weight:700;cursor:pointer}
+.ttbtn:hover{filter:brightness(.97)}
+.tt-list{display:grid;gap:0;margin-top:14px}
+.ttrow{display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--c-line)}
+.ttday{font-size:18px}
+.ttslots{display:flex;flex-wrap:wrap;gap:8px}
+.tt{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 8px 0 14px;border-radius:12px;border:1.5px solid var(--c-line);background:#fff;font:700 18px var(--font);color:var(--c-ink);cursor:pointer}
+.tt i{font-style:normal;font-size:14px;min-width:46px;height:28px;border-radius:8px;display:inline-grid;place-items:center;background:var(--c-ok-bg);color:var(--c-ok-fg)}
+.tt:hover:not(:disabled){border-color:var(--c-brand)}
+.tt.full{opacity:.6;cursor:not-allowed}
+.tt.full i{background:var(--c-bad-bg);color:var(--c-bad-fg)}

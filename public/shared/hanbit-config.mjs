@@ -20,6 +20,7 @@ export const HANBIT = {
   smsHead: '[한빛커뮤니티]',
   notifyLabel: '한빛',
   center: { id: 'hanbit' },
+  address: '경기 고양시 덕양구 화신로 273 명지프라자 8층',   // 소모임을 하는 곳(오시는 길, 신청 확인, 문자에 나옵니다)
   searchable: true,            // 소모임이 많아서 이름 검색 칸을 보여 줍니다
 
   // 프로그램. flexible: true 는 정해진 요일·시간이 없어서 신청 대신 문의 안내를 보여 줍니다.

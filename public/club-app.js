@@ -3,6 +3,7 @@ import { WEEKDAY, findProgram as findProgramIn, findSlot as findSlotIn, slotId }
 import { periodEnd, sessionsBetween, firstOnOrAfter } from '/shared/crew-rules.mjs';
 import { ic } from '/icons.js';
 import { openPhotos } from '/lightbox.js';
+import { watchOverlay, openOverlay, closeOverlay, overlayPop } from '/overlay.js';
 import { todayKst, parseYmd, addDays, ymd, formatKoreanDate, formatKstDateTime, DOW_LABELS } from '/shared/time.mjs';
 
 export function startClub(CREW) {
@@ -109,12 +110,57 @@ export function startClub(CREW) {
 
   /* ---------- 1. 소모임 고르기 ---------- */
   const coverIdx = {};
-  // 요일별로 묶어 "화 11:00, 13:00 · 목 11:00" 처럼 짧게 보여 줍니다(시간대가 많은 소모임용).
-  function slotSummary(p) {
+  // 시간대가 많은 소모임은 카드에 "월~토 · 시간대 13개"만 보이고, 자세한 시간표와 정원은 창에서 봅니다.
+  const dayOrder = (d) => (d + 6) % 7;
+  function daySummary(p) {
+    const days = [...new Set(p.slots.map((sl) => sl.weekday))].sort((a, b) => dayOrder(a) - dayOrder(b));
+    const run = days.length > 2 && days.every((d, k) => k === 0 || dayOrder(d) === dayOrder(days[k - 1]) + 1);
+    return run ? `${WEEKDAY[days[0]]}~${WEEKDAY[days[days.length - 1]]}` : days.map((d) => WEEKDAY[d]).join('·');
+  }
+  function tableHtml(p) {
     const byDay = new Map();
-    for (const sl of p.slots) { if (!byDay.has(sl.weekday)) byDay.set(sl.weekday, []); byDay.get(sl.weekday).push(sl.time); }
-    for (const ts of byDay.values()) ts.sort();
-    return [...byDay.entries()].sort((a, b) => ((a[0] + 6) % 7) - ((b[0] + 6) % 7)).map(([d, ts]) => `${WEEKDAY[d]} ${ts.join(', ')}`).join(' · ');
+    for (const sl of sortedSlots(p)) { if (!byDay.has(sl.weekday)) byDay.set(sl.weekday, []); byDay.get(sl.weekday).push(sl); }
+    const rows = [...byDay.entries()].sort((a, b) => dayOrder(a[0]) - dayOrder(b[0])).map(([d, list]) => `<div class="ttrow"><b class="ttday">${WEEKDAY[d]}요일</b><span class="ttslots">${list.map((sl) => {
+      const n = nextLeft(findSlot(slotId(p.id, sl)));
+      return `<button type="button" class="tt ${n.left ? '' : 'full'}" data-pick="${slotId(p.id, sl)}" ${n.left ? '' : 'disabled'}><span class="num">${esc(sl.time)}</span><i>${n.left ? `${n.used}/${n.cap}` : '마감'}</i></button>`;
+    }).join('')}</span></div>`).join('');
+    return `<div class="dlg-h"><h2 id="tableT">${esc(p.name)} 시간표</h2><button type="button" class="xbtn" data-close aria-label="닫기">${ic('x', 24)}</button></div>
+      <p class="muted sm">시간을 누르면 그 시간으로 신청해요. 오른쪽 숫자는 지금까지 신청 인원 / 정원이에요.</p>
+      <div class="tt-list">${rows}</div>`;
+  }
+  function openTable(pid) {
+    const p = findProgram(pid);
+    if (!p) return;
+    let d = document.getElementById('tableDlg');
+    if (!d) {
+      d = document.createElement('dialog');
+      d.id = 'tableDlg'; d.className = 'sheet'; d.setAttribute('aria-labelledby', 'tableT');
+      d.innerHTML = '<div class="scrim"><div class="dlg" id="tableBox"></div></div>';
+      document.body.appendChild(d);
+      watchOverlay(d);
+      d.addEventListener('click', (e) => {
+        if (e.target.closest('[data-close]') || e.target.classList.contains('scrim')) return closeOverlay(d);
+        const pick = e.target.closest('[data-pick]');
+        if (!pick) return;
+        const sid = pick.dataset.pick;
+        // 창을 닫느라 기록을 한 칸 되돌리므로, 그게 끝난 뒤에 다음 화면으로 넘어갑니다.
+        let went = false;
+        const proceed = () => {
+          if (went) return;
+          went = true;
+          window.removeEventListener('popstate', proceed);
+          setProgram(findSlot(sid).programId);
+          state.slot = sid; state.start = null;
+          ensureMonth();
+          go(2);
+        };
+        window.addEventListener('popstate', proceed);
+        setTimeout(proceed, 400);
+        closeOverlay(d);
+      });
+    }
+    d.querySelector('#tableBox').innerHTML = tableHtml(p);
+    openOverlay(d);
   }
   function programCard(p) {
     const on = state.programId === p.id;
@@ -127,7 +173,7 @@ export function startClub(CREW) {
     if (flex) {
       lines = `<span class="slotline">${ic('info', 16)}<span>일정은 문의 후 정해요</span></span>${state.info.contact ? `<span class="slotline">${ic('phone', 16)}<span>${esc(state.info.contact)}</span></span>` : ''}`;
     } else if (p.slots.length > 3) {
-      lines = `<span class="slotline">${ic('clock', 16)}<span>${esc(slotSummary(p))}</span></span><span class="slotline muted">시간대 ${p.slots.length}개 · 시간마다 정원 ${p.capacity ?? CREW.capacity}명</span>`;
+      lines = `<span class="slotline">${ic('clock', 16)}<span>${daySummary(p)} · 시간대 ${p.slots.length}개</span></span><span class="slotline muted">시간마다 정원 ${p.capacity ?? CREW.capacity}명</span>`;
     } else {
       lines = p.slots.map((sl) => {
         const n = nextLeft(findSlot(slotId(p.id, sl)));
@@ -139,7 +185,7 @@ export function startClub(CREW) {
       <div class="stripw"><div class="strip" data-track="${p.id}" role="group" aria-label="${esc(p.name)} 사진, 옆으로 밀어서 넘기기">${strip}</div>${nav}<span class="chk" aria-hidden="true">${on ? ic('check', 18) : ''}</span></div>
       <button type="button" class="spb" data-program="${p.id}" aria-pressed="${on}" ${flex ? 'disabled' : ''}>
         <span class="spt"><h3>${esc(p.name)}</h3>${flex ? badge('off', '문의', 'phone') : ''}</span>
-        <span class="slots">${lines}</span>
+        <span class="slots">${lines}${flex ? '' : `<span class="ttbtn" role="button" tabindex="0" data-table="${p.id}">${ic('cal', 16)}시간표·정원 보기</span>`}</span>
         ${flex ? '' : `<span class="num sp-price"><b>한 달 ${won(CREW.fee)}</b></span>`}
       </button></div>`;
   }
@@ -151,6 +197,7 @@ export function startClub(CREW) {
     const search = CREW.searchable ? `<div class="field search clubsearch"><input class="input" id="f-search" type="search" placeholder="소모임 이름으로 찾기 (예: 매듭, 뜨개)" value="${esc(state.q || '')}" aria-label="소모임 검색"><span class="si" aria-hidden="true">${ic('search', 24)}</span></div>` : '';
     return `<h1>어떤 소모임에 참여하실래요?</h1>
       <p class="lead">한 달 ${won(CREW.fee)}이고 신청한 날부터 한 달 이용해요.</p>
+      ${CREW.address ? `<p class="placeline">${ic('pin', 20)}<span>${esc(CREW.address)}</span></p>` : ''}
       ${search}
       <div class="sps ${many ? 'many' : ''}">${list.length ? list.map(programCard).join('') : '<div class="state"><h2>찾는 소모임이 없어요</h2></div>'}</div>`;
   }
@@ -239,7 +286,7 @@ export function startClub(CREW) {
     return `<h1>마지막으로 확인해 주세요</h1>
       <p class="lead">내용을 확인하고 안내에 동의해 주세요.</p>
       <div class="stack c4grid">
-        <div class="card c4kv"><dl class="kv"><dt>소모임</dt><dd>${esc(p.name)}</dd><dt>수강일</dt><dd>${slotLabel(sl)}</dd><dt>신청 기간</dt><dd>${esc(LONG(state.start))} ~ ${esc(LONG(pr.end))} (${pr.count}회)</dd><dt>신청자</dt><dd>${esc(state.name)} · ${esc(state.phone)}</dd><dt>비용</dt><dd><b>${won(CREW.fee)}</b> (한 달)</dd></dl></div>
+        <div class="card c4kv"><dl class="kv"><dt>소모임</dt><dd>${esc(p.name)}</dd>${CREW.address ? `<dt>장소</dt><dd>${esc(CREW.address)}</dd>` : ''}<dt>수강일</dt><dd>${slotLabel(sl)}</dd><dt>신청 기간</dt><dd>${esc(LONG(state.start))} ~ ${esc(LONG(pr.end))} (${pr.count}회)</dd><dt>신청자</dt><dd>${esc(state.name)} · ${esc(state.phone)}</dd><dt>비용</dt><dd><b>${won(CREW.fee)}</b> (한 달)</dd></dl></div>
         <div class="card policy-card c4policy"><p class="b row-f">${ic('info', 20)}꼭 읽어 주세요</p>${policyList()}</div>
    <label class="check c4agree ${on ? 'on' : ''}"><input type="checkbox" id="f-agree" class="sr-only" ${on ? 'checked' : ''}><span class="box ${on ? 'on' : ''}">${on ? ic('check', 20) : ''}</span><span>위 안내를 모두 읽었고 동의해요. 신청 당일 노쇼하면 환불되지 않는다는 것도 확인했어요.</span></label>
         ${state.error ? alertBox('err', 'alert', esc(state.error)) : ''}
@@ -253,7 +300,7 @@ export function startClub(CREW) {
 
   function appRows(r) {
     const p = findProgram(r.programId);
-    return `<dt>소모임</dt><dd>${esc(p?.name || r.programId)}</dd><dt>수강일</dt><dd>매주 ${WEEKDAY[r.weekday]}요일 ${esc(r.time)}</dd><dt>신청 기간</dt><dd>${esc(LONG(r.periodStart))} ~ ${esc(LONG(r.periodEnd))}</dd>`;
+    return `<dt>소모임</dt><dd>${esc(p?.name || r.programId)}</dd>${CREW.address ? `<dt>장소</dt><dd>${esc(CREW.address)}</dd>` : ''}<dt>수강일</dt><dd>매주 ${WEEKDAY[r.weekday]}요일 ${esc(r.time)}</dd><dt>신청 기간</dt><dd>${esc(LONG(r.periodStart))} ~ ${esc(LONG(r.periodEnd))}</dd>`;
   }
 
   function viewDone() {
@@ -449,6 +496,8 @@ export function startClub(CREW) {
     }
     const z = t.closest('[data-zoom]');
     if (z) { const pg = findProgram(z.dataset.zoom); return openPhotos(state.info.photos[z.dataset.zoom] || [], Number(z.dataset.i), pg?.name || ''); }
+    const tb = t.closest('[data-table]');
+    if (tb) return openTable(tb.dataset.table);
     const pr = t.closest('[data-program]');
     if (pr) { setProgram(pr.dataset.program); return render(true); }
     const sl = t.closest('[data-slot]');
@@ -466,6 +515,11 @@ export function startClub(CREW) {
     if (t.closest('#lkDoCancel')) return doCancel();
     const c = t.closest('[data-copy]');
     if (c) copyText(c);
+  });
+
+  $('#main').addEventListener('keydown', (e) => {
+    const tb = e.target.closest?.('[data-table]');
+    if (tb && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); openTable(tb.dataset.table); }
   });
 
   $('#main').addEventListener('change', (e) => {
@@ -520,6 +574,7 @@ export function startClub(CREW) {
   });
   $('#back').addEventListener('click', () => { if (state.step === 1) location.href = CREW.homeUrl || '/'; else history.back(); });
   window.addEventListener('popstate', (e) => {
+    if (overlayPop()) return;
     const step = e.state?.step || 1;
     state.step = step === 6 ? 6 : state.done && step === 5 ? 5 : Math.min(step, 4);
     if (state.step >= 2 && state.step <= 4 && !state.programId) state.step = 1;
@@ -530,6 +585,22 @@ export function startClub(CREW) {
   $('#retryBtn').addEventListener('click', loadInfo);
   $('#back').innerHTML = ic('left', 26);
   $('#myres').innerHTML = `${ic('search', 20)}내 신청`;
+  if (CREW.address && $('#whereBtn')) {
+    const q = encodeURIComponent(CREW.address);
+    const link = (href, t) => `<a class="btn secondary s" href="${href}" target="_blank" rel="noopener noreferrer">${t}</a>`;
+    $('#whereBtn').innerHTML = `${ic('pin', 20)}오시는 길`;
+    $('#where').innerHTML = `<div class="dlg-h"><h2 id="whereT">오시는 길</h2><button type="button" class="xbtn" data-close aria-label="닫기">${ic('x', 24)}</button></div>
+      <p class="whereaddr"><b>${esc(CREW.brand)}</b><span>${esc(CREW.address)}</span></p>
+      <div class="map"><iframe class="map-pane" title="위치 지도" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=${q}&hl=ko&z=17&output=embed"></iframe></div>
+      <div class="row-f wrapf" style="margin-top:14px"><button type="button" class="btn secondary s" data-copy="${esc(CREW.address)}">${ic('copy', 18)}주소 복사</button>${link(`https://map.naver.com/p/search/${q}`, '네이버 지도')}${link(`https://map.kakao.com/?q=${q}`, '카카오맵')}${link(`https://www.google.com/maps/search/?api=1&query=${q}`, '구글 지도')}</div>`;
+    watchOverlay($('#whereDlg'));
+    $('#whereBtn').addEventListener('click', () => openOverlay($('#whereDlg')));
+    $('#whereDlg').addEventListener('click', (e) => {
+      if (e.target.closest('[data-close]') || e.target.classList.contains('scrim')) return closeOverlay($('#whereDlg'));
+      const c = e.target.closest('[data-copy]');
+      if (c) copyText(c);
+    });
+  }
   $('#myres').addEventListener('click', () => go(6));
   $('#lastBtn').addEventListener('click', () => {
     try { state.done = JSON.parse(localStorage.getItem(CREW.storageKey)); go(5); } catch { /* 무시 */ }
