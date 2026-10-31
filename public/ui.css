@@ -338,3 +338,37 @@ ol.notes li{font-size:17px;line-height:1.55}
   .view.c1 .spb .slots{padding-top:5px;gap:1px}
   .view.c1 .spb .sp-price{font-size:14.5px}
 }
+
+/* ===== 소모임이 많은 포털(한빛커뮤니티): 카드 높이를 글에 맞추고 3열로 ===== */
+.clubsearch{position:relative;margin-bottom:20px}
+.clubsearch .input{padding-left:54px}
+.clubsearch .si{position:absolute;left:16px;top:18px;pointer-events:none;color:var(--c-ink-2)}
+@media (min-width:900px){
+  .view.c1 .sps.many{grid-auto-rows:auto;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 22px;align-items:stretch}
+  .view.c1 .sps.many .sp{height:auto;min-height:168px;grid-template-columns:clamp(170px,40%,300px) minmax(0,1fr)}
+  .view.c1 .sps.many .sp .stripw,.view.c1 .sps.many .sp .strip,.view.c1 .sps.many .sp .ph{height:100%;min-height:168px}
+  .view.c1 .sps.many .spb{padding:16px 22px}
+}
+@media (min-width:1300px){
+  .view.c1:has(.sps.many){max-width:1240px}
+  .view.c1 .sps.many{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .view.c1 .sps.many .sp{grid-template-columns:clamp(130px,38%,190px) minmax(0,1fr)}
+}
+.sps.many .slots .slotline{align-items:flex-start}
+.sps.many .slots .slotline .i{margin-top:3px}
+.sp.flex .spb{opacity:.92}
+.sp.flex .ph{filter:grayscale(.2)}
+body:has(.sps.many) .wrap{padding-bottom:calc(var(--dock-h,110px) + 28px)}
+@media (min-width:900px){
+  .view.c1 .sps.many .spb{grid-template-columns:minmax(0,1fr);grid-template-areas:"t" "p" "s";gap:2px 0;align-items:start}
+  .view.c1 .sps.many .spb .sp-price{justify-self:start;margin-bottom:4px}
+  .view.c1 .sps.many .spb .slots{margin-top:4px}
+}
+.sps.many .slotline{flex-wrap:nowrap}
+.sps.many .slotline>span{min-width:0}
+/* 시간대가 많은 소모임(예: 매듭 13개): 요일·시간 버튼을 여러 줄로 펼침 */
+@media (min-width:1000px){
+  .view.c2 .c2chips.many{flex-direction:row;flex-wrap:wrap}
+  .view.c2 .c2chips.many .chip{min-height:48px;padding:0 14px;font-size:16px;justify-content:center}
+}
+@media (max-width:999px){.c2chips.many .chip{font-size:16px;padding:0 14px;min-height:46px}}

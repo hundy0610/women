@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#F8FAF5">
+  <title>한빛커뮤니티 소모임 신청</title>
+  <link rel="icon" type="image/svg+xml" href="/icon-hanbit.svg">
+  <link rel="stylesheet" href="/tokens.css">
+  <link rel="stylesheet" href="/fonts/pretendard/pretendard.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/ui.css">
+  <link rel="stylesheet" href="/hanbit.css">
+</head>
+<body class="crew hanbit">
+  <header class="hd">
+    <div class="hd-in">
+      <button type="button" class="bk" id="back" aria-label="뒤로 가기" hidden></button>
+      <a class="logo" href="/hanbit" aria-label="한빛커뮤니티, 처음으로"><span class="t"><b>한빛</b> <span>커뮤니티</span><i></i></span><small>소모임 신청</small></a>
+      <nav class="nav" aria-label="바로가기">
+        <a class="tel" id="hotline" hidden></a>
+        <button type="button" id="myres"></button>
+      </nav>
+    </div>
+    <div class="prog" id="prog" role="progressbar" aria-label="신청 진행" aria-valuemin="1" aria-valuemax="4"><div class="bar"><i id="progBar"></i></div><p class="t" id="progText"></p></div>
+    <div class="steps" id="stepnav" aria-label="진행 단계"></div>
+  </header>
+
+  <div class="banner" id="banner">
+    <div class="alert a-err" id="storeNotice" hidden><span>신청 저장소가 아직 설정되지 않아 신청할 수 없습니다. 관리자에게 알려 주세요.</span></div>
+    <div class="alert a-info" id="lastNotice" hidden><span id="lastText"></span><button type="button" class="btn s secondary" id="lastBtn">입금 안내 보기</button></div>
+    <div class="alert a-err" id="netNotice" hidden><span>자리 현황을 불러오지 못했습니다.</span><button type="button" class="btn s secondary" id="retryBtn">다시 불러오기</button></div>
+  </div>
+
+  <div class="wrap">
+    <div class="work">
+      <main id="main" aria-live="polite"></main>
+      <div id="side"></div>
+    </div>
+  </div>
+
+  <div class="dock" id="dock">
+    <div class="dock-in">
+      <p class="dsum" id="peek" hidden></p>
+      <button type="button" class="btn primary block" id="next" disabled>다음</button>
+    </div>
+  </div>
+
+  <script type="module" src="/hanbit.js"></script>
+</body>
+</html>

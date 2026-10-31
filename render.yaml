@@ -19,6 +19,14 @@ services:
         sync: false
       - key: CRON_SECRET
         sync: false
+      - key: HANBIT_BANK_NAME
+        sync: false
+      - key: HANBIT_BANK_NUMBER
+        sync: false
+      - key: HANBIT_BANK_HOLDER
+        sync: false
+      - key: HANBIT_CONTACT_PHONE
+        sync: false
       - key: UPSTASH_REDIS_REST_URL
         sync: false
       - key: UPSTASH_REDIS_REST_TOKEN

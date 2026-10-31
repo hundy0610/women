@@ -30,11 +30,13 @@ export function crewStatusBadge(r) {
 export const crewTitle = (r) => `${findProgram(r.programId)?.name || r.programId} · 매주 ${WEEKDAY[r.weekday]}요일 ${r.time}`;
 export const crewPeriod = (r) => `${LONG(r.periodStart)} ~ ${LONG(r.periodEnd)}`;
 
-export function createCrewAdmin({ getPw, toast, ask }) {
+export function createCrewAdmin({ getPw, toast, ask, cfg = CREW, api = '/api/crew-admin' }) {
   let items = [];
+  const findProgramC = (id) => findProgram(id, cfg);
+  const titleOf = (r) => `${findProgramC(r.programId)?.name || r.programId} · 매주 ${WEEKDAY[r.weekday]}요일 ${r.time}`;
 
   async function call(body) {
-    const res = await fetch('/api/crew-admin', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-password': getPw() }, body: JSON.stringify(body) });
+    const res = await fetch(api, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-password': getPw() }, body: JSON.stringify(body) });
     const j = await res.json().catch(() => ({}));
     if (!res.ok || j.ok === false) { const e = new Error(j?.error?.message || '요청에 실패했습니다.'); e.code = j?.error?.code; throw e; }
     return j;
@@ -89,7 +91,7 @@ export function createCrewAdmin({ getPw, toast, ask }) {
     const sms = r.sms ? ` <span class="muted sm">· 문자 ${({ sent: '✓', test: '건너뜀', off: '꺼짐', failed: '✗ 실패' })[r.sms.status] || ''}</span>` : '';
     const late = r.status === 'pending' ? `<span class="late ${(r.holdUntil - Date.now()) / 3600000 < 6 ? 'hot' : ''}">${ic('clock', 18)}입금 기한 ${holdText(r)}</span>` : '';
     return `<div class="ritem ${open ? 'open' : ''} ${req ? 'req' : ''}"><div class="rrow"><span class="boxl"></span>
-      <button type="button" class="rmain" data-open="${esc(r.id)}" aria-expanded="${open}"><b style="font-size:20px">${esc(crewTitle(r))}</b><span>${kindTag('crew')} ${esc(r.name)} · ${crewPeriod(r)}${memo}${sms}</span>${late}</button>
+      <button type="button" class="rmain" data-open="${esc(r.id)}" aria-expanded="${open}"><b style="font-size:20px">${esc(titleOf(r))}</b><span>${kindTag('crew')} ${esc(r.name)} · ${crewPeriod(r)}${memo}${sms}</span>${late}</button>
       <div class="rside"><span class="amt num">${won(r.amount)}</span>${crewStatusBadge(r)}${quick(r)}</div></div>${open ? detailHtml(r) : ''}</div>`;
   }
 
@@ -98,7 +100,7 @@ export function createCrewAdmin({ getPw, toast, ask }) {
   async function act(kind, id, memoValue) {
     const r = items.find((x) => x.id === id);
     if (!r) return false;
-    const who = `<p class="b">${esc(r.name)}님 · ${esc(crewTitle(r))}</p>`;
+    const who = `<p class="b">${esc(r.name)}님 · ${esc(titleOf(r))}</p>`;
     if (kind === 'memo') { await call({ action: 'memo', id, memo: memoValue }); toast('메모를 저장했어요.'); return true; }
     if (kind === 'dismiss') { await call({ action: 'dismiss', id }); toast('취소 요청을 반려했어요.'); return true; }
     if (kind === 'confirm') {
@@ -132,21 +134,21 @@ export function createCrewAdmin({ getPw, toast, ask }) {
   /* ---------- 현황, 이력, 내보내기 ---------- */
   function seatsHtml() {
     const today = todayKst(Date.now());
-    return allSlots().map((s) => {
+    return allSlots(cfg).map((s) => {
       const n = items.filter((r) => r.slot === s.id && ['pending', 'active', 'expiring'].includes(r.status) && r.periodEnd >= today).length;
-      const p = findProgram(s.programId);
+      const p = findProgramC(s.programId);
       return `<span class="badge b-${n >= s.capacity ? 'bad' : n ? 'pend' : 'off'}">${esc(p.name)} ${WEEKDAY[s.weekday]} ${s.time} · 정원 ${n}/${s.capacity}</span>`;
     }).join('');
   }
   function eventsFlat() {
     const out = [];
-    for (const r of items) for (const e of r.events || []) out.push({ t: e.t, kind: 'crew', id: r.id, title: `${esc(r.name)} · ${esc(crewTitle(r))}`, text: esc(e.text), status: STATUS_TXT[r.status] || '' });
+    for (const r of items) for (const e of r.events || []) out.push({ t: e.t, kind: 'crew', id: r.id, title: `${esc(r.name)} · ${esc(titleOf(r))}`, text: esc(e.text), status: STATUS_TXT[r.status] || '' });
     return out;
   }
   function csv() {
     const head = ['신청번호', '이름', '연락처', '성별', '나이', '지역(동)', '소모임', '요일', '시간', '시작일', '종료일', '상태', '이번 금액', '납부 개월', '신청 일시'];
     const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const lines = [head, ...items.map((r) => [r.id, r.name, r.phone, r.gender === 'm' ? '남' : '여', r.age ?? '', r.dong ?? '', findProgram(r.programId)?.name || r.programId, WEEKDAY[r.weekday], r.time, r.periodStart, r.periodEnd, STATUS_TXT[r.status] || r.status, r.amount, r.paidMonths || 0, formatKstDateTime(r.createdAt)])];
+    const lines = [head, ...items.map((r) => [r.id, r.name, r.phone, r.gender === 'm' ? '남' : '여', r.age ?? '', r.dong ?? '', findProgramC(r.programId)?.name || r.programId, WEEKDAY[r.weekday], r.time, r.periodStart, r.periodEnd, STATUS_TXT[r.status] || r.status, r.amount, r.paidMonths || 0, formatKstDateTime(r.createdAt)])];
     const blob = new Blob(['﻿' + lines.map((l) => l.map(cell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = `소모임신청_${todayKst(Date.now())}.csv`;
@@ -157,10 +159,10 @@ export function createCrewAdmin({ getPw, toast, ask }) {
   /* ---------- 직접 등록 양식 ---------- */
   function formHtml() {
     return `<form class="card stack" data-c="form" novalidate>
-      <div class="cols2"><div class="field"><label for="cp-prog">소모임</label><select class="input" id="cp-prog" data-c="prog">${CREW.programs.map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></div>
+      <div class="cols2"><div class="field"><label for="cp-prog">소모임</label><select class="input" id="cp-prog" data-c="prog">${cfg.programs.map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></div>
         <div class="field"><label for="cp-slot">요일·시간</label><select class="input" id="cp-slot" data-c="slot"></select></div></div>
       <div class="cols2"><div class="field"><label for="cp-start">시작일</label><input class="input" id="cp-start" data-c="start" type="date" required></div>
-        <div class="field"><label for="cp-amount">금액(원, 비우면 ${won(CREW.fee)})</label><input class="input num" id="cp-amount" data-c="amount" type="number" min="0" step="1000" inputmode="numeric"></div></div>
+        <div class="field"><label for="cp-amount">금액(원, 비우면 ${won(cfg.fee)})</label><input class="input num" id="cp-amount" data-c="amount" type="number" min="0" step="1000" inputmode="numeric"></div></div>
       <div class="cols2"><div class="field"><label for="cp-name">이름</label><input class="input" id="cp-name" data-c="name" maxlength="20" required></div>
         <div class="field"><label for="cp-phone">휴대전화</label><input class="input" id="cp-phone" data-c="phone" type="tel" inputmode="tel" placeholder="010-0000-0000" required></div></div>
       <div class="cols3"><div class="field"><label for="cp-gender">성별</label><select class="input" id="cp-gender" data-c="gender"><option value="f">여성</option><option value="m">남성</option></select></div>
@@ -178,8 +180,8 @@ export function createCrewAdmin({ getPw, toast, ask }) {
       if (!Number.isNaN(wd)) q('start').value = firstOnOrAfter(addDays(todayKst(Date.now()), 1), wd);
     }
     function fillSlots() {
-      const p = findProgram(q('prog').value);
-      q('slot').innerHTML = allSlots().filter((s) => s.programId === p.id).map((s) => `<option value="${s.id}" data-wd="${s.weekday}">${WEEKDAY[s.weekday]}요일 ${s.time}</option>`).join('');
+      const p = findProgramC(q('prog').value);
+      q('slot').innerHTML = allSlots(cfg).filter((s) => s.programId === p.id).map((s) => `<option value="${s.id}" data-wd="${s.weekday}">${WEEKDAY[s.weekday]}요일 ${s.time}</option>`).join('');
       fillStart();
     }
     q('prog').addEventListener('change', fillSlots);

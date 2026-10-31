@@ -1,7 +1,8 @@
 // 매일 한 번 불러서 연장 안내 문자를 보냅니다(GitHub Actions 예약 실행). CRON_SECRET 환경변수와 같은 값을 헤더로 보내야 합니다.
+// 마두 소모임과 한빛커뮤니티를 모두 처리합니다.
 import { handle } from '../lib/http.js';
 import { BookingError } from '../lib/booking.js';
-import { dueReminders, markReminded, recordSms } from '../lib/crew.js';
+import { CLUBS } from '../lib/clubs.js';
 import { smsEnabled, sendCrewRenew } from '../lib/sms.js';
 import { safeEqual } from '../lib/util.js';
 
@@ -14,10 +15,12 @@ export default handle('POST', async ({ req, store, nowMs }) => {
   if (!smsEnabled()) return { sent: 0, failed: 0, skipped: 'sms-disabled' };
   let sent = 0;
   let failed = 0;
-  for (const { rec, stage } of (await dueReminders(store, nowMs)).slice(0, MAX_PER_RUN)) {
-    const r = await sendCrewRenew(rec);
-    await recordSms(store, rec.id, nowMs, '연장 안내 문자(자동)', r);
-    if (r.ok) { await markReminded(store, rec.id, nowMs, stage, true); sent++; } else failed++;
+  for (const { cfg, club } of CLUBS) {
+    for (const { rec, stage } of (await club.dueReminders(store, nowMs)).slice(0, MAX_PER_RUN)) {
+      const r = await sendCrewRenew(rec, cfg);
+      await club.recordSms(store, rec.id, nowMs, '연장 안내 문자(자동)', r);
+      if (r.ok) { await club.markReminded(store, rec.id, nowMs, stage, true); sent++; } else failed++;
+    }
   }
   return { sent, failed };
 });

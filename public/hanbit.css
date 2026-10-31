@@ -1,0 +1,15 @@
+/* 한빛커뮤니티 포털 색상. 구조는 마두 소모임과 같고 색만 초록 계열로 바꿉니다. (흰 글자 대비: 브랜드 5.0:1, 진한 색 7.8:1) */
+:root{
+  --c-brand:#1B7F5C;
+  --c-brand-strong:#0F5C41;
+  --c-brand-soft:#E2F3EB;
+  --c-accent:#F2A33A;
+  --c-bg:#F8FAF5;
+  --sh-btn:0 4px 12px rgba(27,127,92,.28);
+}
+body{background:radial-gradient(520px 240px at 100% 0,#FDEBCB 0,transparent 70%),radial-gradient(640px 420px at 0 0,#D5EDE0 0,transparent 70%),var(--c-bg);background-attachment:fixed}
+.primary{box-shadow:0 8px 20px rgba(27,127,92,.22)}
+.primary:hover{box-shadow:0 10px 24px rgba(27,127,92,.28)}
+.day.sel{box-shadow:0 6px 16px rgba(27,127,92,.28)}
+.dock{background:linear-gradient(to top,var(--c-bg) 58%,rgba(248,250,245,0))!important}
+.hd{background:rgba(248,250,245,.82)}

@@ -1,8 +1,17 @@
 // 소모임(동아리) 신청 설정. 화면(/crew)과 서버(api/crew*.js)가 같은 값을 씁니다.
 // 요일: 0=일 ... 6=토. 프로그램이나 시간이 바뀌면 이 파일만 고치면 됩니다.
 export const CREW = {
-  center: { id: 'madu' },
+  id: 'crew',                  // 포털 이름(주소 /crew)
+  ns: '',                      // 저장소 키 접두어(포털마다 다르게)
+  api: '/api/crew',            // 신청 화면이 부르는 주소
+  storageKey: 'crew:last',     // 브라우저에 방금 한 신청을 기억하는 이름
+  photoDir: 'crew',            // public/photos/ 아래 사진 폴더
+  homeUrl: '/',                // 첫 단계에서 뒤로 가면 가는 곳(없으면 뒤로 가기 버튼을 숨김)
+  envPrefix: '',               // 계좌·문의 환경변수 접두어(없으면 BANK_*, CONTACT_PHONE)
   brand: '드림 문화센터',
+  smsHead: '[드림문화센터 소모임]',
+  notifyLabel: '소모임',
+  center: { id: 'madu' },
 
   fee: 10000,            // 한 달 참가비(원)
   periodMonths: 1,       // 한 번 신청하면 이용하는 기간(개월)
