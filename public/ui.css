@@ -269,13 +269,11 @@ ol.notes li{font-size:17px;line-height:1.55}
 .chips.five{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
 .chips.five .chip{justify-content:center;padding:0 6px}
 .dotsep{font-style:normal}
-.map-pane{display:grid;gap:12px}
 .map{border-radius:20px;border:0;box-shadow:var(--ui-shadow-sm)}
 .only-d{display:none}
 @media (min-width:1000px){.only-d{display:block}.only-m{display:none}}
 .dlg{border-radius:28px 28px 0 0;padding:28px 24px}
 @media (min-width:700px){.dlg{border-radius:28px!important}}
-iframe.map-pane{width:100%;aspect-ratio:16/10;border:0;border-radius:20px;display:block}
 @media (min-width:900px){
   .sp{grid-template-columns:172px minmax(0,1fr);min-height:172px}
   .sp .stripw,.sp .ph{min-height:172px}
@@ -295,3 +293,48 @@ iframe.map-pane{width:100%;aspect-ratio:16/10;border:0;border-radius:20px;displa
   .paygrid{gap:24px}
 }
 .alert .btn{background:#fff;color:var(--c-brand-strong);box-shadow:none;margin-left:auto}
+
+/* ===== 카드 사진: 눌러서 크게 보기, 화살표로 다음 사진 ===== */
+.sp .chk,.sp .cnt{pointer-events:none}
+.sp .strip img.ph{cursor:zoom-in}
+.pn{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:var(--c-ink);display:grid;place-items:center;box-shadow:0 2px 8px rgba(27,34,54,.25);z-index:2;opacity:.92;transition:opacity .16s}
+.pn-prev{left:8px}.pn-next{right:8px}
+.pn:hover{background:#fff}
+.sp:hover .pn,.pn:focus-visible{opacity:1}
+@media (hover:none){.pn{display:none}}
+
+/* ===== 소모임 고르기: PC에서 스크롤 없이 6장이 한눈에 들어오도록 카드 높이를 화면 높이에 맞춤 ===== */
+@media (min-width:900px){
+  .view.c1{--card-h:clamp(140px,calc((100dvh - 405px) / 3),240px);padding-top:clamp(20px,3.5vh,40px)}
+  .view.c1 h1{margin-bottom:6px}
+  .view.c1 .lead{margin-bottom:22px}
+  .view.c1 .sps{grid-auto-rows:var(--card-h);gap:18px 24px}
+  .view.c1 .sp{height:var(--card-h);min-height:0;grid-template-columns:clamp(200px,48%,440px) minmax(0,1fr)}
+  .view.c1 .sp .stripw,.view.c1 .sp .strip,.view.c1 .sp .ph{height:100%;min-height:0}
+  .view.c1 .spb{align-content:center;gap:6px;padding:12px 26px}
+  .view.c1 .spb h3{font-size:24px;margin-bottom:2px}
+  .view.c1 .sp-price{margin-top:4px;padding-top:8px;border-top:1px solid var(--c-line);width:100%;font-size:17px}
+}
+@media (min-width:900px) and (max-height:820px){
+  .view.c1{--card-h:clamp(132px,calc((100dvh - 330px) / 3),240px)}
+  .view.c1 .lead{display:none}
+  .view.c1 .sps{gap:14px 20px}
+  .view.c1 .spb{gap:2px;padding:8px 22px}
+  .view.c1 .spb h3{font-size:21px}
+  .view.c1 .slotline{font-size:14.5px;line-height:1.4}
+  .view.c1 .sp-price{margin-top:2px;padding-top:4px;font-size:15.5px}
+}
+@media (min-width:900px){body:has(.view.c1) .wrap{padding-bottom:calc(var(--dock-h,110px) - 36px)}}
+
+/* 소모임 카드 안: 이름과 가격을 한 줄에, 시간대별 정원은 그 아래에 정돈 */
+@media (min-width:900px){
+  .view.c1 .spb{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"t p" "s s";align-content:center;align-items:baseline;gap:6px 12px;overflow:hidden}
+  .view.c1 .spb .spt{grid-area:t}
+  .view.c1 .spb .slots{grid-area:s;padding-top:8px;border-top:1px solid var(--c-line);gap:3px}
+  .view.c1 .spb .sp-price{grid-area:p;margin:0;padding:0;border:0;width:auto;font-size:16px;white-space:nowrap;color:var(--c-ink-2)}
+  .view.c1 .spb .sp-price b{font-weight:700;color:var(--c-ink)}
+}
+@media (min-width:900px) and (max-height:820px){
+  .view.c1 .spb .slots{padding-top:5px;gap:1px}
+  .view.c1 .spb .sp-price{font-size:14.5px}
+}

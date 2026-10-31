@@ -2,6 +2,7 @@
 import { CREW, WEEKDAY, findProgram, findSlot, slotId } from '/shared/crew-config.mjs';
 import { periodEnd, sessionsBetween, firstOnOrAfter } from '/shared/crew-rules.mjs';
 import { ic } from '/icons.js';
+import { openPhotos } from '/lightbox.js';
 import { todayKst, parseYmd, addDays, ymd, formatKoreanDate, formatKstDateTime, DOW_LABELS } from '/shared/time.mjs';
 
 const $ = (s) => document.querySelector(s);
@@ -107,14 +108,14 @@ function programCard(p) {
   const on = state.programId === p.id;
   const real = state.info.photos[p.id] || [];
   const strip = real.length
-    ? real.map((src, i) => `<img class="ph" src="${esc(src)}" alt="${esc(p.name)} 사진 ${i + 1}" ${i ? 'loading="lazy"' : ''} draggable="false">`).join('')
+    ? real.map((src, i) => `<img class="ph" src="${esc(src)}" alt="${esc(p.name)} 사진 ${i + 1}, 누르면 크게 보기" ${i ? 'loading="lazy"' : ''} draggable="false" data-zoom="${p.id}" data-i="${i}">`).join('')
     : `<div class="ph" role="img" aria-label="${esc(p.name)} 사진 준비 중">${ic('cam', 30)}</div>`;
   const lines = p.slots.map((sl) => {
     const n = nextLeft(findSlot(slotId(p.id, sl)));
     return `<span class="slotline">${ic('clock', 16)}<span>${WEEKDAY[sl.weekday]} ${esc(sl.time)}</span><b class="${n.left ? '' : 'full'}">${n.left ? `정원 : ${n.used}/${n.cap}` : `정원 : ${n.used}/${n.cap} 마감`}</b></span>`;
   }).join('');
   return `<div class="sp ${on ? 'on' : ''}">
-    <div class="stripw"><div class="strip" data-track="${p.id}" role="group" aria-label="${esc(p.name)} 사진, 옆으로 밀어서 넘기기">${strip}</div>${real.length > 1 ? `<span class="cnt num" data-count="${p.id}">${(coverIdx[p.id] || 0) + 1}/${real.length}</span>` : ''}<span class="chk" aria-hidden="true">${on ? ic('check', 18) : ''}</span></div>
+    <div class="stripw"><div class="strip" data-track="${p.id}" role="group" aria-label="${esc(p.name)} 사진, 옆으로 밀어서 넘기기">${strip}</div>${real.length > 1 ? `<button type="button" class="pn pn-prev" data-pn="-1" data-for="${p.id}" aria-label="이전 사진">${ic('left', 18)}</button><button type="button" class="pn pn-next" data-pn="1" data-for="${p.id}" aria-label="다음 사진">${ic('right', 18)}</button>` : ''}${real.length > 1 ? `<span class="cnt num" data-count="${p.id}">${(coverIdx[p.id] || 0) + 1}/${real.length}</span>` : ''}<span class="chk" aria-hidden="true">${on ? ic('check', 18) : ''}</span></div>
     <button type="button" class="spb" data-program="${p.id}" aria-pressed="${on}">
       <span class="spt"><h3>${esc(p.name)}</h3></span>
       <span class="slots">${lines}</span>
@@ -415,6 +416,14 @@ function ensureMonth() {
 
 $('#main').addEventListener('click', (e) => {
   const t = e.target;
+  const pn = t.closest('[data-pn]');
+  if (pn) {
+    const tr = document.querySelector(`[data-track="${pn.dataset.for}"]`);
+    if (tr) { const n = tr.children.length; const cur = Math.round(tr.scrollLeft / (tr.clientWidth || 1)); const to = (cur + Number(pn.dataset.pn) + n) % n; tr.scrollTo({ left: to * tr.clientWidth }); }
+    return;
+  }
+  const z = t.closest('[data-zoom]');
+  if (z) { const pg = findProgram(z.dataset.zoom); return openPhotos(state.info.photos[z.dataset.zoom] || [], Number(z.dataset.i), pg?.name || ''); }
   const pr = t.closest('[data-program]');
   if (pr) { setProgram(pr.dataset.program); return render(true); }
   const sl = t.closest('[data-slot]');

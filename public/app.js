@@ -3,6 +3,7 @@ import { quote } from '/shared/pricing.mjs';
 import { blockLabel, dayFullyBlocked } from '/shared/rules.mjs';
 import { ic } from '/icons.js';
 import { watchOverlay, openOverlay, closeOverlay, overlayPop } from '/overlay.js';
+import { openPhotos } from '/lightbox.js';
 import { todayKst, parseYmd, addDays, kstEpoch, ymd, ymdNum, formatKoreanDate, formatKstDateTime, hh, DOW_LABELS } from '/shared/time.mjs';
 
 const $ = (s) => document.querySelector(s);
@@ -218,7 +219,7 @@ function spaceCard(s) {
     : `<div class="ph" role="img" aria-label="${esc(s.name)} 사진 준비 중">${ic('cam', 30)}</div>`;
   const desc = `${s.note}${s.layout ? ` · ${s.layout}` : ''}`;
   return `<div class="sp ${on ? 'on' : ''} ${dis ? 'dis' : ''}">
-    <div class="stripw"><div class="strip" data-track="${s.id}" role="group" aria-label="${esc(s.name)} 사진, 옆으로 밀어서 넘기기">${strip}</div>${real.length > 1 ? `<span class="cnt num" data-count="${s.id}">${(coverIdx[s.id] || 0) + 1}/${real.length}</span>` : ''}<span class="chk" aria-hidden="true">${on ? ic('check', 18) : ''}</span></div>
+    <div class="stripw"><div class="strip" data-track="${s.id}" role="group" aria-label="${esc(s.name)} 사진, 옆으로 밀어서 넘기기">${strip}</div>${real.length > 1 ? `<button type="button" class="pn pn-prev" data-pn="-1" data-for="${s.id}" aria-label="이전 사진">${ic('left', 18)}</button><button type="button" class="pn pn-next" data-pn="1" data-for="${s.id}" aria-label="다음 사진">${ic('right', 18)}</button>` : ''}${real.length > 1 ? `<span class="cnt num" data-count="${s.id}">${(coverIdx[s.id] || 0) + 1}/${real.length}</span>` : ''}<span class="chk" aria-hidden="true">${on ? ic('check', 18) : ''}</span></div>
     <button type="button" class="spb" data-id="${s.id}" aria-pressed="${on}" ${dis ? 'disabled' : ''} title="${esc(desc)}">
       <span class="spt"><h3>${esc(s.name)}</h3>${dis ? badge('off', '예약 불가', 'ban') : badge('ok', `${free}시간 가능`, 'clock')}</span>
       <span class="meta">${ic('users', 16)}최대 ${s.capacity}명 · ${s.pyeong}평</span>
@@ -465,53 +466,8 @@ async function doCancel() {
 }
 
 /* ---------- 사진 확대 ---------- */
-const lb = { list: [], i: 0, name: '', dir: 0 };
-const lbGo = (step) => { lb.dir = step; lb.i = (lb.i + step + lb.list.length) % lb.list.length; paintLb(); };
 function openLightbox(spaceId, i) {
-  lb.list = state.photos[spaceId] || [];
-  lb.i = i;
-  lb.name = C.spaces.find((s) => s.id === spaceId)?.name || '';
-  let d = $('#lightbox');
-  if (!d) {
-    d = document.createElement('dialog');
-    d.id = 'lightbox';
-    d.className = 'sheet dark';
-    d.setAttribute('aria-label', '사진 보기');
-    let swipedAt = 0;
-    d.addEventListener('click', (e) => {
-      if (Date.now() - swipedAt < 400) return; // 넘기는 동작 끝에 생기는 클릭은 무시
-      if (e.target.closest('[data-lb=close]') || e.target === d) closeOverlay(d);
-      else if (e.target.closest('[data-lb=prev]')) lbGo(-1);
-      else if (e.target.closest('[data-lb=next]')) lbGo(1);
-    });
-    d.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft') lbGo(-1);
-      if (e.key === 'ArrowRight') lbGo(1);
-    });
-    // 화면을 좌우로 밀어서 사진 넘기기 (터치, 마우스 드래그 모두)
-    let sx = 0; let sy = 0; let track = false;
-    d.addEventListener('pointerdown', (e) => { if (e.target.closest('button')) return; sx = e.clientX; sy = e.clientY; track = true; });
-    d.addEventListener('pointercancel', () => { track = false; });
-    d.addEventListener('pointerup', (e) => {
-      if (!track) return;
-      track = false;
-      const dx = e.clientX - sx; const dy = e.clientY - sy;
-      if (lb.list.length > 1 && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.3) { swipedAt = Date.now(); lbGo(dx < 0 ? 1 : -1); }
-    });
-    document.body.append(d);
-    watchOverlay(d);
-  }
-  paintLb();
-  openOverlay(d);
-}
-function paintLb() {
-  const many = lb.list.length > 1;
-  $('#lightbox').innerHTML = `<div class="lb"><div class="lb-top"><button type="button" class="lb-b" data-lb="close" aria-label="닫기">${ic('x', 26)}</button></div>
-    <div class="lb-mid">${many ? `<button type="button" class="lb-b" data-lb="prev" aria-label="이전 사진">${ic('left', 26)}</button>` : ''}<img class="${lb.dir > 0 ? 'in-next' : lb.dir < 0 ? 'in-prev' : ''}" src="${esc(lb.list[lb.i])}" alt="${esc(lb.name)} 사진 ${lb.i + 1}" draggable="false">${many ? `<button type="button" class="lb-b" data-lb="next" aria-label="다음 사진">${ic('right', 26)}</button>` : ''}</div>
-    <p class="lb-cap num">${esc(lb.name)} ${lb.i + 1} / ${lb.list.length}</p></div>`;
-  lb.dir = 0;
-  // 다음 사진을 미리 불러 둡니다.
-  for (const k of [1, -1]) { const s = lb.list[(lb.i + k + lb.list.length) % lb.list.length]; if (s) new Image().src = s; }
+  openPhotos(state.photos[spaceId] || [], i, C.spaces.find((x) => x.id === spaceId)?.name || '');
 }
 
 /* 사진 줄을 밀면 "2/3"처럼 번호가 바뀝니다. scroll은 버블링하지 않아 캡처로 받습니다. */
@@ -648,6 +604,12 @@ $('#main').addEventListener('click', (e) => {
     if (m > 12) { m = 1; y++; }
     state.month = { y, m };
     return render(true);
+  }
+  const pn = t.closest('[data-pn]');
+  if (pn) { // 카드 사진 옆 화살표: 다음/이전 사진으로 (끝에서는 처음/마지막으로)
+    const tr = document.querySelector(`[data-track="${pn.dataset.for}"]`);
+    if (tr) { const n = tr.children.length; const cur = Math.round(tr.scrollLeft / (tr.clientWidth || 1)); const to = (cur + Number(pn.dataset.pn) + n) % n; tr.scrollTo({ left: to * tr.clientWidth }); }
+    return;
   }
   const z = t.closest('[data-zoom]');
   if (z) return openLightbox(z.dataset.zoom, Number(z.dataset.i));
