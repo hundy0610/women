@@ -1,7 +1,7 @@
 import { ic } from '/icons.js';
 import { watchOverlay, openOverlay, closeOverlay, overlayPop } from '/overlay.js';
 import { CONFIG as C } from '/shared/config.mjs';
-import { mountCrewPanel } from '/crew-panel.js';
+import { createCrewAdmin, kindTag, STATUS_TXT } from '/crew-lib.js';
 import { quote } from '/shared/pricing.mjs';
 import { blockLabel } from '/shared/rules.mjs';
 import { formatKoreanDate, formatKstDateTime, hh, todayKst, parseYmd, ymd, addDays } from '/shared/time.mjs';
@@ -11,8 +11,8 @@ const won = (n) => `${Number(n).toLocaleString('ko-KR')}원`;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const LABEL = { pending: '입금 대기', confirmed: '확정', canceled: '취소', expired: '기한 만료' };
 const ACTION = { created: '예약 접수', admin_created: '직접 등록', confirmed: '입금 확인(확정)', canceled: '취소', memo: '메모 수정', password_changed: '비밀번호 변경', cancel_requested: '취소 요청', cancel_dismissed: '취소 요청 반려', block_added: '휴관일 추가', block_removed: '휴관일 해제' };
-const TITLES = { list: '장소대관', cal: '달력', log: '이력', crew: '소모임 신청·이력', new: '직접 등록', block: '휴관일', qr: 'QR 코드', set: '설정' };
-const TAB_ICON = { list: 'list', cal: 'cal', log: 'hist', crew: 'users', new: 'edit', block: 'ban', qr: 'qr', set: 'gear' };
+const TITLES = { list: '예약 관리', cal: '달력', log: '이력', new: '직접 등록', block: '휴관일', qr: 'QR 코드', set: '설정' };
+const TAB_ICON = { list: 'list', cal: 'cal', log: 'hist', new: 'edit', block: 'ban', qr: 'qr', set: 'gear' };
 const spaceNames = (ids) => ids.map((id) => C.spaces.find((s) => s.id === id)?.name || id).join(', ');
 const shortDate = (s) => { const [, m, d] = String(s).split('-').map(Number); return `${m}/${d}`; };
 
@@ -29,6 +29,10 @@ function statusBadge(r) {
 }
 
 let pw = '';
+let kind = 'all';      // 예약 관리 분류: all | rent(장소대관) | crew(소모임)
+let logKind = 'all';
+let newKind = 'rent';
+const crew = createCrewAdmin({ getPw: () => pw, toast: (m, bad) => toast(m, bad), ask: async (o) => Boolean(await ask(o)) });
 let items = [];
 let events = [];
 let blocks = [];
@@ -98,13 +102,16 @@ function ask({ title, body = '', reason = null, ok = '확인', okClass = 'primar
 /* ---------- 틀: 탭, 머리글 ---------- */
 let curTab = 'list';
 function badgeCount() {
-  const n = items.filter((r) => r.status === 'pending').length + items.filter((r) => r.status === 'confirmed' && r.cancelRequest).length;
+  const cr = crew.items();
+  const n = items.filter((r) => r.status === 'pending').length + items.filter((r) => r.status === 'confirmed' && r.cancelRequest).length
+    + cr.filter((r) => r.status === 'pending').length + cr.filter((r) => r.cancelRequest && r.status !== 'canceled').length;
   document.title = n ? `(${n}) 예약 관리` : '예약 관리';
   for (const b of document.querySelectorAll('[data-t="list"]')) {
     b.querySelector('.n')?.remove();
     if (n) b.insertAdjacentHTML('beforeend', `<span class="n" aria-label="처리할 예약 ${n}건">${n}</span>`);
   }
 }
+
 function pageHead(tab) {
   $('#aTitle').textContent = TITLES[tab] || '';
   $('#density').hidden = tab !== 'list';
@@ -123,7 +130,6 @@ function setTab(t) {
   pageHead(t);
   if (['list', 'cal', 'log', 'block'].includes(t)) refresh();
   if (t === 'set') { loadNotify(); loadSms(); }
-  if (t === 'crew') crewPanel.load().catch((e) => toast(e.message, true));
   window.scrollTo(0, 0);
 }
 function decorateStatic() {
@@ -140,7 +146,8 @@ function decorateStatic() {
   $('#qr-png').innerHTML = `${ic('down', 18)}PNG`;
   $('#qr-svg').innerHTML = `${ic('down', 18)}SVG`;
   $('#qr-print').innerHTML = `${ic('print', 18)}인쇄`;
-  $('#csv').innerHTML = `${ic('down', 18)}CSV 내려받기`;
+  $('#csv').innerHTML = `${ic('down', 18)}장소대관 CSV`;
+  $('#csvCrew').innerHTML = `${ic('down', 18)}소모임 CSV`;
   $('#notifyTest').innerHTML = `${ic('bell', 18)}테스트 알림 보내기`;
   for (const h of document.querySelectorAll('.hi')) h.outerHTML = ic(h.dataset.i, 24);
   $('#n-confirmed-l .box').innerHTML = ic('check', 20);
@@ -150,40 +157,82 @@ function applyDensity() {
 }
 
 /* ---------- 예약 목록 ---------- */
+// 분류(전체/장소대관/소모임)에 맞는 항목만 모아 줍니다.
+const entries = () => [
+  ...(kind !== 'crew' ? items.map((r) => ({ kind: 'rent', r })) : []),
+  ...(kind !== 'rent' ? crew.items().map((r) => ({ kind: 'crew', r })) : []),
+];
+function entryMatches(e, f) {
+  const r = e.r;
+  if (f === 'all') return true;
+  if (e.kind === 'rent') {
+    if (f === 'req') return r.status === 'confirmed' && Boolean(r.cancelRequest);
+    if (f === 'expiring') return false;
+    return r.status === f;
+  }
+  if (f === 'req') return Boolean(r.cancelRequest) && r.status !== 'canceled';
+  if (f === 'expiring') return r.status === 'expiring' || r.status === 'ended';
+  if (f === 'confirmed') return r.status === 'active' || r.status === 'expiring';
+  return r.status === f;
+}
+const amountOf = (e) => e.r.amount || 0;
+
 function stats() {
   const today = todayKst(Date.now());
   const month = today.slice(0, 7);
-  const pending = items.filter((r) => r.status === 'pending');
-  const confirmed = items.filter((r) => r.status === 'confirmed');
-  const monthSum = confirmed.filter((r) => r.date.startsWith(month)).reduce((a, r) => a + r.amount, 0);
-  const todays = confirmed.filter((r) => r.date === today).length;
-  const reqs = confirmed.filter((r) => r.cancelRequest).length;
+  const all = entries();
+  const m = (f) => all.filter((e) => entryMatches(e, f));
+  const pending = m('pending');
+  const confirmed = m('confirmed');
+  const rentConfirmed = items.filter((r) => r.status === 'confirmed');
+  const monthSum = rentConfirmed.filter((r) => r.date.startsWith(month)).reduce((a, r) => a + r.amount, 0);
+  const todays = rentConfirmed.filter((r) => r.date === today).length;
+  const expiring = m('expiring');
+  const reqs = m('req');
+  const third = kind === 'rent'
+    ? `<div class="stat"><span class="b">오늘 이용</span><span class="v num">${todays}<small>건</small></span><span class="sm muted">${formatKoreanDate(today)}</span></div>`
+    : `<div class="stat ${expiring.length ? 'warn' : ''}"><span class="b">곧 만료·만료</span><span class="v num">${expiring.length}<small>건</small></span><span class="sm muted">소모임 연장 안내가 필요해요</span></div>`;
   $('#stats').innerHTML = `
-    <div class="stat"><span class="b">입금 대기</span><span class="v num">${pending.length}<small>건</small></span><span class="sm muted">합계 ${won(pending.reduce((a, r) => a + r.amount, 0))}</span></div>
-    <div class="stat"><span class="b">확정 예약</span><span class="v num">${confirmed.length}<small>건</small></span><span class="sm muted">이번 달 ${won(monthSum)}</span></div>
-    <div class="stat"><span class="b">오늘 이용</span><span class="v num">${todays}<small>건</small></span><span class="sm muted">${formatKoreanDate(today)}</span></div>
-    <div class="stat ${reqs ? 'warn' : ''}"><span class="b row-f">${reqs ? ic('alert', 20) : ''}취소 요청</span><span class="v num">${reqs}<small>건</small></span><span class="sm" style="font-weight:600">${reqs ? '환불 처리가 필요해요' : '없음'}</span></div>`;
+    <div class="stat"><span class="b">입금 대기</span><span class="v num">${pending.length}<small>건</small></span><span class="sm muted">합계 ${won(pending.reduce((a, e) => a + amountOf(e), 0))}</span></div>
+    <div class="stat"><span class="b">${kind === 'crew' ? '이용 중' : '확정·이용 중'}</span><span class="v num">${confirmed.length}<small>건</small></span><span class="sm muted">${kind === 'crew' ? '소모임' : `이번 달 대관 ${won(monthSum)}`}</span></div>
+    ${third}
+    <div class="stat ${reqs.length ? 'warn' : ''}"><span class="b row-f">${reqs.length ? ic('alert', 20) : ''}취소 요청</span><span class="v num">${reqs.length}<small>건</small></span><span class="sm" style="font-weight:600">${reqs.length ? '환불 처리가 필요해요' : '없음'}</span></div>`;
+  $('#crewSeatsCard').hidden = kind !== 'crew';
+  $('#crewSeats').innerHTML = crew.seatsHtml();
 }
 
 function filtered() {
   const q = query.trim().toLowerCase().replace(/-/g, '');
   const today = todayKst(Date.now());
   const cmp = (a, b) => (a.date + String(a.start).padStart(2, '0')).localeCompare(b.date + String(b.start).padStart(2, '0'));
-  const list = items.filter((r) => {
-    if (filter === 'req') { if (!(r.status === 'confirmed' && r.cancelRequest)) return false; } else if (filter !== 'all' && r.status !== filter) return false;
+  const list = entries().filter((e) => {
+    if (!entryMatches(e, filter)) return false;
     if (!q) return true;
-    return [r.name, r.phone, r.id, r.purpose].some((v) => String(v || '').toLowerCase().replace(/-/g, '').includes(q));
+    return [e.r.name, e.r.phone, e.r.id, e.r.purpose, e.r.dong].some((v) => String(v || '').toLowerCase().replace(/-/g, '').includes(q));
   });
-  // 입금 대기는 기한이 급한 순, 확정은 다가오는 이용일 순, 그 외는 최근 순
-  if (filter === 'pending') return list.sort((a, b) => (a.holdUntil || 0) - (b.holdUntil || 0));
-  if (filter === 'confirmed' || filter === 'req') return list.sort((a, b) => ((a.date >= today) === (b.date >= today) ? ((a.date >= today) ? cmp(a, b) : cmp(b, a)) : (a.date >= today ? -1 : 1)));
-  return list.sort((a, b) => cmp(b, a));
+  const hold = (e) => e.r.holdUntil || 0;
+  const created = (e) => e.r.createdAt || 0;
+  // 입금 대기는 기한이 급한 순. 장소대관만 볼 때 확정은 다가오는 이용일 순, 그 밖에는 최근 접수 순
+  if (filter === 'pending') return list.sort((a, b) => hold(a) - hold(b));
+  if (kind === 'rent' && (filter === 'confirmed' || filter === 'req')) {
+    return list.sort((x, y) => { const a = x.r; const b = y.r; return ((a.date >= today) === (b.date >= today) ? ((a.date >= today) ? cmp(a, b) : cmp(b, a)) : (a.date >= today ? -1 : 1)); });
+  }
+  return list.sort((a, b) => created(b) - created(a));
 }
 
+const KINDS = [['all', '전체'], ['rent', '장소대관'], ['crew', '소모임']];
+function kindSeg(el, current, opts, attr, counts = true) {
+  const count = (k) => (k === 'all' ? items.length + crew.items().length : k === 'rent' ? items.length : crew.items().length);
+  el.innerHTML = opts.map(([k, t]) => `<button type="button" class="kbtn" ${attr}="${k}" aria-pressed="${current === k}">${t}${counts ? ` <span class="n">${count(k)}</span>` : ''}</button>`).join('');
+}
 function renderFilters() {
-  const count = (s) => (s === 'all' ? items.length : s === 'req' ? items.filter((r) => r.status === 'confirmed' && r.cancelRequest).length : items.filter((r) => r.status === s).length);
-  $('#filters').innerHTML = ['pending', 'req', 'confirmed', 'expired', 'canceled', 'all']
-    .map((s) => `<button type="button" class="chip" data-f="${s}" aria-pressed="${filter === s}">${s === 'all' ? '전체' : s === 'req' ? '취소 요청' : LABEL[s]} <span class="n">${count(s)}</span></button>`).join('');
+  kindSeg($('#kinds'), kind, KINDS, 'data-k');
+  const all = entries();
+  const count = (s) => all.filter((e) => entryMatches(e, s)).length;
+  const list = ['pending', 'req', 'confirmed', ...(kind !== 'rent' ? ['expiring'] : []), 'expired', 'canceled', 'all'];
+  if (!list.includes(filter)) filter = 'pending';
+  const label = (s) => (s === 'all' ? '전체' : s === 'req' ? '취소 요청' : s === 'expiring' ? '곧 만료·만료' : s === 'confirmed' ? (kind === 'crew' ? '이용 중' : '확정·이용 중') : LABEL[s]);
+  $('#filters').innerHTML = list.map((s) => `<button type="button" class="chip" data-f="${s}" aria-pressed="${filter === s}">${label(s)} <span class="n">${count(s)}</span></button>`).join('');
 }
 
 function historyFor(id) {
@@ -222,7 +271,7 @@ function cardRow(r) {
   const late = r.status === 'pending' ? `<span class="late ${holdLeft(r) < 6 ? 'hot' : ''}">${ic(holdLeft(r) < 6 ? 'alert' : 'clock', 18)}입금 기한 ${holdText(r)}</span>` : '';
   const quick = r.status === 'pending' ? `<button type="button" class="btn ok-btn s" data-act="confirm" data-id="${esc(r.id)}">입금 확인(확정)</button>` : '';
   return `<div class="ritem ${open ? 'open' : ''} ${r.cancelRequest && r.status === 'confirmed' ? 'req' : ''} ${selected.has(r.id) ? 'picked' : ''}"><div class="rrow">${pick}
-    <button type="button" class="rmain" data-open="${esc(r.id)}" aria-expanded="${open}"><b style="font-size:20px">${formatKoreanDate(r.date)} ${hh(r.start)}~${hh(r.end)}</b><span>${esc(r.name)} · ${esc(spaceNames(r.spaces))}${memo}</span>${late}</button>
+    <button type="button" class="rmain" data-open="${esc(r.id)}" aria-expanded="${open}"><b style="font-size:20px">${formatKoreanDate(r.date)} ${hh(r.start)}~${hh(r.end)}</b><span>${kindTag('rent')} ${esc(r.name)} · ${esc(spaceNames(r.spaces))}${memo}</span>${late}</button>
     <div class="rside"><span class="amt num">${won(r.amount)}</span>${statusBadge(r)}${quick}</div></div>${open ? detail(r) : ''}</div>`;
 }
 
@@ -231,17 +280,18 @@ function tableRow(r) {
   const pick = r.status !== 'canceled' ? boxChecked(r.id) : '<span class="boxl"></span>';
   const quick = r.status === 'pending' ? `<button type="button" class="btn ok-btn s" style="min-height:44px" data-act="confirm" data-id="${esc(r.id)}">입금 확인</button>` : '<span></span>';
   return `<div class="ritem ${open ? 'open' : ''} ${selected.has(r.id) ? 'picked' : ''}"><div class="trow">${pick}<b class="num">${shortDate(r.date)}</b>
-    <button type="button" class="tmain" data-open="${esc(r.id)}" aria-expanded="${open}">${hh(r.start)}~${hh(r.end)} · ${esc(r.name)} · ${esc(spaceNames(r.spaces))}</button>
+    <button type="button" class="tmain" data-open="${esc(r.id)}" aria-expanded="${open}">${kindTag('rent')} ${hh(r.start)}~${hh(r.end)} · ${esc(r.name)} · ${esc(spaceNames(r.spaces))}</button>
     <b class="num">${won(r.amount)}</b>${statusBadge(r)}${quick}</div>${open ? detail(r) : ''}</div>`;
 }
 
 function renderRows() {
   const list = filtered();
-  $('#rows').innerHTML = list.length ? list.map(density === 'dense' ? tableRow : cardRow).join('') : stateBox('file', '해당하는 예약이 없습니다.');
-  renderBulk(list);
+  $('#rows').innerHTML = list.length
+    ? list.map((e) => (e.kind === 'crew' ? crew.rowHtml(e.r, openId === e.r.id) : (density === 'dense' ? tableRow : cardRow)(e.r))).join('')
+    : stateBox('file', '해당하는 예약이 없습니다.');
+  renderBulk(list.filter((e) => e.kind === 'rent').map((e) => e.r));
 }
 
-// 선택 취소 막대: 현재 목록에서 취소할 수 있는 건만 고를 수 있습니다.
 function renderBulk(list) {
   const cancelable = list.filter((r) => r.status !== 'canceled');
   for (const id of [...selected]) if (!cancelable.some((r) => r.id === id)) selected.delete(id);
@@ -252,25 +302,33 @@ function renderBulk(list) {
   const all = n === cancelable.length;
   const mid = n > 0 && !all;
   bar.innerHTML = `<label class="boxl"><input type="checkbox" class="sr-only" id="pickAll" ${all ? 'checked' : ''} aria-label="현재 목록 전체 선택"><span class="box ${all ? 'on' : mid ? 'mid' : ''}">${all ? ic('check', 18) : mid ? ic('minus', 18) : ''}</span></label>
-    <b>전체 선택 (현재 목록 ${cancelable.length}건)</b><span class="muted">${n ? `${n}건 선택됨` : ''}</span>
+    <b>전체 선택 (장소대관 ${cancelable.length}건)</b><span class="muted">${n ? `${n}건 선택됨` : ''}</span>
     <span style="margin-left:auto" class="row-f wrapf">${n ? `<button type="button" class="btn ghost s" id="pickClear">선택 해제</button>` : ''}<button type="button" class="btn s ${n ? 'danger' : 'dis'}" id="bulkCancel" ${n ? '' : 'disabled'}>선택 취소 (${n})</button></span>`;
 }
 
 function renderLog() {
-  $('#logList').innerHTML = events.length ? events.map((e) => {
-    const r = e.rec;
-    const detail = r ? `${esc(r.name)} · ${esc(spaceNames(r.spaces))} · ${formatKoreanDate(r.date)} ${hh(r.start)}~${hh(r.end)} · ${won(r.amount)}` : '';
-    const note = e.note ? ` · ${esc(e.note)}` : '';
-    return `<div><span class="muted sm b">${formatKstDateTime(e.t)}</span><div><b>${ACTION[e.action] || e.action}</b><br><span class="muted sm">${detail}${r ? ` · ${esc(e.id)}` : ''}${note}</span></div></div>`;
-  }).join('') : stateBox('hist', '아직 이력이 없습니다.');
+  kindSeg($('#logKinds'), logKind, KINDS, 'data-lk');
+  const rows = [];
+  if (logKind !== 'crew') {
+    for (const e of events) {
+      const r = e.rec;
+      const detail = r ? `${esc(r.name)} · ${esc(spaceNames(r.spaces))} · ${formatKoreanDate(r.date)} ${hh(r.start)}~${hh(r.end)} · ${won(r.amount)}` : '';
+      rows.push({ t: e.t, kind: 'rent', title: ACTION[e.action] || e.action, sub: `${detail}${r ? ` · ${esc(e.id)}` : ''}${e.note ? ` · ${esc(e.note)}` : ''}` });
+    }
+  }
+  if (logKind !== 'rent') {
+    for (const e of crew.eventsFlat()) rows.push({ t: e.t, kind: 'crew', title: e.text, sub: `${e.title} · ${esc(e.id)} · ${esc(e.status)}` });
+  }
+  rows.sort((a, b) => b.t - a.t);
+  $('#logList').innerHTML = rows.length ? rows.slice(0, 600).map((x) => `<div><span class="muted sm b">${formatKstDateTime(x.t)}</span><div>${kindTag(x.kind)} <b>${x.title}</b><br><span class="muted sm">${x.sub}</span></div></div>`).join('') : stateBox('hist', '아직 이력이 없습니다.');
 }
 
 async function load() {
-  const [a, b, c] = await Promise.all([call({ action: 'list' }), call({ action: 'history' }), call({ action: 'blocks' })]);
+  const [a, b, c] = await Promise.all([call({ action: 'list' }), call({ action: 'history' }), call({ action: 'blocks' }), crew.load().catch(() => [])]);
   blocks = c.blocks;
   items = a.items.sort((x, y) => (y.date + String(y.start).padStart(2, '0')).localeCompare(x.date + String(x.start).padStart(2, '0')));
   events = b.events;
-  stats(); renderFilters(); renderRows(); renderLog(); renderBlocks(); renderCal(); badgeCount();
+  stats(); renderFilters(); renderRows(); renderLog(); renderBlocks(); renderCal(); badgeCount(); renderNewKinds();
   pageHead(curTab); applyDensity();
 }
 
@@ -304,6 +362,15 @@ document.addEventListener('click', (e) => {
   if (b && b.closest('#appView')) setTab(b.dataset.t);
 });
 
+$('#kinds').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (b) { kind = b.dataset.k; selected.clear(); openId = null; stats(); renderFilters(); renderRows(); } });
+$('#logKinds').addEventListener('click', (e) => { const b = e.target.closest('[data-lk]'); if (b) { logKind = b.dataset.lk; renderLog(); } });
+$('#newKinds').addEventListener('click', (e) => { const b = e.target.closest('[data-nk]'); if (b) { newKind = b.dataset.nk; renderNewKinds(); } });
+function renderNewKinds() {
+  kindSeg($('#newKinds'), newKind, [['rent', '장소대관'], ['crew', '소모임']], 'data-nk', false);
+  $('#rentNew').hidden = newKind !== 'rent';
+  $('#crewNew').hidden = newKind !== 'crew';
+}
+$('#csvCrew').addEventListener('click', () => crew.csv());
 $('#filters').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (b) { filter = b.dataset.f; selected.clear(); renderFilters(); renderRows(); } });
 $('#q').addEventListener('input', (e) => { query = e.target.value; selected.clear(); renderRows(); });
 $('#density').addEventListener('click', (e) => {
@@ -323,7 +390,7 @@ $('#rows').addEventListener('change', (e) => {
 });
 $('#bulk').addEventListener('change', (e) => {
   if (e.target.id !== 'pickAll') return;
-  const ids = filtered().filter((r) => r.status !== 'canceled').map((r) => r.id);
+  const ids = filtered().filter((e) => e.kind === 'rent' && e.r.status !== 'canceled').map((e) => e.r.id);
   selected.clear();
   if (e.target.checked) ids.forEach((id) => selected.add(id));
   renderRows();
@@ -351,6 +418,14 @@ $('#bulk').addEventListener('click', async (e) => {
 $('#rows').addEventListener('click', async (e) => {
   const head = e.target.closest('[data-open]');
   if (head) { openId = openId === head.dataset.open ? null : head.dataset.open; return renderRows(); }
+  const cb = e.target.closest('[data-act][data-kind="crew"]');
+  if (cb) {
+    try {
+      const memo = document.getElementById(`memo-${cb.dataset.id}`)?.value ?? '';
+      if (await crew.act(cb.dataset.act, cb.dataset.id, memo)) await load();
+    } catch (err) { toast(err.message || '처리하지 못했어요. 다시 시도해 주세요.', true); }
+    return;
+  }
   const b = e.target.closest('[data-act]');
   if (!b) return;
   const id = b.dataset.id;
@@ -619,8 +694,13 @@ $('#notifyTest').addEventListener('click', async () => {
 /* ---------- 시작 ---------- */
 watchOverlay($('#adlg'));
 // 소모임 패널(신청 목록, 이력)을 관리자 화면 안에 붙입니다.
-const crewPanel = mountCrewPanel($('#crewRoot'), { getPw: () => pw, toast, ask: async (o) => Boolean(await ask(o)) });
-const openTabFromUrl = () => { const t = new URLSearchParams(location.search).get('tab'); if (t && TITLES[t]) setTab(t); };
+// 소모임 직접 등록 양식을 "직접 등록" 탭에 붙입니다.
+$('#crewNew').innerHTML = crew.formHtml();
+crew.bindForm($('#crewNew'), load);
+const openTabFromUrl = () => {
+  const t = new URLSearchParams(location.search).get('tab');
+  if (t === 'crew') { kind = 'crew'; setTab('list'); stats(); renderFilters(); renderRows(); } else if (t && TITLES[t]) setTab(t);
+};
 window.addEventListener('popstate', () => { overlayPop(); });
 decorateStatic();
 applyDensity();

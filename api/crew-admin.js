@@ -1,6 +1,6 @@
 import { handle, requireAdmin } from '../lib/http.js';
 import { BookingError } from '../lib/booking.js';
-import { applyCrew, listCrew, confirmCrew, renewCrew, cancelCrew, markReminded, setCrewMemo, recordSms } from '../lib/crew.js';
+import { applyCrew, listCrew, confirmCrew, renewCrew, cancelCrew, markReminded, setCrewMemo, recordSms, dismissCrewCancel } from '../lib/crew.js';
 import { smsEnabled, sendCrewGuide, sendCrewConfirmed, sendCrewRenew } from '../lib/sms.js';
 
 export default handle('POST', async (ctx) => {
@@ -34,6 +34,9 @@ export default handle('POST', async (ctx) => {
     }
     case 'cancel':
       await cancelCrew(store, id, nowMs, 'admin', String(body.note || '').slice(0, 200));
+      return {};
+    case 'dismiss':
+      await dismissCrewCancel(store, id, nowMs);
       return {};
     case 'memo':
       await setCrewMemo(store, id, body.memo, nowMs);

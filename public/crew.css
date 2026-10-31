@@ -1,44 +1,25 @@
-/* 관리자 화면의 소모임 패널(신청 목록, 이력) 보조 규칙. 고객 화면 디자인은 ui.css에 있습니다. */
+/* 관리자 화면: 장소대관과 소모임을 한 목록에서 다루기 위한 보조 규칙 */
 .field .req{font-size:13px;font-weight:700;color:var(--c-brand-strong);background:var(--c-brand-soft);border-radius:var(--r-pill);padding:1px 8px;margin-left:6px;vertical-align:1px}
 .field .opt{font-size:13px;font-weight:600;color:var(--c-ink-2);background:var(--c-off-bg);border-radius:var(--r-pill);padding:1px 8px;margin-left:6px;vertical-align:1px}
 
-/* ===== 소모임 관리자: PC에서는 왼쪽 목록, 오른쪽 현황과 직접 등록 ===== */
-.cadm{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
-.cadm-l,.cadm-r{display:grid;gap:12px;align-content:start;min-width:0}
-@media (min-width:1100px){
-  .cadm{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);align-items:start;gap:16px}
-  .cadm-l{grid-template-rows:auto auto minmax(0,1fr)}
-  .cadm-l .cp-rows{max-height:calc(100dvh - 250px);overflow:auto;align-content:start;padding-right:4px}
-  .cadm-r .card{padding:10px 14px}
-  .cadm-r .stats{grid-template-columns:repeat(4,minmax(0,1fr))}
-  .cp-box .cols2,.cp-box .cols3{gap:8px}
-  .cp-box .stack{gap:8px}
-  .cp-box .field label{font-size:15px;margin-bottom:2px}
-  .cp-box .input{min-height:42px}
-  .cp-box summary{min-height:36px!important}
-}
-@media (min-width:1100px){
-  .cp-form{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 10px}
-  .cp-form .cols2,.cp-form .cols3{display:contents}
-  .cp-form>.check,.cp-form>[data-c="err"],.cp-form>.btn{grid-column:1 / -1}
-  .cp-form .check{min-height:44px;padding:6px 12px}
-  .cp-box{padding:8px 14px 12px}
-  .cadm-r .stat{padding:6px 10px}
-  .cadm-r .stat .v{font-size:24px}
-  .cadm-r .card h2{font-size:17px}
-  .cp-seats{gap:6px}
-  .cp-seats .badge{font-size:13px;padding:0 8px}
-}
-@media (min-width:1100px){
-  .cp-form .field{margin:0}
-  .cp-form .field label{font-size:14px;margin:0 0 2px}
-  .cp-form .input,.cp-form select.input{min-height:38px;height:38px;padding:0 10px;font-size:16px}
-  .cp-form .btn{min-height:44px}
-  .cp-form .check{font-size:15px;min-height:38px}
-  .cp-form{gap:6px 10px!important}
-  .cadm-l .cp-filters .chip{min-height:38px;padding:0 12px;font-size:16px}
-  .cadm-l .field.search .input{min-height:40px}
-}
+/* 분류 전환(전체 / 장소대관 / 소모임) */
+.kinds{display:flex;gap:4px;padding:5px;background:var(--c-off-bg);border-radius:16px;width:fit-content;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.kinds:empty{display:none}
+.kbtn{flex:none;min-height:48px;padding:0 20px;border-radius:12px;border:0;background:transparent;font:700 18px var(--font);color:var(--c-ink-2);display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:background-color .15s,color .15s}
+.kbtn:hover:not([aria-pressed=true]){color:var(--c-ink)}
+.kbtn[aria-pressed=true]{background:#fff;color:var(--c-brand-strong);box-shadow:0 1px 3px rgba(27,34,54,.16)}
+.kbtn .n{min-width:26px;height:26px;padding:0 8px;border-radius:999px;background:rgba(27,34,54,.08);font-size:15px;display:inline-grid;place-items:center}
+.kbtn[aria-pressed=true] .n{background:var(--c-brand-soft)}
 
-.cp-top{margin-bottom:14px}
-.crewpanel .seg button[aria-pressed=true]{background:var(--c-brand);color:#fff}
+/* 줄 안의 분류 표시 */
+.kt{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:8px;font-size:14px;font-weight:700;white-space:nowrap}
+.kt-rent{background:var(--c-brand-soft);color:var(--c-brand-strong)}
+.kt-crew{background:var(--c-ink);color:#fff}
+
+/* 목록 줄: 글이 길어도 잘리지 않고 줄바꿈 */
+.ritem .rmain{min-width:0}
+.ritem .rmain>span{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;line-height:1.5}
+.ritem .rmain b{overflow-wrap:anywhere}
+.ritem .rside{flex-wrap:wrap}
+.hist>div{display:flex;flex-wrap:wrap;gap:4px 10px}
+.rdet .kv dd{overflow-wrap:anywhere}
