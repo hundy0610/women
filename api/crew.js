@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { handle } from '../lib/http.js';
 import { BookingError } from '../lib/booking.js';
-import { applyCrew, crewUsage, findForApplicant, applicantView, applicantCancel } from '../lib/crew.js';
+import { applyCrew, crewUsage, findForApplicant, applicantView, applicantCancel, recordSms } from '../lib/crew.js';
 import { notifyAdmin, adminLink } from '../lib/notify.js';
 import { sendCrewGuide } from '../lib/sms.js';
 import { CREW, findProgram, WEEKDAY } from '../public/shared/crew-config.mjs';
@@ -35,7 +35,7 @@ export default handle('POST', async ({ req, store, body, nowMs, ip }) => {
       const { rec } = await applyCrew(store, { ...body.application }, { nowMs, ip });
       const prog = findProgram(rec.programId);
       await notifyAdmin(`[소모임 신청] ${rec.name} ${prog?.name || ''} 매주 ${WEEKDAY[rec.weekday]} ${rec.time} ${formatKoreanDate(rec.periodStart)}부터 (입금 대기)`, adminLink(req));
-      await sendCrewGuide(rec);
+      await recordSms(store, rec.id, nowMs, '입금 안내 문자', await sendCrewGuide(rec));
       return { application: applicantView(rec, nowMs), holdHours: CREW.holdHours };
     }
     case 'lookup': {

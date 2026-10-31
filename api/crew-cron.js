@@ -1,7 +1,7 @@
 // 매일 한 번 불러서 연장 안내 문자를 보냅니다(GitHub Actions 예약 실행). CRON_SECRET 환경변수와 같은 값을 헤더로 보내야 합니다.
 import { handle } from '../lib/http.js';
 import { BookingError } from '../lib/booking.js';
-import { dueReminders, markReminded } from '../lib/crew.js';
+import { dueReminders, markReminded, recordSms } from '../lib/crew.js';
 import { smsEnabled, sendCrewRenew } from '../lib/sms.js';
 import { safeEqual } from '../lib/util.js';
 
@@ -16,6 +16,7 @@ export default handle('POST', async ({ req, store, nowMs }) => {
   let failed = 0;
   for (const { rec, stage } of (await dueReminders(store, nowMs)).slice(0, MAX_PER_RUN)) {
     const r = await sendCrewRenew(rec);
+    await recordSms(store, rec.id, nowMs, '연장 안내 문자(자동)', r);
     if (r.ok) { await markReminded(store, rec.id, nowMs, stage, true); sent++; } else failed++;
   }
   return { sent, failed };

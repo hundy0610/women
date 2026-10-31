@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createMemoryStore } from '../lib/store-memory.js';
-import { dueReminders, markReminded, applyCrew, confirmCrew, renewCrew, cancelCrew, listCrew, crewUsage, crewStatus } from '../lib/crew.js';
+import { recordSms, dueReminders, markReminded, applyCrew, confirmCrew, renewCrew, cancelCrew, listCrew, crewUsage, crewStatus } from '../lib/crew.js';
 import { BookingError } from '../lib/booking.js';
 import { kstEpoch, addDays } from '../public/shared/time.mjs';
 import { CREW } from '../public/shared/crew-config.mjs';
@@ -121,4 +121,19 @@ test('입금 대기·취소 신청에는 연장 안내를 보내지 않는다', 
   const store = createMemoryStore();
   await applyCrew(store, app(), ctx());
   assert.equal((await dueReminders(store, NOW)).length, 0);
+});
+
+test('문자 발송 결과가 신청 기록에 남는다(관리자 확인용)', async () => {
+  const store = createMemoryStore();
+  const { rec } = await applyCrew(store, app(), ctx());
+  await recordSms(store, rec.id, NOW, '입금 안내 문자', { ok: true });
+  let r = (await listCrew(store, NOW))[0];
+  assert.equal(r.sms.status, 'sent');
+  await recordSms(store, rec.id, NOW, '입금 안내 문자', { ok: false, skipped: true, test: true });
+  r = (await listCrew(store, NOW))[0];
+  assert.equal(r.sms.status, 'test');
+  await recordSms(store, rec.id, NOW, '확정 문자', { ok: false, error: 'HTTP 403 forbidden' });
+  r = (await listCrew(store, NOW))[0];
+  assert.equal(r.sms.status, 'failed');
+  assert.ok(r.events.some((e) => /확정 문자: 실패/.test(e.text)));
 });

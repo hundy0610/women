@@ -107,9 +107,9 @@ function renderRows() {
     return `<article class="ritem ${open ? 'open' : ''}">
       <button type="button" class="rrow rmain" data-open="${r.id}" aria-expanded="${open}" style="width:100%;text-align:left">
         <span class="rtop"><b>${esc(r.name)}</b> ${statusBadge(r)}</span>
-        <span class="muted sm">${esc(slotLabel(r))} · ${LONG(r.periodStart)} ~ ${LONG(r.periodEnd)}</span>
+        <span class="muted sm">${esc(slotLabel(r))} · ${LONG(r.periodStart)} ~ ${LONG(r.periodEnd)}${r.sms ? ` · 문자 ${({ sent: '✓', test: '건너뜀', off: '꺼짐', failed: '✗ 실패' })[r.sms.status] || ''}` : ''}</span>
       </button>
-      ${open ? `<div class="rdet stack"><dl class="kv"><dt>신청번호</dt><dd class="num">${esc(r.id)}</dd><dt>연락처</dt><dd>${esc(r.phone)}</dd><dt>성별·나이</dt><dd>${r.gender === 'm' ? '남성' : '여성'}${r.age ? ` · ${r.age}세` : ''}</dd><dt>지역(동)</dt><dd>${esc(r.dong || '')}</dd><dt>이번 금액</dt><dd>${won(r.amount)} · 누적 ${r.paidMonths || 0}개월 납부</dd>${r.status === 'pending' ? `<dt>입금 기한</dt><dd>${formatKstDateTime(r.holdUntil)}까지</dd>` : ''}${r.cancelRequest ? `<dt>취소 요청</dt><dd>${esc(r.cancelRequest.reason || '사유 없음')}</dd>` : ''}</dl>
+      ${open ? `<div class="rdet stack"><dl class="kv"><dt>신청번호</dt><dd class="num">${esc(r.id)}</dd><dt>연락처</dt><dd>${esc(r.phone)}</dd><dt>성별·나이</dt><dd>${r.gender === 'm' ? '남성' : '여성'}${r.age ? ` · ${r.age}세` : ''}</dd><dt>지역(동)</dt><dd>${esc(r.dong || '')}</dd>${r.sms ? `<dt>문자</dt><dd>${esc(r.sms.label)} · ${({ sent: '발송 접수됨', test: '건너뜀(테스트)', off: '건너뜀(설정 꺼짐)', failed: '실패' })[r.sms.status] || ''}</dd>` : ''}<dt>이번 금액</dt><dd>${won(r.amount)} · 누적 ${r.paidMonths || 0}개월 납부</dd>${r.status === 'pending' ? `<dt>입금 기한</dt><dd>${formatKstDateTime(r.holdUntil)}까지</dd>` : ''}${r.cancelRequest ? `<dt>취소 요청</dt><dd>${esc(r.cancelRequest.reason || '사유 없음')}</dd>` : ''}</dl>
         <div class="row-f wrapf">${actions.join('')}</div>
         <div class="hist sm muted stack" style="gap:4px">${ev}</div></div>` : ''}
     </article>`;
