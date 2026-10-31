@@ -38,3 +38,5 @@
 .sc.full{background:var(--c-bad-bg);color:var(--c-bad-fg)}
 .sc.full i{background:#fff;color:var(--c-bad-fg)}
 @media (max-width:520px){.seatrow{grid-template-columns:minmax(0,1fr)}.seatname{line-height:1.4}}
+
+.field.search .input{padding-left:50px}
