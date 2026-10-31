@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="/fonts/pretendard/pretendard.css">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/admin.css">
+  <link rel="stylesheet" href="/crew.css">
 </head>
 <body class="adm">
   <section class="login" id="loginView">
@@ -27,9 +28,10 @@
       <aside class="side">
         <a class="logo" href="/admin" aria-label="드림 문화센터 관리"><span class="t"><b>드림</b> <span>문화센터</span><i></i></span><small>관리</small></a>
         <nav class="menu" id="tabs" aria-label="메뉴">
-          <button type="button" data-t="list" class="on"><span class="lbl">예약 목록</span></button>
+          <button type="button" data-t="list" class="on"><span class="lbl">장소대관</span></button>
           <button type="button" data-t="cal"><span class="lbl">달력</span></button>
           <button type="button" data-t="log"><span class="lbl">이력</span></button>
+          <button type="button" data-t="crew"><span class="lbl">소모임</span></button>
           <button type="button" data-t="new"><span class="lbl">직접 등록</span></button>
           <button type="button" data-t="block"><span class="lbl">휴관일</span></button>
           <button type="button" data-t="qr"><span class="lbl">QR 코드</span></button>
@@ -45,9 +47,10 @@
             <nav class="nav"><button type="button" id="logoutM"></button></nav>
           </div>
           <div class="mtabs" id="mtabs" aria-label="메뉴">
-            <button type="button" data-t="list" class="on"><span class="lbl">예약 목록</span></button>
+            <button type="button" data-t="list" class="on"><span class="lbl">장소대관</span></button>
             <button type="button" data-t="cal"><span class="lbl">달력</span></button>
             <button type="button" data-t="log"><span class="lbl">이력</span></button>
+            <button type="button" data-t="crew"><span class="lbl">소모임</span></button>
             <button type="button" data-t="new"><span class="lbl">직접 등록</span></button>
             <button type="button" data-t="block"><span class="lbl">휴관일</span></button>
             <button type="button" data-t="qr"><span class="lbl">QR 코드</span></button>
@@ -57,7 +60,7 @@
 
         <main class="main">
           <div class="row-f sp-b wrapf" style="gap:12px">
-            <div><p class="dateline" id="aDate"></p><h1 id="aTitle">예약 목록</h1></div>
+            <div><p class="dateline" id="aDate"></p><h1 id="aTitle">장소대관</h1></div>
             <div class="seg" id="density" role="group" aria-label="목록 보기 방식">
               <button type="button" data-d="card" aria-pressed="true"></button>
               <button type="button" data-d="dense" aria-pressed="false"></button>
@@ -126,6 +129,8 @@
             </form>
             <div class="card stack"><h2>등록된 휴관일</h2><div class="stack" id="blockList"></div></div>
           </section>
+
+          <section id="tab-crew" class="stack" hidden><div id="crewRoot"></div></section>
 
           <section id="tab-qr" class="stack" hidden>
             <p class="muted">휴대폰 카메라로 찍으면 해당 주소가 열립니다. 센터 입구나 안내문에 붙여 두면 바로 예약 화면으로 들어와요.</p>

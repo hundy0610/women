@@ -1,6 +1,7 @@
 import { ic } from '/icons.js';
 import { watchOverlay, openOverlay, closeOverlay, overlayPop } from '/overlay.js';
 import { CONFIG as C } from '/shared/config.mjs';
+import { mountCrewPanel } from '/crew-panel.js';
 import { quote } from '/shared/pricing.mjs';
 import { blockLabel } from '/shared/rules.mjs';
 import { formatKoreanDate, formatKstDateTime, hh, todayKst, parseYmd, ymd, addDays } from '/shared/time.mjs';
@@ -10,8 +11,8 @@ const won = (n) => `${Number(n).toLocaleString('ko-KR')}원`;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const LABEL = { pending: '입금 대기', confirmed: '확정', canceled: '취소', expired: '기한 만료' };
 const ACTION = { created: '예약 접수', admin_created: '직접 등록', confirmed: '입금 확인(확정)', canceled: '취소', memo: '메모 수정', password_changed: '비밀번호 변경', cancel_requested: '취소 요청', cancel_dismissed: '취소 요청 반려', block_added: '휴관일 추가', block_removed: '휴관일 해제' };
-const TITLES = { list: '예약 목록', cal: '달력', log: '이력', new: '직접 등록', block: '휴관일', qr: 'QR 코드', set: '설정' };
-const TAB_ICON = { list: 'list', cal: 'cal', log: 'hist', new: 'edit', block: 'ban', qr: 'qr', set: 'gear' };
+const TITLES = { list: '장소대관', cal: '달력', log: '이력', crew: '소모임 신청·이력', new: '직접 등록', block: '휴관일', qr: 'QR 코드', set: '설정' };
+const TAB_ICON = { list: 'list', cal: 'cal', log: 'hist', crew: 'users', new: 'edit', block: 'ban', qr: 'qr', set: 'gear' };
 const spaceNames = (ids) => ids.map((id) => C.spaces.find((s) => s.id === id)?.name || id).join(', ');
 const shortDate = (s) => { const [, m, d] = String(s).split('-').map(Number); return `${m}/${d}`; };
 
@@ -122,6 +123,7 @@ function setTab(t) {
   pageHead(t);
   if (['list', 'cal', 'log', 'block'].includes(t)) refresh();
   if (t === 'set') { loadNotify(); loadSms(); }
+  if (t === 'crew') crewPanel.load().catch((e) => toast(e.message, true));
   window.scrollTo(0, 0);
 }
 function decorateStatic() {
@@ -288,7 +290,7 @@ $('#login').addEventListener('submit', async (e) => {
   try {
     await load();
     try { sessionStorage.setItem('women:adm', pw); } catch { /* 무시 */ }
-    showApp();
+    showApp(); openTabFromUrl();
   } catch (err) { $('#loginErr').innerHTML = errMsg(err.message); $('#pw').classList.add('err'); }
   btn.disabled = false; btn.textContent = '들어가기';
 });
@@ -616,6 +618,9 @@ $('#notifyTest').addEventListener('click', async () => {
 
 /* ---------- 시작 ---------- */
 watchOverlay($('#adlg'));
+// 소모임 패널(신청 목록, 이력)을 관리자 화면 안에 붙입니다.
+const crewPanel = mountCrewPanel($('#crewRoot'), { getPw: () => pw, toast, ask: async (o) => Boolean(await ask(o)) });
+const openTabFromUrl = () => { const t = new URLSearchParams(location.search).get('tab'); if (t && TITLES[t]) setTab(t); };
 window.addEventListener('popstate', () => { overlayPop(); });
 decorateStatic();
 applyDensity();
@@ -623,7 +628,7 @@ renderQr();
 (async function init() {
   try { pw = sessionStorage.getItem('women:adm') || ''; } catch { /* 무시 */ }
   if (!pw) return;
-  try { await load(); showApp(); } catch { /* 로그인 화면 유지 */ }
+  try { await load(); showApp(); openTabFromUrl(); } catch { /* 로그인 화면 유지 */ }
 })();
 
 /* ---------- 자동 새로고침 (1분마다, 입력 중이거나 창이 열려 있으면 건너뜀) ---------- */
