@@ -216,7 +216,7 @@ ol.notes li{font-size:17px;line-height:1.55}
   .dock-in{max-width:var(--col)}
   .view.c2>.stack{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px 36px;align-items:start}
   .view.c2 .c2cal{grid-column:1;grid-row:1 / span 3}
-  .view.c2 .c2chips,.view.c2 .c2sum{grid-column:2}
+  .view.c2 .c2chips,.view.c2 .sgrps,.view.c2 .c2sum{grid-column:2}
   .view.c2 .c2chips{flex-direction:column;align-items:stretch}
   .view.c2 .c2chips .chip{justify-content:space-between;min-height:56px}
   .view.c3{max-width:760px}
@@ -373,12 +373,6 @@ body:has(.sps.many) .wrap{padding-bottom:calc(var(--dock-h,110px) + 28px)}
 }
 @media (max-width:999px){.c2chips.many .chip{font-size:16px;padding:0 14px;min-height:46px}}
 
-/* 소모임 장소 안내 */
-.placeline{display:flex;align-items:flex-start;gap:8px;margin:-12px 0 22px;font-size:17px;font-weight:600;color:var(--c-brand-strong)}
-.placeline .i{flex:none;margin-top:3px}
-.whereaddr{display:grid;gap:4px;margin:10px 0 14px;font-size:19px;line-height:1.5}
-.whereaddr span{font-weight:600;color:var(--c-ink-2)}
-
 /* 시간표·정원 보기 */
 .ttbtn{white-space:nowrap;display:inline-flex;align-items:center;gap:6px;align-self:flex-start;min-height:38px;padding:0 14px;margin-top:6px;border-radius:999px;background:var(--c-brand-soft);color:var(--c-brand-strong);font-size:15px;font-weight:700;cursor:pointer}
 .ttbtn:hover{filter:brightness(.97)}
@@ -401,3 +395,23 @@ body:has(.sps.many) .wrap{padding-bottom:calc(var(--dock-h,110px) + 28px)}
 .pn-prev{left:5px}.pn-next{right:5px}
 .pn:hover{background:rgba(255,255,255,.9)}
 .sp .cnt{right:6px;bottom:6px;padding:0 7px;font-size:11px;line-height:18px;background:rgba(27,34,54,.5)}
+
+/* 일정 고르기: 요일마다 한 줄, 시간 단추 */
+.sgrps{display:grid;gap:0;background:#fff;border-radius:var(--r-lg,20px);padding:6px 18px;box-shadow:0 1px 3px rgba(27,34,54,.08)}
+.sgrps .lab{margin:12px 0 4px;font-weight:700;font-size:16px}
+.sgrp{display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--c-line)}
+.sgrp:first-of-type{border-top:0}
+.sgday{font-size:17px}
+.sgtimes{display:flex;flex-wrap:wrap;gap:8px}
+.sgt{display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 8px 0 14px;border-radius:12px;border:1.5px solid var(--c-line);background:#fff;font:700 17px var(--font);color:var(--c-ink);cursor:pointer}
+.sgt i{font-style:normal;font-size:13.5px;min-width:42px;height:26px;border-radius:8px;display:inline-grid;place-items:center;background:var(--c-ok-bg);color:var(--c-ok-fg)}
+.sgt:hover:not(:disabled){border-color:var(--c-brand)}
+.sgt.on{background:var(--c-brand);border-color:var(--c-brand);color:#fff}
+.sgt.on i{background:rgba(255,255,255,.9);color:var(--c-brand-strong)}
+.sgt.full{opacity:.6;cursor:not-allowed}
+.sgt.full i{background:var(--c-bad-bg);color:var(--c-bad-fg)}
+.sgrp{grid-template-columns:58px minmax(0,1fr);gap:8px}
+.sgtimes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.sgt{justify-content:space-between;gap:4px;padding:0 5px 0 10px;font-size:16px;min-height:44px}
+.sgt i{min-width:36px;font-size:12.5px}
+@media (max-width:420px){.sgtimes{grid-template-columns:repeat(2,minmax(0,1fr))}}

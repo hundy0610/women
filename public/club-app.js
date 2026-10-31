@@ -197,7 +197,6 @@ export function startClub(CREW) {
     const search = CREW.searchable ? `<div class="field search clubsearch"><input class="input" id="f-search" type="search" placeholder="소모임 이름으로 찾기 (예: 매듭, 뜨개)" value="${esc(state.q || '')}" aria-label="소모임 검색"><span class="si" aria-hidden="true">${ic('search', 24)}</span></div>` : '';
     return `<h1>어떤 소모임에 참여하실래요?</h1>
       <p class="lead">한 달 ${won(CREW.fee)}이고 신청한 날부터 한 달 이용해요.</p>
-      ${CREW.address ? `<p class="placeline">${ic('pin', 20)}<span>${esc(CREW.address)}</span></p>` : ''}
       ${search}
       <div class="sps ${many ? 'many' : ''}">${list.length ? list.map(programCard).join('') : '<div class="state"><h2>찾는 소모임이 없어요</h2></div>'}</div>`;
   }
@@ -228,9 +227,17 @@ export function startClub(CREW) {
       const label = ok ? (full ? '마감' : `${sl.capacity - left}/${sl.capacity}`) : date === today ? '오늘' : '';
       cells += `<button type="button" class="day ${k}" data-day="${date}" ${!ok || full ? 'disabled' : ''} aria-pressed="${date === state.start}" aria-label="${formatKoreanDate(date)}${ok ? (full ? ' 정원 마감' : ` 정원 ${sl.capacity - left}/${sl.capacity}`) : ''}">${d}${label ? `<small>${label}</small>` : ''}</button>`;
     }
-    const slotChips = p.slots.length > 1
-      ? `<div class="chips c2chips ${p.slots.length > 6 ? 'many' : ''}" role="group" aria-label="요일과 시간">${sortedSlots(p).map((s) => { const id = slotId(p.id, s); return `<button type="button" class="chip ${state.slot === id ? 'on' : ''}" data-slot="${id}" aria-pressed="${state.slot === id}">${WEEKDAY[s.weekday]}요일 ${s.time} · 정원 ${nextLeft(findSlot(id)).used}/${nextLeft(findSlot(id)).cap}</button>`; }).join('')}</div>`
-      : '';
+    // 요일마다 한 줄, 그 안에 시간 단추(시간 + 신청/정원). 시간대가 많아도 한눈에 보입니다.
+    const slotChips = p.slots.length > 1 ? (() => {
+      const byDay = new Map();
+      for (const s of sortedSlots(p)) { if (!byDay.has(s.weekday)) byDay.set(s.weekday, []); byDay.get(s.weekday).push(s); }
+      const rows = [...byDay.entries()].sort((a, b) => dayOrder(a[0]) - dayOrder(b[0])).map(([d, list]) => `<div class="sgrp"><b class="sgday">${WEEKDAY[d]}요일</b><span class="sgtimes">${list.map((s) => {
+        const id = slotId(p.id, s);
+        const n = nextLeft(findSlot(id));
+        return `<button type="button" class="sgt ${state.slot === id ? 'on' : ''} ${n.left ? '' : 'full'}" data-slot="${id}" aria-pressed="${state.slot === id}" ${n.left ? '' : 'disabled'}><span class="num">${esc(s.time)}</span><i>${n.left ? `${n.used}/${n.cap}` : '마감'}</i></button>`;
+      }).join('')}</span></div>`).join('');
+      return `<div class="sgrps" role="group" aria-label="요일과 시간"><p class="lab">요일과 시간 <span class="muted sm">(숫자는 신청 인원/정원)</span></p>${rows}</div>`;
+    })() : '';
     let sessions = '';
     if (state.start) sessions = `<div class="c2dates"><p class="lab">수업 날짜</p><div class="chips">${[...inRange].map((d) => `<span class="chip dt">${esc(SHORT(d))}</span>`).join('')}</div></div>`;
     let sum = `<p class="muted row-f c2hint">${ic('info', 20)}달력에서 첫 수업 날짜를 눌러 주세요. 그날부터 한 달간 이용해요.</p>`;
@@ -310,6 +317,7 @@ export function startClub(CREW) {
         <div class="stack"><div class="card amt-row"><div><p class="muted sm">입금하실 금액 (한 달)</p><p class="amount num" style="color:var(--c-brand-strong)">${won(r.amount)}</p></div><button type="button" class="btn secondary s" data-copy="${r.amount}">${ic('copy', 18)}금액 복사</button></div>
         ${acctCard(state.info.bank)}</div>
         <div class="card"><dl class="kv"><dt>신청번호</dt><dd class="num" style="font-size:20px;letter-spacing:.06em">${esc(r.id)}</dd>${appRows(r)}<dt>입금자명</dt><dd>${esc(r.name)}</dd><dt>입금 기한</dt><dd style="color:var(--c-pend-fg)">${formatKstDateTime(r.holdUntil)}까지</dd></dl>
+        ${CREW.address ? `<button type="button" class="btn secondary s" data-where>${ic('pin', 18)}오시는 길 보기</button>` : ''}
         <div class="hr"></div>
         <ol class="notes"><li>입금 계좌 안내를 문자로 보내 드렸어요. 문자가 오지 않으면 이 화면의 계좌로 입금해 주세요.</li><li>입금자명을 신청하신 분 이름과 같게 보내 주세요.</li><li>기한(${CREW.holdHours}시간)이 지나면 신청이 자동으로 취소돼요.</li><li>신청 당일 노쇼하면 환불되지 않아요.</li><li>신청번호는 조회·취소에 필요해요. 화면을 캡처해 두세요.</li></ol></div>
       </div>`;
@@ -496,6 +504,7 @@ export function startClub(CREW) {
     }
     const z = t.closest('[data-zoom]');
     if (z) { const pg = findProgram(z.dataset.zoom); return openPhotos(state.info.photos[z.dataset.zoom] || [], Number(z.dataset.i), pg?.name || ''); }
+    if (t.closest('[data-where]')) return openWhere();
     const tb = t.closest('[data-table]');
     if (tb) return openTable(tb.dataset.table);
     const pr = t.closest('[data-program]');
@@ -582,19 +591,25 @@ export function startClub(CREW) {
     render();
     window.scrollTo(0, 0);
   });
+  let openWhere = () => {};
   $('#retryBtn').addEventListener('click', loadInfo);
   $('#back').innerHTML = ic('left', 26);
   $('#myres').innerHTML = `${ic('search', 20)}내 신청`;
   if (CREW.address && $('#whereBtn')) {
     const q = encodeURIComponent(CREW.address);
-    const link = (href, t) => `<a class="btn secondary s" href="${href}" target="_blank" rel="noopener noreferrer">${t}</a>`;
+    const link = (href, t) => `<a class="btn secondary block" href="${href}" target="_blank" rel="noopener noreferrer">${t}</a>`;
     $('#whereBtn').innerHTML = `${ic('pin', 20)}오시는 길`;
-    $('#where').innerHTML = `<div class="dlg-h"><h2 id="whereT">오시는 길</h2><button type="button" class="xbtn" data-close aria-label="닫기">${ic('x', 24)}</button></div>
-      <p class="whereaddr"><b>${esc(CREW.brand)}</b><span>${esc(CREW.address)}</span></p>
+    const fillWhere = () => { $('#where').innerHTML = `<div class="dlg-h"><h2 id="whereT">오시는 길</h2><button type="button" class="xbtn" data-close aria-label="닫기">${ic('x', 24)}</button></div>
       <div class="map"><iframe class="map-pane" title="위치 지도" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=${q}&hl=ko&z=17&output=embed"></iframe></div>
-      <div class="row-f wrapf" style="margin-top:14px"><button type="button" class="btn secondary s" data-copy="${esc(CREW.address)}">${ic('copy', 18)}주소 복사</button>${link(`https://map.naver.com/p/search/${q}`, '네이버 지도')}${link(`https://map.kakao.com/?q=${q}`, '카카오맵')}${link(`https://www.google.com/maps/search/?api=1&query=${q}`, '구글 지도')}</div>`;
+      ${link(`https://map.naver.com/p/search/${q}`, `${ic('pin', 20)}지도 앱 열기 (네이버)`)}
+      ${link(`https://map.kakao.com/?q=${q}`, `${ic('pin', 20)}카카오맵에서 열기`)}
+      ${link(`https://www.google.com/maps/search/?api=1&query=${q}`, `${ic('pin', 20)}구글 지도에서 열기`)}
+      <dl class="kv" style="text-align:left"><dt>주소</dt><dd style="text-align:left">${esc(CREW.address)}</dd></dl>
+      <button type="button" class="btn secondary s" style="justify-self:start" data-copy="${esc(CREW.address)}">${ic('copy', 18)}주소 복사</button>
+      <p class="sm">길찾기와 대중교통은 네이버 지도나 카카오맵에서 확인하세요.</p>${state.info?.contact ? `<a class="btn primary block" href="tel:${state.info.contact.replace(/[^0-9+]/g, '')}">${ic('phone', 20)}문의 ${esc(state.info.contact)}</a>` : ''}`; };
     watchOverlay($('#whereDlg'));
-    $('#whereBtn').addEventListener('click', () => openOverlay($('#whereDlg')));
+    openWhere = () => { fillWhere(); openOverlay($('#whereDlg')); };
+    $('#whereBtn').addEventListener('click', () => openWhere());
     $('#whereDlg').addEventListener('click', (e) => {
       if (e.target.closest('[data-close]') || e.target.classList.contains('scrim')) return closeOverlay($('#whereDlg'));
       const c = e.target.closest('[data-copy]');
