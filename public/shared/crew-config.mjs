@@ -24,11 +24,11 @@ export const CREW = {
 
   // 프로그램(소모임). slots의 time은 "HH:MM". capacity를 적으면 그 프로그램만 정원이 달라집니다.
   programs: [
-    { id: 'knit', dept: 'jabi', name: '뜨개', icon: 'sparkle', note: '실과 바늘로 소품을 함께 떠요',
+    { id: 'knit', dept: 'jabi', name: '뜨개질', icon: 'sparkle', note: '실과 바늘로 소품을 함께 떠요',
       slots: [{ weekday: 4, time: '11:00' }, { weekday: 4, time: '14:00' }, { weekday: 5, time: '11:00' }] },
     { id: 'soap', dept: 'jabi', name: '비누공예', icon: 'sparkle', note: '천연 비누를 직접 만들어요',
       slots: [{ weekday: 2, time: '11:00' }] },
-    { id: 'stocking', dept: 'jabi', name: '스타킹', icon: 'sparkle', note: '스타킹으로 만드는 생활 소품',
+    { id: 'stocking', dept: 'jabi', name: '스타킹 공예', icon: 'sparkle', note: '스타킹으로 만드는 생활 소품',
       slots: [{ weekday: 2, time: '14:00' }] },
     { id: 'tarot', dept: 'jihye', name: '타로', icon: 'sparkle', note: '카드로 나누는 이야기',
       slots: [{ weekday: 4, time: '11:00' }] },
