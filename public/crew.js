@@ -129,20 +129,6 @@ function viewProgram() {
     <div class="sps">${list.map(programCard).join('')}</div>`;
 }
 
-/* ---------- 선택한 소모임 요약(PC에서 빈 공간을 채움) ---------- */
-function recapCard(withPeriod) {
-  const p = program();
-  const sl = slotObj();
-  const photo = (state.info.photos[p.id] || [])[0];
-  const pic = photo ? `<img src="${esc(photo)}" alt="${esc(p.name)} 사진" draggable="false">` : `<div class="rph">${ic('cam', 34)}</div>`;
-  let period = '';
-  if (withPeriod && state.start) {
-    const pr = period_(state.start);
-    period = `<dt>신청 기간</dt><dd>${esc(LONG(state.start))} ~ ${esc(LONG(pr.end))}</dd><dt>수업</dt><dd>${pr.count}번</dd>`;
-  }
-  return `<div class="recap"><div class="rpic">${pic}</div><div class="rbody"><h3>${esc(p.name)}</h3><p class="muted">${esc(p.note || '')}</p><dl class="kv"><dt>수강일</dt><dd>${slotLabel(sl)}</dd>${period}<dt>참가비</dt><dd><b>${won(CREW.fee)}</b> (한 달)</dd></dl></div></div>`;
-}
-
 /* ---------- 2. 요일·시간과 시작일 ---------- */
 function viewSchedule() {
   const p = program();
@@ -191,7 +177,6 @@ function viewSchedule() {
         </div>
         <div class="cal">${cells}</div>
       </div>
-      <div class="c2prog">${recapCard(false)}</div>
       <div class="c2sum stack">${state.error ? alertBox('err', 'alert', esc(state.error)) : ''}${sum}${sessions}</div>
     </div>`;
 }
@@ -216,7 +201,6 @@ function viewPerson() {
         <input id="f-dong" class="input" maxlength="20" placeholder="예: 마두동" value="${esc(state.dong)}"></div>
       <input class="hp" type="text" id="f-website" tabindex="-1" autocomplete="off" aria-hidden="true">
     </div>
-    <aside class="c3side">${recapCard(true)}</aside>
     </div>`;
 }
 
