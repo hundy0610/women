@@ -560,3 +560,51 @@ ol.notes li::before{width:26px;height:26px;font-size:14px}
 .hcard .hgo{display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-weight:700;color:var(--c-brand-strong)}
 @media (min-width:700px){.homechoice{grid-template-columns:repeat(2,minmax(0,1fr))}.hcard{padding:28px 26px;min-height:240px}}
 .view.s0{justify-content:center}
+
+/* 처음 화면: 두 카드가 화면을 채우도록 */
+@media (min-width:1000px){
+  .view.s0 .homechoice{flex:1;min-height:0;max-height:640px;grid-template-columns:repeat(2,minmax(0,1fr));align-content:stretch}
+  .view.s0 .hcard{min-height:0;justify-content:center}
+  .view.s0 .hcard .ht{font-size:34px}
+  .view.s0 .hcard .hd2{font-size:20px}
+  .view.s0 .hcard .hico{width:76px;height:76px}
+}
+
+/* ===== 큰 PC 화면(높이 900 이상): 대관 화면도 빈 공간 없이 채움 ===== */
+@media (min-width:1000px) and (min-height:900px){
+  /* 공간 고르기: 3열 큰 카드 */
+  .view.s2>.sps{flex:1;min-height:0;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:16px;max-width:none}
+  .view.s2 .sp{display:flex;flex-direction:column;min-height:0}
+  .view.s2 .sp .stripw{flex:1;min-height:110px;height:auto;position:relative}
+  .view.s2 .sp .strip{position:absolute;inset:0;height:100%}
+  .view.s2 .sp .ph{aspect-ratio:auto;height:100%;min-height:0}
+  .view.s2 .spb{padding:12px 18px 14px}
+  .view.s2 .spb h3{font-size:24px}
+  .view.s2 .all{max-width:none}
+  .view.s2 h1{font-size:34px}
+  body[data-step="2"] .wrap{max-width:min(1600px,94vw)}
+  /* 인원·예약자·확인: 글씨와 여백을 키워 화면을 채움 */
+  .view.s4 h1,.view.s5 h1,.view.s6 h1,.view.s7 h1,.view.s8 h1,.view.s3 h1,.view.s1 h1{font-size:34px}
+  .view.s4>*,.view.s5>*,.view.s6>*{max-width:1000px}
+  .view.s4 .card,.view.s5 .card,.view.s6 .card{padding:clamp(22px,3.2vh,40px) clamp(24px,3vw,44px)}
+  .view.s5 .card.stack,.view.s4 .card.stack{gap:clamp(18px,3vh,34px)}
+  .view.s5 .input,.view.s4 .input{min-height:clamp(60px,6.4vh,72px);font-size:20px}
+  .view.s6 .kv{font-size:clamp(19px,2.3vh,27px);gap:clamp(10px,1.6vh,20px) 18px}
+  .view.s6 .pr{font-size:clamp(18px,2.1vh,24px)}
+  .view.s6 .check{font-size:clamp(18px,2.1vh,24px);padding:clamp(16px,2.2vh,28px)}
+  .view.s6>.stack{gap:clamp(16px,2.4vh,28px)}
+  .view.s5 .field label{font-size:20px}
+  .view.s4 .chip{min-height:60px;font-size:20px}
+  .view.s7>*{max-width:1300px}
+  .view.s8>*{max-width:860px}
+}
+@media (min-width:1000px) and (min-height:900px){
+  .view.s3>*{max-width:1300px}
+  .view.s3 .chip{min-height:clamp(58px,6.2vh,72px);font-size:clamp(19px,2.3vh,26px);padding:0 24px}
+  .view.s3 .card{padding:clamp(20px,3vh,38px) clamp(22px,2.6vw,40px)}
+  .view.s3 .hc{min-height:clamp(52px,5.6vh,68px);font-size:clamp(17px,2vh,22px)}
+  .view.s3 .stack{gap:clamp(16px,2.6vh,30px)}
+  .view.s5>*{max-width:1100px}
+  .view.s5 .card.stack{gap:clamp(24px,4.4vh,48px);padding:clamp(30px,5vh,60px) clamp(28px,3.4vw,56px)}
+  .view.s5 .input{min-height:clamp(64px,7.4vh,84px);font-size:22px}
+}

@@ -1,7 +1,7 @@
 // 소모임(동아리) 신청 설정. 화면(/crew)과 서버(api/crew*.js)가 같은 값을 씁니다.
 // 요일: 0=일 ... 6=토. 프로그램이나 시간이 바뀌면 이 파일만 고치면 됩니다.
 export const CREW = {
-  center: { id: 'madu', name: '마두 문화센터' },
+  center: { id: 'madu' },
   brand: '드림 문화센터',
 
   fee: 10000,            // 한 달 참가비(원)

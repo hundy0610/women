@@ -77,7 +77,7 @@ function nextLeft(slot) {
   const used = state.info.used[`${slot.id}|${date}`] || 0;
   return { date, used, left: Math.max(0, slot.capacity - used), cap: slot.capacity };
 }
-const period = (start) => ({ end: periodEnd(start, CREW.periodMonths), count: sessionsBetween(start, periodEnd(start, CREW.periodMonths), slotObj().weekday).length });
+const period_ = (start) => ({ end: periodEnd(start, CREW.periodMonths), count: sessionsBetween(start, periodEnd(start, CREW.periodMonths), slotObj().weekday).length });
 
 function stepProblem(step) {
   if (!state.storeReady) return '지금은 신청할 수 없습니다.';
@@ -125,8 +125,22 @@ function programCard(p) {
 function viewProgram() {
   const list = CREW.programs;
   return `<h1>어떤 소모임에 참여하실래요?</h1>
-    <p class="lead">${esc(CREW.center.name)}에서 진행해요. 한 달 ${won(CREW.fee)}이고 신청한 날부터 한 달 이용해요.</p>
+    <p class="lead">한 달 ${won(CREW.fee)}이고 신청한 날부터 한 달 이용해요.</p>
     <div class="sps">${list.map(programCard).join('')}</div>`;
+}
+
+/* ---------- 선택한 소모임 요약(PC에서 빈 공간을 채움) ---------- */
+function recapCard(withPeriod) {
+  const p = program();
+  const sl = slotObj();
+  const photo = (state.info.photos[p.id] || [])[0];
+  const pic = photo ? `<img src="${esc(photo)}" alt="${esc(p.name)} 사진" draggable="false">` : `<div class="rph">${ic('cam', 34)}</div>`;
+  let period = '';
+  if (withPeriod && state.start) {
+    const pr = period_(state.start);
+    period = `<dt>신청 기간</dt><dd>${esc(LONG(state.start))} ~ ${esc(LONG(pr.end))}</dd><dt>수업</dt><dd>${pr.count}번</dd>`;
+  }
+  return `<div class="recap"><div class="rpic">${pic}</div><div class="rbody"><h3>${esc(p.name)}</h3><p class="muted">${esc(p.note || '')}</p><dl class="kv"><dt>수강일</dt><dd>${slotLabel(sl)}</dd>${period}<dt>참가비</dt><dd><b>${won(CREW.fee)}</b> (한 달)</dd></dl></div></div>`;
 }
 
 /* ---------- 2. 요일·시간과 시작일 ---------- */
@@ -158,9 +172,11 @@ function viewSchedule() {
   const slotChips = p.slots.length > 1
     ? `<div class="chips c2chips" role="group" aria-label="요일과 시간">${p.slots.map((s) => { const id = slotId(p.id, s); return `<button type="button" class="chip ${state.slot === id ? 'on' : ''}" data-slot="${id}" aria-pressed="${state.slot === id}">${WEEKDAY[s.weekday]}요일 ${s.time} · 정원 ${nextLeft(findSlot(id)).used}/${nextLeft(findSlot(id)).cap}</button>`; }).join('')}</div>`
     : '';
+  let sessions = '';
+  if (state.start) sessions = `<div class="c2dates"><p class="lab">수업 날짜</p><div class="chips">${[...inRange].map((d) => `<span class="chip dt">${esc(SHORT(d))}</span>`).join('')}</div></div>`;
   let sum = `<p class="muted row-f c2hint">${ic('info', 20)}달력에서 첫 수업 날짜를 눌러 주세요. 그날부터 한 달간 이용해요.</p>`;
   if (state.start) {
-    const pr = period(state.start);
+    const pr = period_(state.start);
     sum = `<div class="card soft slim"><p class="b">${esc(LONG(state.start))}부터 ${esc(LONG(pr.end))}까지 · 수업 ${pr.count}번</p><p class="sm">${slotLabel(sl)} · 정원 : ${sl.capacity - seatsLeft(sl, state.start)}/${sl.capacity}</p></div>`;
   }
   return `<h1>${esc(p.name)}, 언제부터 하실래요?</h1>
@@ -175,7 +191,8 @@ function viewSchedule() {
         </div>
         <div class="cal">${cells}</div>
       </div>
-      <div class="c2sum stack">${state.error ? alertBox('err', 'alert', esc(state.error)) : ''}${sum}</div>
+      <div class="c2prog">${recapCard(false)}</div>
+      <div class="c2sum stack">${state.error ? alertBox('err', 'alert', esc(state.error)) : ''}${sum}${sessions}</div>
     </div>`;
 }
 
@@ -186,6 +203,7 @@ function viewPerson() {
   const g = (v, t) => `<button type="button" class="chip ${state.gender === v ? 'on' : ''}" data-gender="${v}" aria-pressed="${state.gender === v}">${t}</button>`;
   return `<h1>신청하시는 분을 알려 주세요</h1>
     <p class="lead">입금하실 분 이름과 같게 적어 주세요. 연락처는 안내와 확인에만 써요. 한 시간대에 최대 ${cap}명까지 받아요.</p>
+    <div class="c3grid">
     <div class="card stack c3form">
       <div class="field"><label for="f-name">이름 <span class="req">필수</span></label>
         <input id="f-name" class="input" autocomplete="name" maxlength="20" placeholder="예: 김미영" value="${esc(state.name)}"></div>
@@ -197,6 +215,8 @@ function viewPerson() {
       <div class="field"><label for="f-dong">지역(동) <span class="req">필수</span></label>
         <input id="f-dong" class="input" maxlength="20" placeholder="예: 마두동" value="${esc(state.dong)}"></div>
       <input class="hp" type="text" id="f-website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    </div>
+    <aside class="c3side">${recapCard(true)}</aside>
     </div>`;
 }
 
@@ -204,12 +224,12 @@ function viewPerson() {
 function viewReview() {
   const p = program();
   const sl = slotObj();
-  const pr = period(state.start);
+  const pr = period_(state.start);
   const on = state.agree;
   return `<h1>마지막으로 확인해 주세요</h1>
     <p class="lead">내용을 확인하고 안내에 동의해 주세요.</p>
     <div class="stack c4grid">
-      <div class="card c4kv"><dl class="kv"><dt>소모임</dt><dd>${esc(p.name)}</dd><dt>장소</dt><dd>${esc(CREW.center.name)}</dd><dt>수강일</dt><dd>${slotLabel(sl)}</dd><dt>신청 기간</dt><dd>${esc(LONG(state.start))} ~ ${esc(LONG(pr.end))} (${pr.count}회)</dd><dt>신청자</dt><dd>${esc(state.name)} · ${esc(state.phone)}</dd><dt>비용</dt><dd><b>${won(CREW.fee)}</b> (한 달)</dd></dl></div>
+      <div class="card c4kv"><dl class="kv"><dt>소모임</dt><dd>${esc(p.name)}</dd><dt>수강일</dt><dd>${slotLabel(sl)}</dd><dt>신청 기간</dt><dd>${esc(LONG(state.start))} ~ ${esc(LONG(pr.end))} (${pr.count}회)</dd><dt>신청자</dt><dd>${esc(state.name)} · ${esc(state.phone)}</dd><dt>비용</dt><dd><b>${won(CREW.fee)}</b> (한 달)</dd></dl></div>
       <div class="card policy-card c4policy"><p class="b row-f">${ic('info', 20)}꼭 읽어 주세요</p>${policyList()}</div>
  <label class="check c4agree ${on ? 'on' : ''}"><input type="checkbox" id="f-agree" class="sr-only" ${on ? 'checked' : ''}><span class="box ${on ? 'on' : ''}">${on ? ic('check', 20) : ''}</span><span>위 안내를 모두 읽었고 동의해요. 신청 당일 노쇼하면 환불되지 않는다는 것도 확인했어요.</span></label>
       ${state.error ? alertBox('err', 'alert', esc(state.error)) : ''}

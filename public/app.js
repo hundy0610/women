@@ -169,7 +169,7 @@ const OFF_STRIPE = 'background:repeating-linear-gradient(135deg,#C6CCD9 0 3px,#F
 // 0단계: 처음 화면. 공간 대관과 소모임(동아리) 신청 중에서 고릅니다.
 function viewHome() {
   return `<h1>무엇을 도와드릴까요?</h1>
-    <p class="lead">마두 문화센터에서 하실 수 있어요.</p>
+    <p class="lead">원하시는 항목을 골라 주세요.</p>
     <div class="homechoice">
       <button type="button" class="hcard" id="goRent"><span class="hico">${ic('cal', 34)}</span><span class="ht">공간 대관</span><span class="hd2">로비, 세미나실, 방을 시간 단위로 예약해요.</span><span class="hgo">예약하기 ${ic('right', 20)}</span></button>
       <button type="button" class="hcard" id="goCrew"><span class="hico">${ic('users', 34)}</span><span class="ht">소모임(동아리) 신청</span><span class="hd2">뜨개, 비누공예, 타로 등 한 달 10,000원으로 참여해요.</span><span class="hgo">신청하기 ${ic('right', 20)}</span></button>
